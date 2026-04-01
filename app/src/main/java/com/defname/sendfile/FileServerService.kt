@@ -15,12 +15,15 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.OutgoingContent
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondBytesWriter
+import io.ktor.server.response.respondFile
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
@@ -29,6 +32,7 @@ import io.ktor.utils.io.copyTo
 import io.ktor.utils.io.jvm.javaio.toByteReadChannel
 import io.ktor.utils.io.writer
 import kotlinx.coroutines.Dispatchers
+import java.io.File
 
 
 class FileServerService : Service() {
@@ -91,7 +95,7 @@ class FileServerService : Service() {
 
             // Notification bauen
             val notification = NotificationCompat.Builder(this, "my_channel_id")
-                .setContentTitle("Sharing ${state.fileName}")
+                .setContentTitle("Sharing Files...")
                 .setContentText("Server is running.")
                 .setSmallIcon(R.drawable.ic_launcher_foreground) // Teste mal ein Standard-Icon
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -123,65 +127,101 @@ class FileServerService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    private suspend fun sendFile(call: ApplicationCall, fileInfo: FileInfo, clientIp: String, stream: Boolean) {
+        val state = ServerRepository.state.value
+
+        // 1. MIME Type
+        val fileUri = fileInfo.uri
+
+        val mimeTypeString = contentResolver.getType(fileUri) ?: "application/octet-stream"
+        val contentType = ContentType.parse(mimeTypeString)
+
+        // 2. filesize
+        val fileSize = fileInfo.size
+
+        // 3. client ip
+        if (state.bannedIps.contains(clientIp)) {
+            return call.respondText("Your IP is banned.", status = HttpStatusCode.Forbidden)
+        }
+
+        // 4. send file
+        Log.d("FileServerService", "$fileUri \n ${fileUri.path}")
+
+        val file = File(fileUri.path!!)
+        return call.respondFile(file)
+
+        // 4. send file
+        val inputStream = contentResolver.openInputStream(fileUri) ?: return call.respond(HttpStatusCode.InternalServerError)
+
+        try {
+            // respondBytesWriter ist ideal für Streams und arbeitet nahtlos mit dem PartialContent-Plugin
+            call.respondBytesWriter (
+                contentType = contentType,
+                contentLength = fileInfo.size
+            ) {
+                inputStream.use { input ->
+                    try {
+                        ServerRepository.onClientConnected(clientIp)
+                        // Stream effizient in den Netzwerk-Channel kopieren
+                        input.toByteReadChannel(context = Dispatchers.IO).copyTo(this)
+                    } catch (e: Exception) {
+                        Log.d("FileServerService", "Transfer to $clientIp interrupted: ${e.message}")
+                    } finally {
+                        ServerRepository.onClientDisconnected(clientIp)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("FileServerService", "Error during file transfer", e)
+            inputStream.close()
+        }
+    }
+
+    private suspend fun sendZip(call: ApplicationCall, files: List<FileInfo>, clientIp: String) {
+
+    }
+
     private fun startHttpServer() {
         if (server == null) {
             server = embeddedServer(Netty, port = 8080) {
                 install(io.ktor.server.plugins.partialcontent.PartialContent)
                 routing {
-                    get("/download/{token...}") {
-                        val state = ServerRepository.state.value
+                    val state = ServerRepository.state.value
 
-                        if ((call.parameters["token"] ?: "") != ServerRepository.getToken()) {
+                    get("/{token}/{action}/{filename?}") {
+                        val token = call.parameters["token"]
+                        val action = call.parameters["action"]
+                        val requestedFilename = call.parameters["filename"]
+                        val clientIp = call.request.local.remoteHost
+
+                        //  1. validate
+                        if (token != ServerRepository.getToken()) {
                             Log.d("FileServerService", "Invalid token: ${call.parameters["token"]}")
                             return@get call.respondText("No Access\n", status = io.ktor.http.HttpStatusCode.Forbidden)
                         }
 
-                        // 1. MIME Type
-                        val fileUri = state.fileUri ?: return@get call.respondText("No File Selected\n", status = io.ktor.http.HttpStatusCode.NotFound)
-
-                        val mimeTypeString = contentResolver.getType(fileUri) ?: "application/octet-stream"
-                        val contentType = ContentType.parse(mimeTypeString)
-
-                        // 2. filesize
-                        val pfd = contentResolver.openFileDescriptor(fileUri, "r") ?: return@get call.respondText("File not found.", status = io.ktor.http.HttpStatusCode.NotFound)
-                        val fileSize = pfd.statSize
-                        pfd.close()
-
-                        // 3. client ip
-                        val clientIp = call.request.local.remoteHost
-                        if (state.bannedIps.contains(clientIp)) {
-                            return@get call.respondText("Your IP is banned.", status = io.ktor.http.HttpStatusCode.Forbidden)
+                        if (action != "download" && action != "stream") {
+                            return@get call.respondText("No Access\n", status = io.ktor.http.HttpStatusCode.Forbidden)
                         }
 
-                        // 4. send file
-                        val inputStream = contentResolver.openInputStream(fileUri) ?: return@get call.respond(HttpStatusCode.InternalServerError)
-
-                        try {
-                            call.response.header(
-                                HttpHeaders.ContentDisposition,
-                                "${if (state.deliverAsStream) "inline" else "attachment"}; filename=${state.fileName}"
-                            )
-
-                            call.respond(object : OutgoingContent.ReadChannelContent() {
-                                override val contentType: ContentType = contentType
-                                override val contentLength: Long = fileSize
-                                override fun readFrom(): ByteReadChannel {
-                                    return call.writer(Dispatchers.IO) {
-                                        try {
-                                            ServerRepository.onClientConnected(clientIp)
-                                            inputStream.toByteReadChannel().copyTo(this.channel)
-                                        } catch (e: Exception) {
-                                            Log.d("FileServerService", "Download canceled: $e")
-                                        } finally {
-                                            ServerRepository.onClientDisconnected(clientIp)
-                                            inputStream.close()
-                                        }
-                                    }.channel
-                                }
-                            })
-                        } catch (e: Exception) {
-                            Log.d("FileServerService", "Download canceled: $e")
+                        if (state.fileList.isEmpty()) {
+                            return@get call.respondText("No File Selected\n", status = io.ktor.http.HttpStatusCode.NotFound)
                         }
+
+                        //  2. single file or zip
+
+                        //  2.1
+                        if (requestedFilename != null || state.fileList.size == 1) {
+                            val fileInfo = if (requestedFilename != null) state.fileList.find { it.name == requestedFilename } else state.fileList[0]
+                            if (fileInfo == null) {
+                                return@get call.respondText("File not found.", status = io.ktor.http.HttpStatusCode.NotFound)
+                            }
+
+                            return@get sendFile(call, fileInfo, clientIp, action == "stream")
+                        }
+
+                        // 2.2 multiple files
+                        return@get call.respondText("Multiple files not supported yet.", status = io.ktor.http.HttpStatusCode.NotImplemented)
 
                     }
                     get("{...}") {

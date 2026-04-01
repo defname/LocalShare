@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.text.format.Formatter
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -21,6 +22,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,10 +31,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material.icons.filled.Share
@@ -43,6 +49,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -55,6 +62,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
+import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
@@ -66,6 +75,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -88,7 +98,9 @@ class MainActivity : ComponentActivity() {
             // Die URI (der Pfad) zur Datei extrahieren
             val sharedFileUri = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
             Log.d("MainActivity", "Received shared file URI: $sharedFileUri")
-            ServerRepository.setFileUri(this, sharedFileUri)
+            if (sharedFileUri != null) {
+                ServerRepository.addFile(this, sharedFileUri)
+            }
         }
 
         enableEdgeToEdge()
@@ -105,7 +117,9 @@ class MainActivity : ComponentActivity() {
             // Die URI (der Pfad) zur Datei extrahieren
             val sharedFileUri = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
             Log.d("MainActivity", "Received shared file URI: $sharedFileUri")
-            ServerRepository.setFileUri(this, sharedFileUri)
+            if (sharedFileUri != null) {
+                ServerRepository.addFile(this, sharedFileUri)
+            }
         }
     }
 
@@ -143,12 +157,7 @@ fun MainScreen() {
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         // Wir nutzen eine Box, um das innerPadding (von enableEdgeToEdge) anzuwenden
         Box(modifier = Modifier.padding(innerPadding)) {
-            if (state.fileUri != null) {
-                ServerControlScreen()
-            }
-            else {
-                Greeting()
-            }
+            ServerControlScreen()
         }
     }
 }
@@ -222,6 +231,53 @@ fun QrCodeDialog(url: String, onDismiss: () -> Unit) {
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FileCarousel() {
+    val state by ServerRepository.state.collectAsState()
+
+    HorizontalMultiBrowseCarousel(
+        state = rememberCarouselState { state.fileList.size },
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .padding(top = 16.dp, bottom = 16.dp),
+        preferredItemWidth = 48.dp,
+        itemSpacing = 8.dp,
+        maxSmallItemWidth = 48.dp,
+        minSmallItemWidth = 48.dp,
+        contentPadding = PaddingValues(horizontal = 8.dp)
+    ) { i ->
+        val item = state.fileList[i]
+        Card(
+            Modifier
+                .maskClip(MaterialTheme.shapes.medium)
+        ) {
+            if (item.filePreview != null) {
+                Image(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .maskClip(MaterialTheme.shapes.small),
+                    bitmap = item.filePreview.asImageBitmap(),
+                    contentDescription = item.name,
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Box(
+                    Modifier.size(48.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AttachFile,
+                        contentDescription = item.name,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun ServerControlScreen() {
     val state by ServerRepository.state.collectAsState()
@@ -238,9 +294,9 @@ fun ServerControlScreen() {
 
     val scrollState = rememberScrollState()
 
-    val filePickerDialog = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        if (uri != null) {
-            ServerRepository.setFileUri(context, uri)
+    val filePickerDialog = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+        if (uris.isNotEmpty()) {
+            ServerRepository.addFiles(context, uris)
         }
     }
 
@@ -259,35 +315,36 @@ fun ServerControlScreen() {
                 .weight(1.0f)
                 .padding(bottom = 8.dp)
                 .verticalScroll(scrollState),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Shared File", style = MaterialTheme.typography.headlineMedium)
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Card {
-                Row {
-                    Text("${state.fileName}", Modifier
-                        .padding(8.dp)
-                        .weight(1f), fontWeight = FontWeight.Bold)
-                    IconButton(onClick = { filePickerDialog.launch("*/*") }) {
-                        Icon(imageVector = Icons.Default.FileOpen, contentDescription = "Open")
+            Row (verticalAlignment = Alignment.CenterVertically){
+                Text(
+                    "Shared Files",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.weight(1f)
+                )
+                if (state.fileList.isNotEmpty()) {
+                    IconButton(
+                        onClick = { ServerRepository.clearFiles() }
+                    ) {
+                        Icon(imageVector = Icons.Default.Clear, contentDescription = "Clear")
                     }
-                }
-                if (state.filePreview != null) {
-                    Image(
-                        bitmap = state.filePreview!!.asImageBitmap(),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .align(Alignment.CenterHorizontally)
-                    )
-                }
-
-                Row(Modifier.padding(8.dp)) {
-                    Text("${state.fileUri}", Modifier.weight(1f))
                 }
             }
 
+            if (state.fileList.isNotEmpty()) {
+                Text("Files: ${state.fileList.size}", style = MaterialTheme.typography.bodySmall)
+                Text("Total Size: ${Formatter.formatFileSize(context, state.fileList.sumOf { it.size })}", style = MaterialTheme.typography.bodySmall)
+                FileCarousel()
+            }
+            Row {
+                Spacer(Modifier.weight(1f))
+                Button(
+                    onClick = { filePickerDialog.launch("*/*") }
+                ) {
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
+                    Text("Add Files")
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
             Text("Server Settings", style = MaterialTheme.typography.headlineMedium)
