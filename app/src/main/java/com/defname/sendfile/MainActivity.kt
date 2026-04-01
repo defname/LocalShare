@@ -94,13 +94,8 @@ class MainActivity : ComponentActivity() {
         }
 
         // Prüfen, ob die App durch eine "Teilen"-Aktion gestartet wurde
-        if (intent?.action == Intent.ACTION_SEND) {
-            // Die URI (der Pfad) zur Datei extrahieren
-            val sharedFileUri = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
-            Log.d("MainActivity", "Received shared file URI: $sharedFileUri")
-            if (sharedFileUri != null) {
-                ServerRepository.addFile(this, sharedFileUri)
-            }
+        if (intent != null) {
+            onNewIntent(intent)
         }
 
         enableEdgeToEdge()
@@ -114,11 +109,14 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         if (intent.action == Intent.ACTION_SEND) {
-            // Die URI (der Pfad) zur Datei extrahieren
-            val sharedFileUri = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
-            Log.d("MainActivity", "Received shared file URI: $sharedFileUri")
-            if (sharedFileUri != null) {
-                ServerRepository.addFile(this, sharedFileUri)
+            if (intent.hasExtra(Intent.EXTRA_STREAM)) {
+                val uri = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
+                uri?.let { ServerRepository.addFile(this, it) }
+            }
+        } else if (intent.action == Intent.ACTION_SEND_MULTIPLE) {
+            if (intent.hasExtra(Intent.EXTRA_STREAM)) {
+                val uris = IntentCompat.getParcelableArrayListExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
+                uris?.let { ServerRepository.addFiles(this, it) }
             }
         }
     }

@@ -31,8 +31,8 @@ ktor-server-core = { group = "io.ktor", name = "ktor-server-core", version.ref =
 ktor-server-netty = { group = "io.ktor", name = "ktor-server-netty", version.ref = "ktorServerCore" }
 ktor-server-host-common = { group = "io.ktor", name = "ktor-server-host-common", version.ref = "ktorServerCore" }
 ktor-server-partialcontent = { group = "io.ktor", name = "ktor-server-partial-content", version.ref = "ktorServerCore" }
+ktor-server-html-builder = { group = "io.ktor", name = "ktor-server-html-builder", version.ref = "ktorServerCore" }
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
-
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

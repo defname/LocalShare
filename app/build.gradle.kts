@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.host.common)
     implementation(libs.ktor.server.partialcontent)
+    implementation(libs.ktor.server.html.builder)
     implementation(libs.zxing.core)
 
     testImplementation(libs.junit)
