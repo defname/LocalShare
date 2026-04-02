@@ -4,13 +4,11 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
-import android.net.ConnectivityManager
-import android.net.Network
-import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.graphics.drawable.toBitmap
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -24,17 +22,16 @@ import io.ktor.server.html.respondHtml
 import io.ktor.server.netty.Netty
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondBytesWriter
-import io.ktor.server.response.respondFile
+import io.ktor.server.response.respondOutputStream
 import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
+import io.ktor.server.routing.RoutingCall
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.CancellationException
-import io.ktor.utils.io.close
-import io.ktor.utils.io.copyTo
-import io.ktor.utils.io.jvm.javaio.toByteReadChannel
 import io.ktor.utils.io.jvm.javaio.toOutputStream
 import io.ktor.utils.io.writeFully
 import io.ktor.utils.io.writer
@@ -45,40 +42,21 @@ import kotlinx.html.button
 import kotlinx.html.div
 import kotlinx.html.h1
 import kotlinx.html.head
+import kotlinx.html.img
+import kotlinx.html.link
 import kotlinx.html.span
 import kotlinx.html.style
 import kotlinx.html.title
-import java.io.File
+import kotlinx.html.unsafe
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 
 class FileServerService : Service() {
     var server: EmbeddedServer<*,*>? = null
-    private lateinit var connectivityManager: ConnectivityManager
-
-    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
-        override fun onAvailable(network: Network) {
-            ServerRepository.updateLocalIpAddresses()
-        }
-
-        override fun onLost(network: Network) {
-            ServerRepository.updateLocalIpAddresses()
-        }
-
-        override fun onCapabilitiesChanged(
-            network: Network,
-            networkCapabilities: NetworkCapabilities
-        ) {
-            ServerRepository.updateLocalIpAddresses()
-        }
-
-    }
 
     override fun onCreate() {
         super.onCreate()
-        connectivityManager = getSystemService(ConnectivityManager::class.java)
-        connectivityManager.registerDefaultNetworkCallback(networkCallback)
 
         createNotificationChannel()
         ServerRepository.updateLocalIpAddresses()
@@ -108,8 +86,6 @@ class FileServerService : Service() {
                 stopIntent,
                 android.app.PendingIntent.FLAG_IMMUTABLE
             )
-
-            val state = ServerRepository.state.value
 
             // Notification bauen
             val notification = NotificationCompat.Builder(this, "my_channel_id")
@@ -146,13 +122,11 @@ class FileServerService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private suspend fun sendFile(call: ApplicationCall, fileInfo: FileInfo, clientIp: String, stream: Boolean) {
-        val state = ServerRepository.state.value
-
         // 1. MIME Type
         val fileUri = fileInfo.uri
         val fileName = fileInfo.name
 
-        val mimeTypeString = contentResolver.getType(fileUri) ?: "application/octet-stream"
+        val mimeTypeString = fileInfo.mimeType
         val contentType = ContentType.parse(mimeTypeString)
 
         // 2. filesize
@@ -210,8 +184,6 @@ class FileServerService : Service() {
         files: List<FileInfo>,
         clientIp: String
     ) {
-        val state = ServerRepository.state.value
-
         call.response.header(
             HttpHeaders.ContentDisposition,
             "attachment; filename=\"files.zip\""
@@ -274,63 +246,212 @@ class FileServerService : Service() {
     private suspend fun sendFileListing(
         call: ApplicationCall,
         files: List<FileInfo>,
-        clientIp: String,
         token: String
     ) {
         return call.respondHtml {
             head {
-                title { "File Listing" }
+                title { +"File Listing" }
+                link (rel = "icon", type = "image/png", href = "/$token/favicon")
                 style {
-                    """
-                body { font-family: sans-serif; padding: 20px; }
-                .file { margin-bottom: 15px; }
-                button { margin-left: 10px; }
-                """.trimIndent()
+                    unsafe {
+                        +"""
+                        body { font-family: sans-serif; padding: 20px; }
+                        button { margin-left: 10px; }
+                
+                        .container {
+                          display: flex;
+                          gap: 10px;
+                          flex-wrap: wrap;
+                        }
+                
+                        .file {
+                          flex: none;
+                          background-color: #f0f0f0;
+                          padding: 20px;
+                          border: 1px solid #ccc;
+                          text-align: center;
+                          box-sizing: border-box;
+                          width: 250px;
+                          height: 250px;
+                          min-width: 0;
+                
+                          display: flex;
+                          flex-direction: column;
+                          gap: 10px;
+                        }
+                
+                        .file img {
+                          width: 100%;
+                          object-fit: cover;  // contain
+                          flex-grow: 1;
+                          flex-shrink: 1;
+                          min-height: 0;
+                          border-radius: 16px;
+                          max-height: 132px;
+                          display: block;
+                          margin: auto;
+                        }
+                        .file img.icon {
+                          object-fit: contain;
+                          max-height: 100px;
+                        }
+                
+                        .image-wrapper {
+                          flex-grow: 1;      /* Nimmt den gesamten Platz über dem Text ein */
+                          display: flex;
+                          align-items: center;    /* Zentriert vertikal */
+                          justify-content: center; /* Zentriert horizontal */
+                          overflow: hidden;
+                          margin-bottom: 10px;
+                        }
+                
+                        .file span.filename {
+                          margin-top: auto;
+                          font-weight: bold;
+                        }
+                
+                        .file span {
+                          display: block;
+                          font-size: 0.8rem;
+                          width: 100%;
+                          white-space: nowrap;
+                          overflow: hidden;
+                          text-overflow: ellipsis;
+                          flex-grow: 0;
+                          flex-shrink: 0;
+                        }
+                        """.trimIndent()
+                    }
                 }
             }
+
             body {
                 h1 { +"File Listing" }
-                files.forEach { file ->
-                    val filename = file.name.encodeURLPathPart()
-                    div ("file") {
-                        span { +file.name }
+                a(href = "/$token/download") {
+                    button { +"Download All (as ZIP)" }
+                }
+                div ("container") {
+                    files.forEach { file ->
+                        val fileId = file.id.encodeURLPathPart()
+                        div("file") {
+                            div("image-wrapper") {
+                                val hasThumbnail = file.filePreview != null
+                                val imgSrc = if (file.filePreview != null) "/$token/thumbnail/$fileId"
+                                    else "/$token/icon/${file.iconFile.encodeURLPathPart()}"
+                                img(
+                                    src = imgSrc,
+                                    classes = if (!hasThumbnail) "icon" else ""
+                                )
+                            }
+                            span("filename") { +file.name }
 
-                        a(href = "/$token/download/${filename}") {
-                            button { +"Download" }
-                        }
+                            span {
+                                a(href = "/$token/download/${fileId}") {
+                                    button { +"Download" }
+                                }
 
-                        a(href = "/$token/stream/${filename}") {
-                            button { +"Stream" }
+                                a(href = "/$token/stream/${fileId}") {
+                                    button { +"Open" }
+                                }
+                            }
                         }
                     }
                 }
-                a(href = "/$token/download") {
-                    button { +"Download All" }
-                }
+
             }
         }
     }
 
+    private fun verifyRequest(call: RoutingCall): Boolean {
+        val state = ServerRepository.state.value
+        val token = call.parameters["token"]
+        val clientIp = call.request.local.remoteHost
+
+        if (state.bannedIps.contains(clientIp)) {
+            return false
+        }
+        if (token != state.token) {
+            Log.d("FileServerService", "Invalid token: ${call.parameters["token"]}")
+            return false
+        }
+        return true
+    }
+
     private fun startHttpServer() {
         if (server == null) {
-            server = embeddedServer(Netty, port = 8080) {
+            server = embeddedServer(Netty, port = 8080, ServerRepository.state.value.selectedIp) {
                 install(io.ktor.server.plugins.partialcontent.PartialContent)
                 routing {
-                    get("/{token}/{action}/{filename?}") {
+                    get("/{token}/favicon") {
+                        if (!verifyRequest(call)) {
+                            return@get call.respondText("No Access.", status = io.ktor.http.HttpStatusCode.Forbidden)
+                        }
+                        try {
+                            // App-Icon laden und direkt als PNG in den Stream schreiben
+                            val drawable = packageManager.getApplicationIcon(packageName)
+                            call.respondOutputStream(ContentType.Image.PNG) {
+                                // toBitmap(128, 128) sorgt für eine feste, browserfreundliche Größe
+                                drawable.toBitmap(128, 128).compress(android.graphics.Bitmap.CompressFormat.PNG, 100, this)
+                            }
+                        } catch (e: Exception) {
+                            call.respond(HttpStatusCode.InternalServerError)
+                        }
+                    }
+                    get("/{token}/thumbnail/{file}") {
+                        if (!verifyRequest(call)) {
+                            return@get call.respondText("No Access.", status = io.ktor.http.HttpStatusCode.Forbidden)
+                        }
+
+                        val state = ServerRepository.state.value
+                        val requestedFile = call.parameters["file"]
+
+                        val fileInfo = state.fileList.find { it.id == requestedFile }
+                        if (fileInfo == null) {
+                            return@get call.respondText("File not found.\n", status = io.ktor.http.HttpStatusCode.NotFound)
+                        }
+
+                        val thumbnail = fileInfo.filePreview
+                        if (thumbnail == null) {
+                            return@get call.respondText(
+                                "No thumbnail found.\n",
+                                status = io.ktor.http.HttpStatusCode.NotFound
+                            )
+                        }
+                        val stream = java.io.ByteArrayOutputStream()
+                        thumbnail.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, stream)
+                        call.respondBytes(stream.toByteArray(), ContentType.Image.PNG)
+                    }
+
+                    get("/{token}/icon/{icon}") {
+                        if (!verifyRequest(call)) {
+                            return@get call.respondText("No Access.", status = HttpStatusCode.Forbidden)
+                        }
+
+                        val iconName = call.parameters["icon"]
+                        try {
+                            val assetStream = this@FileServerService.assets.open("fileicons/$iconName")
+
+                            call.respondBytes(
+                                contentType = ContentType.parse("image/svg+xml")
+                            ) {
+                                assetStream.use { it.readBytes() }
+                            }
+                        } catch (e: Exception) {
+                            call.respond(HttpStatusCode.NotFound)
+                        }
+                    }
+
+                    get("/{token}/{action}/{file?}") {
                         val state = ServerRepository.state.value
 
                         val token = call.parameters["token"]
                         val action = call.parameters["action"]
-                        val requestedFilename = call.parameters["filename"]
+                        val requestedFile = call.parameters["file"]
                         val clientIp = call.request.local.remoteHost
 
                         //  1. validate
-                        if (state.bannedIps.contains(clientIp)) {
-                            return@get call.respondText("Your IP is banned.", status = io.ktor.http.HttpStatusCode.Forbidden)
-                        }
-                        if (token != ServerRepository.getToken()) {
-                            Log.d("FileServerService", "Invalid token: ${call.parameters["token"]}")
-                            return@get call.respondText("No Access\n", status = io.ktor.http.HttpStatusCode.Forbidden)
+                        if (!verifyRequest(call)) {
+                            return@get call.respondText("No Access.", status = io.ktor.http.HttpStatusCode.Forbidden)
                         }
 
                         if (action != "download" && action != "stream") {
@@ -344,8 +465,8 @@ class FileServerService : Service() {
                         //  2. single file or zip
 
                         //  2.1
-                        if (requestedFilename != null || state.fileList.size == 1) {
-                            val fileInfo = if (requestedFilename != null) state.fileList.find { it.name == requestedFilename } else state.fileList[0]
+                        if (requestedFile != null || state.fileList.size == 1) {
+                            val fileInfo = if (requestedFile != null) state.fileList.find { it.id == requestedFile } else state.fileList[0]
                             if (fileInfo == null) {
                                 return@get call.respondText("File not found.", status = io.ktor.http.HttpStatusCode.NotFound)
                             }
@@ -358,7 +479,8 @@ class FileServerService : Service() {
                             return@get sendZip(call, state.fileList, clientIp)
                         }
                         else {
-                            return@get sendFileListing(call, state.fileList, clientIp, token)
+                            val token = call.parameters["token"]!!
+                            return@get sendFileListing(call, state.fileList, token)
                         }
                     }
                     get("/{token}") {
@@ -381,7 +503,6 @@ class FileServerService : Service() {
     }
 
     override fun onDestroy() {
-        connectivityManager.unregisterNetworkCallback(networkCallback)
         stopHttpServer()
         super.onDestroy()
     }

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared Files</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        button { margin-left: 10px; }
+
+        .container {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .file {
+          flex: none;
+          background-color: #f0f0f0;
+          padding: 20px;
+          border: 1px solid #ccc;
+          text-align: center;
+          box-sizing: border-box;
+          width: 250px;
+          height: 250px;
+          min-width: 0;
+
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .file img {
+          width: 100%;
+          object-fit: cover;  // contain
+          flex-grow: 1;
+          min-height: 0;
+          border-radius: 16px;
+          max-height: 150px;
+          display: block;
+        }
+
+        .image-wrapper {
+          flex-grow: 1;      /* Nimmt den gesamten Platz über dem Text ein */
+          display: flex;
+          align-items: center;    /* Zentriert vertikal */
+          justify-content: center; /* Zentriert horizontal */
+          overflow: hidden;
+          margin-bottom: 10px;
+        }
+
+        .file span.filename {
+          margin-top: auto;
+          font-weight: bold;
+        }
+
+        .file span {
+          display: block;
+          font-size: 12px;
+          width: 100%;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          flex-grow: 0;
+          flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Shared Files</h1>
+    <noscript>
+        <!-- PLACEHOLDER-NOSCRIPT -->
+    </noscript>
+    <div class="container">
+        <div class="file"><div class="image-wrapper"><img src="https://img.freepik.com/premium-vector/profile-icon-vector-image-can-be-used-ui_120816-260932.jpg?semt=ais_incoming&w=740&q=80"></div><span class="filename">20260330_102433.jpg</span><span><a href="/4444/download/e12b70f2"><button>Download</button></a><a href="/4444/stream/e12b70f2"><button>Stream</button></a></span></div>
+        <div class="file"><div class="image-wrapper"><img src="https://t3.ftcdn.net/jpg/14/84/74/60/360_F_1484746003_mdEwZle9nXcosssxVwKjFVKd0bL0SM4A.jpg"></div><span class="filename">20260330_102357.jpg</span><span><a href="/4444/download/e12b70dc"><button>Download</button></a><a href="/4444/stream/e12b70dc"><button>Stream</button></a></span></div>
+        <div class="file"><div class="image-wrapper"><img src="https://www.schmidhuber.de/wp-content/uploads/2022/02/placeholder-16.png"></div><span class="filename">20260330_102343.jpg</span><span><a href="/4444/download/e12b70db"><button>Download</button></a><a href="/4444/stream/e12b70db"><button>Stream</button></a></span></div>
+        <div class="file"><div class="image-wrapper"><img src="https://www.schmidhuber.de/wp-content/uploads/2022/02/placeholder-16.png"></div><span class="filename">20260330_102440.jpg</span><span><a href="/4444/download/e12b70f3"><button>Download</button></a><a href="/4444/stream/e12b70f3"><button>Stream</button></a></span></div>
+        <div class="file"><div class="image-wrapper"><img src="https://t3.ftcdn.net/jpg/14/84/74/60/360_F_1484746003_mdEwZle9nXcosssxVwKjFVKd0bL0SM4A.jpg"></div><span class="filename">IMG-20260326-WA0004.jpg</span><span><a href="/4444/download/e12b705c"><button>Download</button></a><a href="/4444/stream/e12b705c"><button>Stream</button></a></span></div>
+        <div class="file"><div class="image-wrapper"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRFQLq_zxU1kYiJ1If0mU0oITrego5NQa07hw&s"></div><span class="filename">IMG-20260326-WA0001.jpg</span><span><a href="/4444/download/e12b7040"><button>Download</button></a><a href="/4444/stream/e12b7040"><button>Stream</button></a></span></div>
+        <div class="file"><span class="filename">LM (ATV) - 1.0.4.apk</span><span><a href="/4444/download/5417747d"><button>Download</button></a><a href="/4444/stream/5417747d"><button>Stream</button></a></span></div>
+        <div class="file"><div class="image-wrapper"><img src="https://www.schmidhuber.de/wp-content/uploads/2022/02/placeholder-16.png"></div><span class="filename">IMG-20260325-WA0000.jpg</span><span><a href="/4444/download/e12b6d55"><button>Download</button></a><a href="/4444/stream/e12b6d55"><button>Stream</button></a></span></div>
+        <div class="file"><span class="filename">streamflix-v1.7.107-only-mobile.apk</span><span><a href="/4444/download/54177476"><button>Download</button></a><a href="/4444/stream/54177476"><button>Stream</button></a></span></div>
+        <div class="file"><span class="filename">streamflix-v1.7.107-only-tv.apk</span><span><a href="/4444/download/54177477"><button>Download</button></a><a href="/4444/stream/54177477"><button>Stream</button></a></span></div>
+    </div>
+</body>
+</html>

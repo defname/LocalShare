@@ -10,6 +10,7 @@ activityCompose = "1.13.0"
 composeBom = "2026.03.01"
 ktorServerCore = "3.4.2"
 zxing = "3.5.3"
+coil = "2.6.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -33,6 +34,9 @@ ktor-server-host-common = { group = "io.ktor", name = "ktor-server-host-common",
 ktor-server-partialcontent = { group = "io.ktor", name = "ktor-server-partial-content", version.ref = "ktorServerCore" }
 ktor-server-html-builder = { group = "io.ktor", name = "ktor-server-html-builder", version.ref = "ktorServerCore" }
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+coil-svg = { group = "io.coil-kt", name = "coil-svg", version.ref = "coil" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

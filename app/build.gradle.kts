@@ -69,6 +69,8 @@ dependencies {
     implementation(libs.ktor.server.partialcontent)
     implementation(libs.ktor.server.html.builder)
     implementation(libs.zxing.core)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.svg)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -77,4 +79,25 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+
+val generateIconMapping = tasks.register<Exec>("generateIconMapping") {
+    group = "build setup"
+    description = "Generate Kotlin file for the icon mapping."
+
+    // path to the script
+    commandLine("python3", "${rootProject.projectDir}/buildScripts/generate_icon_mapping.py")
+
+    // specify working directory
+    // workingDir = File("${rootProject.projectDir}")
+
+    // error handling
+    doFirst {
+        println("Start generating icon mapping...")
+    }
+}
+
+// add task to Android build process
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
+    dependsOn(generateIconMapping)
 }
