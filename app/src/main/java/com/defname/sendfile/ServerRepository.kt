@@ -2,28 +2,40 @@ package com.defname.sendfile
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Build
 import android.util.Log
-import android.util.Size
-import android.webkit.MimeTypeMap
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.util.UUID
 
+data class LogEntry (
+    val timestamp: Long = System.currentTimeMillis(),
+    val method: String,
+    val path: String,
+    val status: Int,
+    val clientIp: String
+)
 
+data class ConnectionRequest(
+    val id: String = UUID.randomUUID().toString(),
+    val clientIp: String,
+    val deferred: CompletableDeferred<Boolean> = CompletableDeferred()
+)
 
 data class ServerState(
     val fileList: List<FileInfo> = emptyList(),
     val token: String = UUID.randomUUID().toString(),
     val isRunning: Boolean = false,
     val activeClients: List<String> = emptyList(),
-    val bannedIps: Set<String> = emptySet(),
+    val blacklist: Set<String> = emptySet(),
+    val whitelist: Set<String> = emptySet(),
     val localIpAddresses: List<NetworkInfo> = emptyList(),
-    val selectedIp: String = "0.0.0.0"
+    val selectedIp: String = "0.0.0.0",
+    val logs: List<LogEntry> = emptyList(),
+    val pendingRequests: List<ConnectionRequest> = emptyList()
 )
 
 object ServerRepository {
@@ -69,6 +81,16 @@ object ServerRepository {
         _state.update { it.copy(token = UUID.randomUUID().toString()) }
     }
 
+    fun addLog(entry: LogEntry) {
+        Log.d("ServerRepository", "Adding log: $entry")
+        _state.update { it.copy(logs = it.logs + entry) }
+    }
+
+    fun clearLogs() {
+        _state.update { it.copy(logs = emptyList()) }
+    }
+
+
     fun startServer(context: Context) {
         val intent = Intent(context, FileServerService::class.java).apply {
             action = "START_SERVER"
@@ -108,21 +130,78 @@ object ServerRepository {
         Log.d("ServerRepository", "Client disconnected: $ip")
     }
 
-    fun banIp(ip: String) {
-        _state.update { it.copy(bannedIps = it.bannedIps + ip) }
-        Log.d("ServerRepository", "IP banned: $ip")
+    fun addToBlacklist(ip: String) {
+        removeFromWhitelist(ip)
+        _state.update { it.copy(blacklist = it.blacklist + ip) }
+        Log.d("ServerRepository", "add to blacklist $ip")
     }
 
-    fun unbanIp(ip: String) {
+    fun removeFromBlacklist(ip: String) {
         _state.update {
-            val newList = it.bannedIps.toMutableSet()
+            val newList = it.blacklist.toMutableSet()
             newList.remove(ip)
-            it.copy(bannedIps = newList)
+            it.copy(blacklist = newList)
         }
-        Log.d("ServerRepository", "IP unbanned: $ip")
+        Log.d("ServerRepository", "remove from blacklist $ip")
+    }
+
+    fun isBlacklisted(ip: String): Boolean {
+        return _state.value.blacklist.contains(ip)
+    }
+
+    fun addToWhitelist(ip: String) {
+        removeFromBlacklist(ip)
+        _state.update { it.copy(whitelist = it.whitelist + ip) }
+        Log.d("ServerRepository", "add to whitelist $ip")
+    }
+
+    fun removeFromWhitelist(ip: String) {
+        _state.update {
+            val newList = it.whitelist.toMutableSet()
+            newList.remove(ip)
+            it.copy(whitelist = newList)
+        }
+        Log.d("ServerRepository", "remove from whitelist $ip")
+    }
+
+    fun isWhitelisted(ip: String): Boolean {
+        return _state.value.whitelist.contains(ip)
     }
 
     fun updateLocalIpAddresses() {
         _state.update { it.copy(localIpAddresses = getLocalIpAddresses()) }
+    }
+
+    fun askForPermission(clientIp: String): CompletableDeferred<Boolean> {
+        val request = ConnectionRequest(clientIp = clientIp)
+        _state.update { it.copy(pendingRequests = it.pendingRequests + request) }
+        return request.deferred
+    }
+
+    fun approvaRequestIp(ip: String, approved: Boolean) {
+        val request = _state.value.pendingRequests.find { it.clientIp == ip }
+        if (request != null) {
+            approveRequest(request.id, approved)
+        }
+    }
+
+    fun approveRequest(clientIp: String, approved: Boolean) {
+        val request = _state.value.pendingRequests.find { it.clientIp == clientIp }
+
+        if (request != null) {
+            request.deferred.complete(approved)
+            if (approved) {
+                addToWhitelist(clientIp)
+            }
+            else {
+                addToBlacklist(clientIp)
+            }
+            // Aus den ausstehenden Anfragen entfernen
+            _state.update { it.copy(pendingRequests = it.pendingRequests.filter { it.clientIp != clientIp }) }
+        } else {
+            Log.e("ServerRepository", "No pending request found for IP: $clientIp")
+            // Falls approved, trotzdem whitelisten (Sicherheitsnetz)
+            if (approved) addToWhitelist(clientIp)
+        }
     }
 }

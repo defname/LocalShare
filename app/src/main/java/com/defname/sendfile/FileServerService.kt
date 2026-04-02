@@ -2,6 +2,7 @@ package com.defname.sendfile
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.os.Build
@@ -15,11 +16,15 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.OutgoingContent
 import io.ktor.http.encodeURLPathPart
 import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.ApplicationCallPipeline
+import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.html.respondHtml
 import io.ktor.server.netty.Netty
+import io.ktor.server.request.httpMethod
+import io.ktor.server.request.uri
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytes
@@ -35,7 +40,9 @@ import io.ktor.utils.io.CancellationException
 import io.ktor.utils.io.jvm.javaio.toOutputStream
 import io.ktor.utils.io.writeFully
 import io.ktor.utils.io.writer
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withTimeout
 import kotlinx.html.a
 import kotlinx.html.body
 import kotlinx.html.button
@@ -75,41 +82,55 @@ class FileServerService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.action == "START_SERVER") {
-            val stopIntent = Intent(this, FileServerService::class.java).apply {
-                action = "STOP_SERVER"
-            }
+        when (intent?.action) {
+            "START_SERVER" -> {
+                val stopIntent = Intent(this, FileServerService::class.java).apply {
+                    action = "STOP_SERVER"
+                }
 
-            val deletePendingIntent = android.app.PendingIntent.getService(
-                this,
-                1,
-                stopIntent,
-                android.app.PendingIntent.FLAG_IMMUTABLE
-            )
-
-            // Notification bauen
-            val notification = NotificationCompat.Builder(this, "my_channel_id")
-                .setContentTitle("Sharing Files...")
-                .setContentText("Server is running.")
-                .setSmallIcon(R.drawable.ic_launcher_foreground) // Teste mal ein Standard-Icon
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setOngoing(true) // Verhindert das Wegwischen durch den User
-                .setDeleteIntent(deletePendingIntent)
-                .addAction(
-                    android.R.drawable.ic_menu_close_clear_cancel,
-                    "Stop Server",
-                    deletePendingIntent
+                val deletePendingIntent = android.app.PendingIntent.getService(
+                    this,
+                    1,
+                    stopIntent,
+                    android.app.PendingIntent.FLAG_IMMUTABLE
                 )
-                .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
-                .build()
 
-            startForeground(1, notification)
+                // Notification bauen
+                val notification = NotificationCompat.Builder(this, "my_channel_id")
+                    .setContentTitle("Sharing Files...")
+                    .setContentText("Server is running.")
+                    .setSmallIcon(R.drawable.ic_launcher_foreground) // Teste mal ein Standard-Icon
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setOngoing(true) // Verhindert das Wegwischen durch den User
+                    .setDeleteIntent(deletePendingIntent)
+                    .addAction(
+                        android.R.drawable.ic_menu_close_clear_cancel,
+                        "Stop Server",
+                        deletePendingIntent
+                    )
+                    .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
+                    .build()
 
-            startHttpServer()
-        } else if (intent?.action == "STOP_SERVER") {
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            stopSelf()
+                startForeground(1, notification)
+
+                startHttpServer()
+            }
+            "STOP_SERVER" -> {
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                stopSelf()
+            }
+            "APPROVE_IP" -> {
+                val ip = intent.getStringExtra("client_ip") ?: ""
+                ServerRepository.approveRequest(ip, true)
+                cancelApprovalNotification(ip)
+            }
+            "DENY_IP" -> {
+                val ip = intent.getStringExtra("client_ip") ?: ""
+                ServerRepository.approveRequest(ip, false)
+                cancelApprovalNotification(ip)
+            }
         }
+
         return START_NOT_STICKY
     }
 
@@ -152,7 +173,7 @@ class FileServerService : Service() {
 
                                 while (input.read(buffer).also { bytesRead = it } != -1) {
                                     // WICHTIG: Hier prüfen wir bei jedem Buffer-Durchgang den Ban-Status
-                                    if (ServerRepository.state.value.bannedIps.contains(clientIp)) {
+                                    if (ServerRepository.state.value.blacklist.contains(clientIp)) {
                                         Log.d("FileServerService", "Abort download: Client $clientIp was banned.")
                                         // Wir werfen eine Exception, um den Ktor-Channel hart zu schließen
                                         throw CancellationException("Client banned")
@@ -199,7 +220,7 @@ class FileServerService : Service() {
                 val zip = ZipOutputStream(this.toOutputStream())
 
                 for (fileInfo in files) {
-                    if (ServerRepository.state.value.bannedIps.contains(clientIp)) {
+                    if (ServerRepository.state.value.blacklist.contains(clientIp)) {
                         Log.d("FileServerService", "Stopping ZIP: Client $clientIp was banned.")
                         break // Schleife abbrechen
                     }
@@ -217,7 +238,7 @@ class FileServerService : Service() {
                             var read: Int
                             while (input.read(buffer).also { read = it } != -1) {
                                 // 3. Check wÄhrend des Kopierens der aktuellen Datei
-                                if (ServerRepository.state.value.bannedIps.contains(clientIp)) {
+                                if (ServerRepository.state.value.blacklist.contains(clientIp)) {
                                     throw CancellationException("Client banned during file streaming")
                                 }
                                 zip.write(buffer, 0, read)
@@ -362,26 +383,118 @@ class FileServerService : Service() {
         }
     }
 
-    private fun verifyRequest(call: RoutingCall): Boolean {
+    private fun showApprovalNotification(clientIp: String) {
+        val approveIntent = Intent(this, FileServerService::class.java).apply {
+            action = "APPROVE_IP"
+            putExtra("client_ip", clientIp)
+        }
+        val approvePendingIntent = PendingIntent.getService(
+            this,
+            clientIp.hashCode(),
+            approveIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val denyIntent = Intent(
+            this,
+            FileServerService::class.java
+        ).apply {
+            action = "DENY_IP"
+            putExtra("client_ip", clientIp)
+        }
+        val denyPendingIntent = PendingIntent.getService(
+            this,
+            clientIp.hashCode() + 1,
+            denyIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val notification = NotificationCompat.Builder(this, "my_channel_id")
+            .setContentTitle("Verbindungsanfrage")
+            .setContentText("Gerät $clientIp möchte Dateien laden.")
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .addAction(android.R.drawable.ic_menu_add, "Erlauben", approvePendingIntent)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Blockieren", denyPendingIntent)
+            .setAutoCancel(true)
+            .build()
+
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(1001 + clientIp.hashCode(), notification)
+    }
+
+    private suspend fun verifyRequest(call: RoutingCall): Boolean {
         val state = ServerRepository.state.value
         val token = call.parameters["token"]
         val clientIp = call.request.local.remoteHost
 
-        if (state.bannedIps.contains(clientIp)) {
+        if (ServerRepository.isBlacklisted(clientIp)) {
             return false
         }
         if (token != state.token) {
             Log.d("FileServerService", "Invalid token: ${call.parameters["token"]}")
             return false
         }
-        return true
+        if (ServerRepository.isWhitelisted(clientIp)) {
+            return true
+        }
+        return try {
+            withTimeout(30000) { // 30 Sek Zeit zum Bestätigen
+                val deferred = ServerRepository.askForPermission(clientIp)
+                showApprovalNotification(clientIp) // Notification zeigen
+                deferred.await() // Warten auf User-Eingabe
+            }
+        } catch (e: Exception) {
+            false // Timeout oder Fehler -> Kein Zugriff
+        }
+    }
+
+    private fun cancelApprovalNotification(clientIp: String) {
+        val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        // WICHTIG: Die ID muss exakt mit der in showApprovalNotification übereinstimmen (1001 + hashCode)
+        nm.cancel(1001 + clientIp.hashCode())
+    }
+
+    private suspend fun waitForApproval(clientIp: String): Boolean {
+        if (ServerRepository.isWhitelisted(clientIp)) return true
+
+        val deferred = ServerRepository.askForPermission(clientIp)
+
+        // Benachrichtigung mit "Zulassen" / "Ablehnen" senden
+        showApprovalNotification(clientIp)
+
+        return try {
+            // Timeout nach 30 Sekunden, falls der User nicht reagiert
+            withTimeout(30000) {
+                deferred.await()
+            }
+        } catch (e: Exception) {
+            false // Timeout führt zur Ablehnung
+        } finally {
+            cancelApprovalNotification(clientIp)
+        }
     }
 
     private fun startHttpServer() {
         if (server == null) {
             server = embeddedServer(Netty, port = 8080, ServerRepository.state.value.selectedIp) {
                 install(io.ktor.server.plugins.partialcontent.PartialContent)
+
+                intercept(ApplicationCallPipeline.Monitoring) {
+                    proceed()
+                    val entry = LogEntry(
+                        method = call.request.httpMethod.value,
+                        path = call.request.uri,
+                        status = call.response.status()?.value ?: 0,
+                        clientIp = call.request.local.remoteHost
+                    )
+                    ServerRepository.addLog(entry)
+                }
+
                 routing {
+                    get("/favicon.ico") {
+                        return@get call.respond(HttpStatusCode.NoContent)
+                    }
                     get("/{token}/favicon") {
                         if (!verifyRequest(call)) {
                             return@get call.respondText("No Access.", status = io.ktor.http.HttpStatusCode.Forbidden)

@@ -8,7 +8,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.format.Formatter
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -18,7 +17,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,45 +35,35 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Stream
 import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
@@ -91,15 +79,14 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.IntentCompat
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
-import org.eclipse.jetty.alpn.ALPN
 
 class MainActivity : ComponentActivity() {
 
@@ -393,6 +380,102 @@ fun IpAddressSelector() {
 }
 
 @Composable
+fun LogList(maxEntries: Int = 0) {
+    val state by ServerRepository.state.collectAsState()
+    var dropDownIdx by remember { mutableStateOf<Int>(-1) }
+
+    val logsToShow = if (maxEntries > 0) {
+        state.logs.reversed().take(maxEntries)
+    } else {
+        state.logs.reversed()
+    }
+
+    Column {
+        logsToShow.forEachIndexed { idx, log ->
+            Box {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp, 4.dp)
+                        .combinedClickable(
+                            onClick = { },
+                            onLongClick = { dropDownIdx = idx }
+                        )
+                ) {
+                    Text("${log.status}", color = if (log.status >= 400) Color.Red else Color.Green)
+                    Spacer(Modifier.width(8.dp))
+                    Text(log.method)
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        log.path,
+                        modifier = Modifier.weight(1f),
+                        //style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.StartEllipsis
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        log.clientIp,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (ServerRepository.isBlacklisted(log.clientIp)) Color.Red else if (ServerRepository.isWhitelisted(log.clientIp)) Color.Green else MaterialTheme.colorScheme.outline
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = dropDownIdx == idx,
+                    onDismissRequest = { dropDownIdx = -1 }
+                ) {
+                    if (ServerRepository.isWhitelisted(log.clientIp)) {
+                        DropdownMenuItem(
+                            text = { Text("Remove ${log.clientIp} from whitelist") },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Block,
+                                    contentDescription = null,
+                                    //tint = Color.Red
+                                )
+                            },
+                            onClick = {
+                                ServerRepository.removeFromWhitelist(log.clientIp)
+                                dropDownIdx = -1
+                            }
+                        )
+                    }
+                    if (ServerRepository.isBlacklisted(log.clientIp)) {
+                        DropdownMenuItem(
+                            text = { Text("Remove ${log.clientIp} from blacklist") },
+                            leadingIcon = {
+                                Icon(Icons.Default.Undo, contentDescription = null, tint = Color.Green)
+                            },
+                            onClick = {
+                                ServerRepository.removeFromBlacklist(log.clientIp)
+                                dropDownIdx = -1
+                            }
+                        )
+                    }
+                    else {
+                        DropdownMenuItem(
+                            text = { Text("Add ${log.clientIp} to blacklist") },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Block,
+                                    contentDescription = null,
+                                    tint = Color.Red
+                                )
+                            },
+                            onClick = {
+                                ServerRepository.addToBlacklist(log.clientIp)
+                                dropDownIdx = -1
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun ServerControlScreen() {
     val state by ServerRepository.state.collectAsState()
     val context = LocalContext.current
@@ -446,10 +529,17 @@ fun ServerControlScreen() {
                     modifier = Modifier.weight(1f)
                 )
                 if (state.fileList.isNotEmpty()) {
-                    IconButton(
-                        onClick = { ServerRepository.clearFiles(); filesToDelete = emptySet() }
-                    ) {
-                        Icon(imageVector = Icons.Default.Clear, contentDescription = "Clear")
+                    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+                        IconButton(
+                            onClick = { ServerRepository.clearFiles(); filesToDelete = emptySet() },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = "Clear",
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -517,6 +607,31 @@ fun ServerControlScreen() {
 
             IpAddressSelector()
 
+            Spacer(modifier = Modifier.height(16.dp))
+            Row (verticalAlignment = Alignment.CenterVertically){
+                Text(
+                    "Logs",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.weight(1f)
+                )
+                if (state.logs.isNotEmpty()) {
+                    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+                        IconButton(
+                            onClick = { ServerRepository.clearLogs() },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = "Clear",
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            LogList(10)
 
             if (state.isRunning) {
 
@@ -548,7 +663,7 @@ fun ServerControlScreen() {
                                     .padding(start = 8.dp)
                             )
                             IconButton(
-                                onClick = { ServerRepository.banIp(ip) }
+                                onClick = { ServerRepository.addToBlacklist(ip) }
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Block,
@@ -560,18 +675,15 @@ fun ServerControlScreen() {
                     }
                 }
 
-
-
-
-                if (state.bannedIps.isNotEmpty()) {
+                if (state.blacklist.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        "Bans (${state.bannedIps.size})",
+                        "Bans (${state.blacklist.size})",
                         style = MaterialTheme.typography.headlineSmall,
                     )
 
-                    state.bannedIps.distinct().forEach { ip ->
+                    state.blacklist.distinct().forEach { ip ->
                         Row(
                             Modifier
                                 .padding(8.dp)
@@ -590,7 +702,7 @@ fun ServerControlScreen() {
                                     .padding(start = 8.dp)
                             )
                             IconButton(
-                                onClick = { ServerRepository.unbanIp(ip) }
+                                onClick = { ServerRepository.removeFromBlacklist(ip) }
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Undo,
