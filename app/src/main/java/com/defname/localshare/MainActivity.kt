@@ -1,4 +1,4 @@
-package com.defname.sendfile
+package com.defname.localshare
 
 import android.Manifest
 import android.content.Context
@@ -71,7 +71,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.defname.sendfile.ui.theme.SendFileTheme
+import com.defname.localshare.ui.theme.SendFileTheme
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {

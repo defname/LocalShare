@@ -5,13 +5,13 @@ plugins {
 }
 
 android {
-    namespace = "com.defname.sendfile"
+    namespace = "com.defname.localshare"
     compileSdk {
         version = release(36)
     }
 
     defaultConfig {
-        applicationId = "com.defname.sendfile"
+        applicationId = "com.defname.localshare"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
@@ -88,7 +88,7 @@ val generateIconMapping = tasks.register<Exec>("generateIconMapping") {
     description = "Generate Kotlin file for the icon mapping."
 
     // path to the script
-    commandLine("python3", "${rootProject.projectDir}/buildScripts/generate_icon_mapping.py")
+    commandLine("/usr/bin/python3", "${rootProject.projectDir}/buildScripts/generate_icon_mapping.py")
 
     // specify working directory
     // workingDir = File("${rootProject.projectDir}")

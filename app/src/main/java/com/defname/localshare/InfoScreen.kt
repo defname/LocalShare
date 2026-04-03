@@ -1,4 +1,4 @@
-package com.defname.sendfile
+package com.defname.localshare
 
 import android.content.pm.PackageManager
 import android.os.Build

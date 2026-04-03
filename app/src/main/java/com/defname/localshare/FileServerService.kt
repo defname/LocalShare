@@ -1,4 +1,4 @@
-package com.defname.sendfile
+package com.defname.localshare
 
 import android.app.NotificationChannel
 import android.app.NotificationManager

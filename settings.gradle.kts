@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "SendFile"
+rootProject.name = "LocalShare"
 include(":app")
  

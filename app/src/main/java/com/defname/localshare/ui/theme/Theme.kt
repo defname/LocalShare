@@ -1,4 +1,4 @@
-package com.defname.sendfile.ui.theme
+package com.defname.localshare.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

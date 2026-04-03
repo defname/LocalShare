@@ -1,4 +1,4 @@
-package com.defname.sendfile
+package com.defname.localshare
 
 import java.net.NetworkInterface
 

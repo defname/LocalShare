@@ -1,4 +1,4 @@
-package com.defname.sendfile.ui.theme
+package com.defname.localshare.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

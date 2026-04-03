@@ -1,4 +1,4 @@
-package com.defname.sendfile
+package com.defname.localshare
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer

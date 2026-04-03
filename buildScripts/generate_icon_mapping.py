@@ -10,7 +10,7 @@ ICON_SET_DIR = "papirus-icon-theme"
 RAW_ASSETS_DIR = BASE_DIR / "raw_assets/icons" / ICON_SET_DIR
 ICON_SOURCE_DIR = RAW_ASSETS_DIR / "Papirus/64x64/mimetypes"
 ASSETS_DEST_DIR = BASE_DIR / "app/src/main/assets/fileicons"
-KOTLIN_OUTPUT_FILE = BASE_DIR / "app/src/main/java/com/defname/sendfile/IconMap.kt"
+KOTLIN_OUTPUT_FILE = BASE_DIR / "app/src/main/java/com/defname/localshare/IconMap.kt"
 ZIP_TEMP_FILE = BASE_DIR / "icons_temp.zip"
 
 icons_copied = 0
@@ -79,7 +79,7 @@ def main():
 
     # ✨ Kotlin Datei generieren
     with open(KOTLIN_OUTPUT_FILE, "w", encoding="utf-8") as f:
-        f.write("package com.defname.sendfile\n\n")
+        f.write("package com.defname.localshare\n\n")
         f.write("/**\n * generated automatically by generate_icon_mapping.py\n */\n")
         f.write("object IconMap {\n")
         f.write("    val MAP = mapOf(\n")
