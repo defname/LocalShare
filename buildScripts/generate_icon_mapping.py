@@ -1,13 +1,35 @@
 import shutil
+import subprocess
+import os
 from pathlib import Path
 
 # Pfade relativ zum Skript-Speicherort definieren
+GIT_REPO_URL = "https://github.com/PapirusDevelopmentTeam/papirus-icon-theme"
 BASE_DIR = Path(__file__).parent.parent
-ICON_SOURCE_DIR = BASE_DIR / "raw_assets/icons/papirus-icon-theme/Papirus/64x64/mimetypes"
+ICON_SET_DIR = "papirus-icon-theme"
+RAW_ASSETS_DIR = BASE_DIR / "raw_assets/icons" / ICON_SET_DIR
+ICON_SOURCE_DIR = RAW_ASSETS_DIR / "Papirus/64x64/mimetypes"
 ASSETS_DEST_DIR = BASE_DIR / "app/src/main/assets/fileicons"
 KOTLIN_OUTPUT_FILE = BASE_DIR / "app/src/main/java/com/defname/sendfile/IconMap.kt"
+ZIP_TEMP_FILE = BASE_DIR / "icons_temp.zip"
 
 icons_copied = 0
+
+def download_icons():
+    if (RAW_ASSETS_DIR / ICON_SET_DIR).exists():
+        return
+
+    print(f"Icon Set not found. Downloading...")
+
+    try:
+        subprocess.run([
+            "git", "clone", "--depth", "1",
+            GIT_REPO_URL,
+            str(RAW_ASSETS_DIR)
+        ], check=True)
+        print("Download successful")
+    except Exception as e:
+        print(f"Error during git clone: {e}")
 
 def copy_icon_file(file):
     dst = ASSETS_DEST_DIR / file.name
@@ -37,10 +59,13 @@ def main():
         if not (file.is_file() or file.is_symlink) or not file.suffix == ".svg":
             continue
 
+        print(f"   - {file}")
+
         mime = file.stem  # z.B. "application-pdf"
 
         if file.is_symlink():
             linked_file = file.resolve()
+            print("         symlink -> " + str(linked_file))
             if not linked_file.is_file():
                 print(f"Linked file {linked_file} does not exist. Skipping")
                 continue
@@ -88,4 +113,5 @@ def main():
     print(f"   - Mapping in {KOTLIN_OUTPUT_FILE} mit ({len(icon_map)})generiert.")
 
 if __name__ == "__main__":
+    download_icons()
     main()
