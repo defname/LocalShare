@@ -6,10 +6,38 @@
     <title>{{appname}} - Shared Files</title>
     <link rel = "icon" type = "image/png" href = "/{{token}}/favicon">
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        a { text-decoration: none; }
-        a:hover { text-decoration: underline; }
+        :root {
+          color-scheme: light dark;
+          --background-color: light-dark(#fff, #222);
+          --background-color-alt: light-dark(#f0f0f0, #353535);
+          --color: light-dark(#000, #ccc);
+          --color-alt: light-dark(#000, #ccc);
+          --border-color: light-dark(#ccc, #000);
+          --button-text-color: light-dark(#000, #000);
+          --button-color: light-dark(#ccc, #858585);
 
+
+        }
+
+        body {
+          font-family: sans-serif;
+          padding: 20px;
+          background-color: var(--background-color);
+          color: var(--color);
+        }
+
+        a {
+          text-decoration: none;
+        }
+
+        a:hover {
+          text-decoration: underline;
+        }
+
+        select {
+          color: var(--button-text-color);
+          background-color: var(--button-color);
+        }
 
         header {
             display: flex;
@@ -17,6 +45,7 @@
             flex-direction: row;
             align-items: center;
             justify-content: left;
+            color: var(--color-alt);
         }
 
         footer {
@@ -27,10 +56,14 @@
         }
 
         header img {
-            max-width: 48px;
+            //width: 48px;
         }
 
-        button { margin-left: 10px; }
+        button {
+            color: var(--button-text-color);
+            background-color: var(--button-color);
+            border: 1px solid var(--border-color);
+        }
 
         .grid {
           display: flex;
@@ -40,9 +73,9 @@
 
         .grid .file {
           flex: none;
-          background-color: #f0f0f0;
+          background-color: var(--background-color-alt);
           padding: 20px;
-          border: 1px solid #ccc;
+          border: 1px solid var(--border-color);
           text-align: center;
           box-sizing: border-box;
           width: 250px;
@@ -106,14 +139,14 @@
         }
 
         .list .file {
-            background-color: #f0f0f0;
+            background-color: var(--background-color-alt);
             display: flex;
             flex-direction: row;
             gap: 10px;
             flex-grow: 0;
             flex-shrink: 0;
 
-            border: 1px solid #ccc;
+            border: 1px solid var(--border-color);
             padding: 10px;
         }
 
@@ -150,20 +183,19 @@
         }
 
         #toolbar {
-            border: 1px solid #ccc;
+            border: 1px solid var(--border-color);
             padding: 10px;
             display: flex;
             justify-content: space-between;
             flex-direction: row;
             align-items: center;
             margin-bottom: 24px;
-            background-color: #f0f0f0;
+            background-color: var(--background-color-alt);
         }
 
         #toolbar .buttons-container {
 
         }
-
     </style>
     <script lang="javascript">
         const fileItems = {{filelist}}
@@ -275,7 +307,7 @@
 </head>
 <body>
 <header>
-    <img src="/{{token}}/favicon" alt="Logo" />
+    <img src="/{{token}}/favicon/medium" alt="Logo" />
     <h1>{{appname}} - Shared Files</h1>
 </header>
 <div id="toolbar" hidden>

@@ -7,8 +7,10 @@ import android.app.Service
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -55,6 +57,8 @@ class FileServerService : Service() {
     private var server: EmbeddedServer<*,*>? = null
     private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var idleTimeoutJob: Job? = null
+    private var wakeLock: PowerManager.WakeLock? = null
+
 
     override fun onCreate() {
         super.onCreate()
@@ -63,7 +67,10 @@ class FileServerService : Service() {
 
         serviceScope.launch {
             ServerRepository.state.collect { state ->
+                updateWakeLock(state.keepScreenOn, state.isRunning)
+
                 if (state.isRunning) {
+
                     if (state.activeClients.isEmpty()) {
                         resetIdleTimer()
                     } else {
@@ -94,6 +101,30 @@ class FileServerService : Service() {
         }
     }
 
+    private fun updateWakeLock(keepScreenOn: Boolean, isRunning: Boolean) {
+        if (keepScreenOn && isRunning) {
+            if (wakeLock == null) {
+                val powerManager = getSystemService(POWER_SERVICE) as PowerManager
+                // SCREEN_BRIGHT_WAKE_LOCK hält das Display an
+                // ACQUIRE_CAUSES_WAKEUP schaltet es ggf. sogar ein
+                wakeLock = powerManager.newWakeLock(
+                    PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+                    "SendFile::KeepScreenOn"
+                )
+            }
+            if (wakeLock?.isHeld == false) {
+                wakeLock?.acquire()
+                Log.d("FileServerService", "WakeLock acquired: Display forced ON")
+            }
+        } else {
+            if (wakeLock?.isHeld == true) {
+                wakeLock?.release()
+                Log.d("FileServerService", "WakeLock released")
+            }
+            wakeLock = null
+        }
+    }
+
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -120,6 +151,19 @@ class FileServerService : Service() {
                     android.app.PendingIntent.FLAG_IMMUTABLE
                 )
 
+                val contentIntent = Intent(this, MainActivity::class.java).apply {
+                    // Stellt sicher, dass die App in den Vordergrund kommt, ohne neu zu starten
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                }
+
+                val contentPendingIntent = PendingIntent.getActivity(
+                    this,
+                    0,
+                    contentIntent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+
                 // Notification bauen
                 val notification = NotificationCompat.Builder(this, "my_channel_id")
                     .setContentTitle("Sharing Files...")
@@ -127,6 +171,7 @@ class FileServerService : Service() {
                     .setSmallIcon(R.drawable.ic_launcher_foreground) // Teste mal ein Standard-Icon
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setOngoing(true) // Verhindert das Wegwischen durch den User
+                    .setContentIntent(contentPendingIntent)
                     .setDeleteIntent(deletePendingIntent)
                     .addAction(
                         android.R.drawable.ic_menu_close_clear_cancel,
@@ -405,15 +450,10 @@ class FileServerService : Service() {
         if (ServerRepository.isWhitelisted(clientIp)) {
             return true
         }
-        return try {
-            withTimeout(30000) { // 30 Sek Zeit zum Bestätigen
-                val deferred = ServerRepository.askForPermission(clientIp)
-                showApprovalNotification(clientIp) // Notification zeigen
-                deferred.await() // Warten auf User-Eingabe
-            }
-        } catch (e: Exception) {
-            false // Timeout oder Fehler -> Kein Zugriff
+        if (!state.requireApproval) {
+            return true
         }
+        return waitForApproval(clientIp)
     }
 
     private fun cancelApprovalNotification(clientIp: String) {
@@ -463,16 +503,26 @@ class FileServerService : Service() {
                         call.response.header(HttpHeaders.CacheControl, "public, max-age=31536000, immutable")
                         return@get call.respond(HttpStatusCode.NoContent)
                     }
-                    get("/{token}/favicon") {
+                    get("/{token}/favicon/{size?}") {
                         if (!verifyRequest(call)) {
                             return@get call.respondText("No Access.", status = io.ktor.http.HttpStatusCode.Forbidden)
                         }
+                        val size = when (call.parameters["size"]) {
+                            "medium" -> 64
+                            "large" -> 128
+                            "huge" -> 512
+                            else -> 32
+                        }
                         try {
                             // App-Icon laden und direkt als PNG in den Stream schreiben
-                            val drawable = packageManager.getApplicationIcon(packageName)
+                            val drawable = ContextCompat.getDrawable(this@FileServerService, R.mipmap.ic_launcher)
+                            if (drawable == null) {
+                                return@get call.respond(HttpStatusCode.NotFound)
+                            }
+                            call.response.header(HttpHeaders.CacheControl, "public, max-age=31536000, immutable")
                             call.respondOutputStream(ContentType.Image.PNG) {
                                 // toBitmap(128, 128) sorgt für eine feste, browserfreundliche Größe
-                                drawable.toBitmap(48, 48).compress(android.graphics.Bitmap.CompressFormat.PNG, 100, this)
+                                drawable.toBitmap(size, size).compress(android.graphics.Bitmap.CompressFormat.PNG, 100, this)
                             }
                         } catch (e: Exception) {
                             call.respond(HttpStatusCode.InternalServerError)

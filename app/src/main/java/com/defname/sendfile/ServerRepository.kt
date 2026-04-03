@@ -27,19 +27,29 @@ data class ConnectionRequest(
     val deferred: CompletableDeferred<Boolean> = CompletableDeferred()
 )
 
+data class WhiteListEntry(
+    val ip: String,
+    val timestamp: Long = System.currentTimeMillis()
+)
+
 data class ServerState(
     val fileList: List<FileInfo> = emptyList(),
     val token: String = UUID.randomUUID().toString(),
     val isRunning: Boolean = false,
     val activeClients: List<String> = emptyList(),
     val blacklist: Set<String> = emptySet(),
-    val whitelist: Set<String> = emptySet(),
+    val whitelist: List<WhiteListEntry> = emptyList(),
+    val whiteListEntryTTLSeconds: Int = 60 * 60,
     val localIpAddresses: List<NetworkInfo> = emptyList(),
     val selectedIp: String = "0.0.0.0",
     val logs: List<LogEntry> = emptyList(),
     val pendingRequests: List<ConnectionRequest> = emptyList(),
     val port: Int = 8080,
-    val idleTimeoutSeconds: Int = 30
+    val idleTimeoutSeconds: Int = 300,
+    val requireApproval: Boolean = true,
+    val approvalTimeoutSeconds: Int = 30,
+    val keepScreenOn: Boolean = true,
+    val clearFileListOnSendIntent: Boolean = false
 )
 
 object ServerRepository {
@@ -61,7 +71,12 @@ object ServerRepository {
             token = sharedToken ?: UUID.randomUUID().toString(),
             selectedIp = _state.value.localIpAddresses.find { it.ip == sharedSelectedIp }?.ip ?: "0.0.0.0",
             port = _sharedPrefs.getInt("port", 8080),
-            idleTimeoutSeconds = _sharedPrefs.getInt("idleTimeoutSeconds", 30)
+            idleTimeoutSeconds = _sharedPrefs.getInt("idleTimeoutSeconds", 30),
+            requireApproval = _sharedPrefs.getBoolean("requireApproval", true),
+            keepScreenOn = _sharedPrefs.getBoolean("keepScreenOn", true),
+            whiteListEntryTTLSeconds = _sharedPrefs.getInt("whiteListEntryTTL", 60 * 60),
+            approvalTimeoutSeconds = _sharedPrefs.getInt("approvalTimeoutSeconds", 30),
+            clearFileListOnSendIntent = _sharedPrefs.getBoolean("clearFileListOnSendIntent", false)
         )}
     }
 
@@ -173,21 +188,38 @@ object ServerRepository {
 
     fun addToWhitelist(ip: String) {
         removeFromBlacklist(ip)
-        _state.update { it.copy(whitelist = it.whitelist + ip) }
+        _state.update { it.copy(whitelist = it.whitelist + WhiteListEntry(ip, System.currentTimeMillis())) }
         Log.d("ServerRepository", "add to whitelist $ip")
+        Log.d("ServerRepository", "whitelist: ${_state.value.whitelist}")
     }
 
     fun removeFromWhitelist(ip: String) {
         _state.update {
-            val newList = it.whitelist.toMutableSet()
-            newList.remove(ip)
-            it.copy(whitelist = newList)
+            it.copy(whitelist = it.whitelist.filter{ e -> e.ip != ip })
         }
         Log.d("ServerRepository", "remove from whitelist $ip")
     }
 
     fun isWhitelisted(ip: String): Boolean {
-        return _state.value.whitelist.contains(ip)
+        val entry = _state.value.whitelist.find{ e -> e.ip == ip }
+        if (entry == null) {
+            return false
+        }
+        if (entry.timestamp + _state.value.whiteListEntryTTLSeconds * 1000 < System.currentTimeMillis()) {
+            removeFromWhitelist(ip)
+            return false
+        }
+        return true
+    }
+
+    fun setWhiteListEntryTTLSeconds(seconds: Int) {
+        if (seconds < 0) {
+            return
+        }
+        _state.update { it.copy(whiteListEntryTTLSeconds = seconds) }
+        _sharedPrefs.edit {
+            putInt("whiteListEntryTTL", seconds)
+        }
     }
 
     fun updateLocalIpAddresses() {
@@ -238,12 +270,45 @@ object ServerRepository {
     }
 
     fun setPort(port: Int) {
-        if (port < 1 || port > 65535) {
+        if (port < 1024 || port > 65535) {
             return
         }
         _state.update { it.copy(port = port) }
         _sharedPrefs.edit {
             putInt("port", port)
         }
+    }
+
+    fun setRequireApproval(requireApproval: Boolean) {
+        _state.update { it.copy(requireApproval = requireApproval) }
+        _sharedPrefs.edit {
+            putBoolean("requireApproval", requireApproval)
+        }
+    }
+
+    fun setKeepScreenOn(keepScreenOn: Boolean) {
+        _state.update { it.copy(keepScreenOn = keepScreenOn) }
+        _sharedPrefs.edit {
+            putBoolean("keepScreenOn", keepScreenOn)
+        }
+    }
+
+    fun setClearFilesListOnSendIntent(clearFileListOnSendIntent: Boolean)    {
+        _state.update { it.copy(clearFileListOnSendIntent = clearFileListOnSendIntent) }
+        _sharedPrefs.edit {
+            putBoolean("clearFileListOnSendIntent", clearFileListOnSendIntent)
+        }
+    }
+
+    fun getServerAdress(fileId: String? = null, download: Boolean = false): String {
+        val s = _state.value
+        val displayIp = if (s.selectedIp == "0.0.0.0") {
+            getSmartDefaultIp(s.localIpAddresses)
+        } else s.selectedIp
+
+        val baseUrl = "http://${displayIp}:${s.port}/${s.token}"
+        val filePart = if (fileId != null) "/$fileId" else ""
+
+        return "$baseUrl/${if (download) "download" else "stream"}$filePart"
     }
 }
