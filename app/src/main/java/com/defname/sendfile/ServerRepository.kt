@@ -2,6 +2,7 @@ package com.defname.sendfile
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.net.Uri
 import android.util.Log
 import kotlinx.coroutines.CompletableDeferred
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.util.UUID
+import androidx.core.content.edit
 
 data class LogEntry (
     val timestamp: Long = System.currentTimeMillis(),
@@ -35,19 +37,38 @@ data class ServerState(
     val localIpAddresses: List<NetworkInfo> = emptyList(),
     val selectedIp: String = "0.0.0.0",
     val logs: List<LogEntry> = emptyList(),
-    val pendingRequests: List<ConnectionRequest> = emptyList()
+    val pendingRequests: List<ConnectionRequest> = emptyList(),
+    val port: Int = 8080,
+    val idleTimeoutSeconds: Int = 30
 )
 
 object ServerRepository {
     /** Private state flow for the UI to observe */
     private val _state = MutableStateFlow(ServerState())
+    private lateinit var _sharedPrefs: SharedPreferences
+
     /** Public state flow (read-only) */
     val state: StateFlow<ServerState> = _state.asStateFlow()  //< public state flow (readonly)
 
-    /* controlling functions for the UI */
+
+    fun init(context: Context) {
+        updateLocalIpAddresses()
+        _sharedPrefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val sharedToken = _sharedPrefs.getString("token", UUID.randomUUID().toString())
+        val sharedSelectedIp = _sharedPrefs.getString("selectedIp", "0.0.0.0")
+
+        _state.update{ it.copy(
+            token = sharedToken ?: UUID.randomUUID().toString(),
+            selectedIp = _state.value.localIpAddresses.find { it.ip == sharedSelectedIp }?.ip ?: "0.0.0.0",
+            port = _sharedPrefs.getInt("port", 8080),
+            idleTimeoutSeconds = _sharedPrefs.getInt("idleTimeoutSeconds", 30)
+        )}
+    }
 
     fun setSelectedIp(ip: String?) {
         _state.update { it.copy(selectedIp = ip ?: "0.0.0.0") }
+        _sharedPrefs.edit { putString("selectedIp", ip ?: "0.0.0.0") }
+
     }
 
     fun addFile(context: Context, uri: Uri) {
@@ -74,11 +95,12 @@ object ServerRepository {
     fun setToken(token: String) {
         if (token.isNotEmpty() && token.all { char -> char.isLetterOrDigit() || char == '-' || char == '_' }) {
             _state.update { it.copy(token = token) }
+            _sharedPrefs.edit { putString("token", token) }
         }
     }
 
     fun setRandomToken() {
-        _state.update { it.copy(token = UUID.randomUUID().toString()) }
+        setToken(UUID.randomUUID().toString())
     }
 
     fun addLog(entry: LogEntry) {
@@ -202,6 +224,26 @@ object ServerRepository {
             Log.e("ServerRepository", "No pending request found for IP: $clientIp")
             // Falls approved, trotzdem whitelisten (Sicherheitsnetz)
             if (approved) addToWhitelist(clientIp)
+        }
+    }
+
+    fun setIdleTimeoutSeconds(seconds: Int) {
+        if (seconds < 0) {
+            return
+        }
+        _state.update { it.copy(idleTimeoutSeconds = seconds) }
+        _sharedPrefs.edit {
+            putInt("idleTimeoutSeconds", seconds)
+        }
+    }
+
+    fun setPort(port: Int) {
+        if (port < 1 || port > 65535) {
+            return
+        }
+        _state.update { it.copy(port = port) }
+        _sharedPrefs.edit {
+            putInt("port", port)
         }
     }
 }

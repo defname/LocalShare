@@ -21,7 +21,6 @@ import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
-import io.ktor.server.html.respondHtml
 import io.ktor.server.netty.Netty
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.uri
@@ -40,33 +39,59 @@ import io.ktor.utils.io.CancellationException
 import io.ktor.utils.io.jvm.javaio.toOutputStream
 import io.ktor.utils.io.writeFully
 import io.ktor.utils.io.writer
-import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
-import kotlinx.html.a
-import kotlinx.html.body
-import kotlinx.html.button
-import kotlinx.html.div
-import kotlinx.html.h1
-import kotlinx.html.head
-import kotlinx.html.img
-import kotlinx.html.link
-import kotlinx.html.span
-import kotlinx.html.style
-import kotlinx.html.title
-import kotlinx.html.unsafe
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 
 class FileServerService : Service() {
-    var server: EmbeddedServer<*,*>? = null
+    private var server: EmbeddedServer<*,*>? = null
+    private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private var idleTimeoutJob: Job? = null
 
     override fun onCreate() {
         super.onCreate()
 
         createNotificationChannel()
-        ServerRepository.updateLocalIpAddresses()
+
+        serviceScope.launch {
+            ServerRepository.state.collect { state ->
+                if (state.isRunning) {
+                    if (state.activeClients.isEmpty()) {
+                        resetIdleTimer()
+                    } else {
+                        idleTimeoutJob?.cancel()
+                        idleTimeoutJob = null
+                    }
+                }
+            }
+        }
+    }
+
+    private fun resetIdleTimer() {
+        idleTimeoutJob?.cancel()
+        val state = ServerRepository.state.value
+        val timeoutMillis = state.idleTimeoutSeconds * 1000L
+
+        if (timeoutMillis <= 0L || !state.isRunning) {
+            return
+        }
+
+        idleTimeoutJob = serviceScope.launch {
+            delay(timeoutMillis)
+            if (ServerRepository.state.value.activeClients.isEmpty()) {
+                Log.d("FileServerService", "Stopping server due to idle timeout")
+                stopHttpServer()
+                stopSelf()
+            }
+        }
     }
 
     private fun createNotificationChannel() {
@@ -419,7 +444,7 @@ class FileServerService : Service() {
 
     private fun startHttpServer() {
         if (server == null) {
-            server = embeddedServer(Netty, port = 8080, ServerRepository.state.value.selectedIp) {
+            server = embeddedServer(Netty, port = ServerRepository.state.value.port, ServerRepository.state.value.selectedIp) {
                 install(io.ktor.server.plugins.partialcontent.PartialContent)
 
                 intercept(ApplicationCallPipeline.Monitoring) {
@@ -435,6 +460,7 @@ class FileServerService : Service() {
 
                 routing {
                     get("/favicon.ico") {
+                        call.response.header(HttpHeaders.CacheControl, "public, max-age=31536000, immutable")
                         return@get call.respond(HttpStatusCode.NoContent)
                     }
                     get("/{token}/favicon") {
@@ -558,6 +584,7 @@ class FileServerService : Service() {
     }
 
     override fun onDestroy() {
+        serviceScope.cancel()
         stopHttpServer()
         super.onDestroy()
     }

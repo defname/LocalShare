@@ -103,7 +103,7 @@ class MainActivity : ComponentActivity() {
             onNewIntent(intent)
         }
 
-        ServerRepository.updateLocalIpAddresses()
+        ServerRepository.init(applicationContext)
 
         enableEdgeToEdge()
         setContent {
