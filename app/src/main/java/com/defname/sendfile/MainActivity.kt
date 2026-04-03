@@ -115,13 +115,16 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onNewIntent(intent: Intent) {
-
         super.onNewIntent(intent)
+
+        setIntent(intent)
+
         if (intent.action == Intent.ACTION_SEND || intent.action == Intent.ACTION_SEND_MULTIPLE) {
             if (ServerRepository.state.value.clearFileListOnSendIntent) {
                 ServerRepository.clearFiles()
             }
         }
+
         if (intent.action == Intent.ACTION_SEND) {
             if (intent.hasExtra(Intent.EXTRA_STREAM)) {
                 val uri = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
