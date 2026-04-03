@@ -269,117 +269,59 @@ class FileServerService : Service() {
         files: List<FileInfo>,
         token: String
     ) {
-        return call.respondHtml {
-            head {
-                title { +"File Listing" }
-                link (rel = "icon", type = "image/png", href = "/$token/favicon")
-                style {
-                    unsafe {
-                        +"""
-                        body { font-family: sans-serif; padding: 20px; }
-                        button { margin-left: 10px; }
-                
-                        .container {
-                          display: flex;
-                          gap: 10px;
-                          flex-wrap: wrap;
-                        }
-                
-                        .file {
-                          flex: none;
-                          background-color: #f0f0f0;
-                          padding: 20px;
-                          border: 1px solid #ccc;
-                          text-align: center;
-                          box-sizing: border-box;
-                          width: 250px;
-                          height: 250px;
-                          min-width: 0;
-                
-                          display: flex;
-                          flex-direction: column;
-                          gap: 10px;
-                        }
-                
-                        .file img {
-                          width: 100%;
-                          object-fit: cover;  // contain
-                          flex-grow: 1;
-                          flex-shrink: 1;
-                          min-height: 0;
-                          border-radius: 16px;
-                          max-height: 132px;
-                          display: block;
-                          margin: auto;
-                        }
-                        .file img.icon {
-                          object-fit: contain;
-                          max-height: 100px;
-                        }
-                
-                        .image-wrapper {
-                          flex-grow: 1;      /* Nimmt den gesamten Platz über dem Text ein */
-                          display: flex;
-                          align-items: center;    /* Zentriert vertikal */
-                          justify-content: center; /* Zentriert horizontal */
-                          overflow: hidden;
-                          margin-bottom: 10px;
-                        }
-                
-                        .file span.filename {
-                          margin-top: auto;
-                          font-weight: bold;
-                        }
-                
-                        .file span {
-                          display: block;
-                          font-size: 0.8rem;
-                          width: 100%;
-                          white-space: nowrap;
-                          overflow: hidden;
-                          text-overflow: ellipsis;
-                          flex-grow: 0;
-                          flex-shrink: 0;
-                        }
-                        """.trimIndent()
-                    }
-                }
+        try {
+            // 1. Template aus Assets laden
+            val template = assets.open("listing.html").bufferedReader().use { it.readText() }
+
+            // 2. Den dynamischen Teil für die Dateien bauen (HTML-Schnipsel)
+            val fileEntriesHtml = StringBuilder()
+            val fileItems = mutableListOf<String>()
+            files.forEach { file ->
+                val fileId = file.id.encodeURLPathPart()
+                val hasThumbnail = file.filePreview != null
+                val imgSrc = if (hasThumbnail) "/$token/thumbnail/$fileId"
+                else "/$token/icon/${file.iconFile.encodeURLPathPart()}"
+                val imgClass = if (!hasThumbnail) "icon" else ""
+
+                fileEntriesHtml.append("""
+                <div class="file">
+                    <div class="image-wrapper">
+                        <img src="$imgSrc" class="$imgClass" />
+                    </div>
+                    <span class="filename">${file.name}</span>
+                    <span>
+                        <a href="/$token/download/$fileId"><button>Download</button></a>
+                        <a href="/$token/stream/$fileId"><button>Open</button></a>
+                    </span>
+                </div>
+                """.trimIndent())
+                fileItems += ("""
+                {
+                    fileId: "$fileId",
+                    filename: "${file.name}",
+                    hasThumbnail: $hasThumbnail,
+                    icon: "${file.iconFile}",
+                    size: ${file.size},
+                    mimeType: "${file.mimeType}"
+                }    
+                """.trimIndent())
             }
 
-            body {
-                h1 { +"File Listing" }
-                a(href = "/$token/download") {
-                    button { +"Download All (as ZIP)" }
-                }
-                div ("container") {
-                    files.forEach { file ->
-                        val fileId = file.id.encodeURLPathPart()
-                        div("file") {
-                            div("image-wrapper") {
-                                val hasThumbnail = file.filePreview != null
-                                val imgSrc = if (file.filePreview != null) "/$token/thumbnail/$fileId"
-                                    else "/$token/icon/${file.iconFile.encodeURLPathPart()}"
-                                img(
-                                    src = imgSrc,
-                                    classes = if (!hasThumbnail) "icon" else ""
-                                )
-                            }
-                            span("filename") { +file.name }
+            // 3. Platzhalter im Template ersetzen
+            val finalHtml = template
+                .replace("{{token}}", token)
+                .replace("{{noscript}}", fileEntriesHtml.toString())
+                .replace("{{appname}}", applicationInfo.loadLabel(packageManager).toString())
+                .replace("{{appurl}}", getString(R.string.app_url))
+                .replace("{{filelist}}", "[" + fileItems.joinToString(",\n") + "]")
 
-                            span {
-                                a(href = "/$token/download/${fileId}") {
-                                    button { +"Download" }
-                                }
 
-                                a(href = "/$token/stream/${fileId}") {
-                                    button { +"Open" }
-                                }
-                            }
-                        }
-                    }
-                }
+            // 4. Antwort senden
+            call.respondText(finalHtml, ContentType.Text.Html)
 
-            }
+        } catch (e: Exception) {
+            Log.e("FileServerService", "Error loading template", e)
+            call.respond(HttpStatusCode.InternalServerError, "Template Error")
         }
     }
 
@@ -504,7 +446,7 @@ class FileServerService : Service() {
                             val drawable = packageManager.getApplicationIcon(packageName)
                             call.respondOutputStream(ContentType.Image.PNG) {
                                 // toBitmap(128, 128) sorgt für eine feste, browserfreundliche Größe
-                                drawable.toBitmap(128, 128).compress(android.graphics.Bitmap.CompressFormat.PNG, 100, this)
+                                drawable.toBitmap(48, 48).compress(android.graphics.Bitmap.CompressFormat.PNG, 100, this)
                             }
                         } catch (e: Exception) {
                             call.respond(HttpStatusCode.InternalServerError)

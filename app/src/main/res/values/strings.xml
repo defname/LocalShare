@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">SendFile</string>
+    <string name="icon_theme">Papirus Icon Theme</string>
+    <string name="icon_theme_license">GPL-3.0</string>
+    <string name="icon_theme_url">https://git.io/papirus-icon-theme</string>
+    <string name="app_url">http://github.org/defname</string>
 </resources>

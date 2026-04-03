@@ -2,4 +2,18 @@
 <resources>
 
     <style name="Theme.SendFile" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <!-- Hintergrundfarbe (passt sich automatisch an, wenn du @color/background nutzt) -->
+        <item name="windowSplashScreenBackground">?android:attr/colorBackground</item>
+
+        <!-- Dein Icon (Vordergrund) -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+
+        <!-- Dauer der Anzeige -->
+        <item name="windowSplashScreenAnimationDuration">1000</item>
+
+        <!-- Das Theme, zu dem nach dem Laden gewechselt wird -->
+        <item name="postSplashScreenTheme">@style/Theme.SendFile</item>
+    </style>
 </resources>

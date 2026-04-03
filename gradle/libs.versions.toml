@@ -11,6 +11,9 @@ composeBom = "2026.03.01"
 ktorServerCore = "3.4.2"
 zxing = "3.5.3"
 coil = "2.6.0"
+navigationCompose = "2.8.8"
+splashscreen = "1.0.1"
+
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -28,6 +31,7 @@ androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 ktor-server-core = { group = "io.ktor", name = "ktor-server-core", version.ref = "ktorServerCore" }
 ktor-server-netty = { group = "io.ktor", name = "ktor-server-netty", version.ref = "ktorServerCore" }
 ktor-server-host-common = { group = "io.ktor", name = "ktor-server-host-common", version.ref = "ktorServerCore" }
@@ -36,9 +40,9 @@ ktor-server-html-builder = { group = "io.ktor", name = "ktor-server-html-builder
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 coil-svg = { group = "io.coil-kt", name = "coil-svg", version.ref = "coil" }
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-
