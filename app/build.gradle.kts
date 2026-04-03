@@ -6,9 +6,7 @@ plugins {
 
 android {
     namespace = "com.defname.localshare"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.defname.localshare"
@@ -22,7 +20,12 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+
+            ndk {
+                debugSymbolLevel = "SYMBOL_TABLE"
+            }
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -91,6 +94,7 @@ val generateIconMapping = tasks.register<Exec>("generateIconMapping") {
     commandLine("/usr/bin/python3", "${rootProject.projectDir}/buildScripts/generate_icon_mapping.py")
 
     // specify working directory
+    // workingDir = File("${rootProject.projectDir}    // specify working directory
     // workingDir = File("${rootProject.projectDir}")
 
     // error handling
