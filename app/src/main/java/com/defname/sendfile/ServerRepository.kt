@@ -232,13 +232,6 @@ object ServerRepository {
         return request.deferred
     }
 
-    fun approvaRequestIp(ip: String, approved: Boolean) {
-        val request = _state.value.pendingRequests.find { it.clientIp == ip }
-        if (request != null) {
-            approveRequest(request.id, approved)
-        }
-    }
-
     fun approveRequest(clientIp: String, approved: Boolean) {
         val request = _state.value.pendingRequests.find { it.clientIp == clientIp }
 

@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -31,8 +30,6 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun SettingsScreen() {
     val state by ServerRepository.state.collectAsState()
-    val context = LocalContext.current
-
 
     Column(
         modifier = Modifier
@@ -82,7 +79,6 @@ fun SettingsScreen() {
             SettingsSwitchRow(
                 title = "Require Manual Approval",
                 subtitle = "Ask for permission before any download starts",
-                icon = Icons.Default.Block,
                 checked = state.requireApproval,
                 onCheckedChange = { ServerRepository.setRequireApproval(it) }
             )
@@ -108,7 +104,6 @@ fun SettingsScreen() {
             SettingsSwitchRow(
                 title = "Clear File List on Share",
                 subtitle = "Automatically remove existing files when adding new ones from other apps.",
-                icon = Icons.Default.Block,
                 checked = state.clearFileListOnSendIntent,
                 onCheckedChange = { ServerRepository.setClearFilesListOnSendIntent(it) }
             )
@@ -116,7 +111,6 @@ fun SettingsScreen() {
             SettingsSwitchRow(
                 title = "Keep Screen On",
                 subtitle = "Prevent device from sleeping while server is running.",
-                icon = Icons.Default.Refresh, // Ersetze durch passendes Icon
                 checked = state.keepScreenOn,
                 onCheckedChange = { ServerRepository.setKeepScreenOn(it) }
             )
@@ -140,28 +134,6 @@ fun SettingsGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
 }
 
 @Composable
-fun SettingsClickableRow(title: String, subtitle: String, icon: ImageVector, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.width(16.dp))
-        Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall, // Kleinerer Font
-                color = MaterialTheme.colorScheme.onSurfaceVariant // Dezente Farbe
-            )
-        }
-    }
-}
-
-@Composable
 fun SettingsRow(content: @Composable RowScope.() -> Unit) {
     Row(
         modifier = Modifier
@@ -173,7 +145,7 @@ fun SettingsRow(content: @Composable RowScope.() -> Unit) {
 }
 
 @Composable
-fun SettingsSwitchRow(title: String, subtitle: String, icon: ImageVector, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+fun SettingsSwitchRow(title: String, subtitle: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

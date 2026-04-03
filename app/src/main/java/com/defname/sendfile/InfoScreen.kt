@@ -1,17 +1,19 @@
 package com.defname.sendfile
 
 import android.content.pm.PackageManager
-import android.graphics.drawable.AdaptiveIconDrawable
-import android.media.Image
 import android.os.Build
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -26,10 +28,11 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
 
 @Composable
-fun InfoScreen(onBack: () -> Unit) {
+fun InfoScreen() {
     val context = LocalContext.current
 
     // Daten sicher abrufen
@@ -41,19 +44,14 @@ fun InfoScreen(onBack: () -> Unit) {
                 @Suppress("DEPRECATION")
                 context.packageManager.getPackageInfo(context.packageName, 0)
             }
-        } catch (e: Exception) {
+        } catch (_: PackageManager.NameNotFoundException) {
             null
         }
     }
 
     val appName = stringResource(id = R.string.app_name)
     val appIcon = remember {
-        val icon = context.packageManager.getApplicationIcon(context.packageName)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && icon is AdaptiveIconDrawable) {
-            icon.foreground
-        } else {
-            icon
-        }
+        ContextCompat.getDrawable(context, R.drawable.ic_launcher_foreground)
     }
     val versionName = packageInfo?.versionName ?: "Unknown"
     val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {

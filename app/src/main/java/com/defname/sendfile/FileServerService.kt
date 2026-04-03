@@ -144,11 +144,11 @@ class FileServerService : Service() {
                     action = "STOP_SERVER"
                 }
 
-                val deletePendingIntent = android.app.PendingIntent.getService(
+                val deletePendingIntent = PendingIntent.getService(
                     this,
                     1,
                     stopIntent,
-                    android.app.PendingIntent.FLAG_IMMUTABLE
+                    PendingIntent.FLAG_IMMUTABLE
                 )
 
                 val contentIntent = Intent(this, MainActivity::class.java).apply {
@@ -475,7 +475,7 @@ class FileServerService : Service() {
             withTimeout(30000) {
                 deferred.await()
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             false // Timeout führt zur Ablehnung
         } finally {
             cancelApprovalNotification(clientIp)
@@ -505,7 +505,7 @@ class FileServerService : Service() {
                     }
                     get("/{token}/favicon/{size?}") {
                         if (!verifyRequest(call)) {
-                            return@get call.respondText("No Access.", status = io.ktor.http.HttpStatusCode.Forbidden)
+                            return@get call.respondText("No Access.", status = HttpStatusCode.Forbidden)
                         }
                         val size = when (call.parameters["size"]) {
                             "medium" -> 64
@@ -524,13 +524,13 @@ class FileServerService : Service() {
                                 // toBitmap(128, 128) sorgt für eine feste, browserfreundliche Größe
                                 drawable.toBitmap(size, size).compress(android.graphics.Bitmap.CompressFormat.PNG, 100, this)
                             }
-                        } catch (e: Exception) {
+                        } catch (_: Exception) {
                             call.respond(HttpStatusCode.InternalServerError)
                         }
                     }
                     get("/{token}/thumbnail/{file}") {
                         if (!verifyRequest(call)) {
-                            return@get call.respondText("No Access.", status = io.ktor.http.HttpStatusCode.Forbidden)
+                            return@get call.respondText("No Access.", status = HttpStatusCode.Forbidden)
                         }
 
                         val state = ServerRepository.state.value
@@ -538,14 +538,14 @@ class FileServerService : Service() {
 
                         val fileInfo = state.fileList.find { it.id == requestedFile }
                         if (fileInfo == null) {
-                            return@get call.respondText("File not found.\n", status = io.ktor.http.HttpStatusCode.NotFound)
+                            return@get call.respondText("File not found.\n", status = HttpStatusCode.NotFound)
                         }
 
                         val thumbnail = fileInfo.filePreview
                         if (thumbnail == null) {
                             return@get call.respondText(
                                 "No thumbnail found.\n",
-                                status = io.ktor.http.HttpStatusCode.NotFound
+                                status = HttpStatusCode.NotFound
                             )
                         }
                         val stream = java.io.ByteArrayOutputStream()
@@ -567,7 +567,7 @@ class FileServerService : Service() {
                             ) {
                                 assetStream.use { it.readBytes() }
                             }
-                        } catch (e: Exception) {
+                        } catch (_: Exception) {
                             call.respond(HttpStatusCode.NotFound)
                         }
                     }
@@ -575,22 +575,21 @@ class FileServerService : Service() {
                     get("/{token}/{action}/{file?}") {
                         val state = ServerRepository.state.value
 
-                        val token = call.parameters["token"]
                         val action = call.parameters["action"]
                         val requestedFile = call.parameters["file"]
                         val clientIp = call.request.local.remoteHost
 
                         //  1. validate
                         if (!verifyRequest(call)) {
-                            return@get call.respondText("No Access.", status = io.ktor.http.HttpStatusCode.Forbidden)
+                            return@get call.respondText("No Access.", status = HttpStatusCode.Forbidden)
                         }
 
                         if (action != "download" && action != "stream") {
-                            return@get call.respondText("No Access\n", status = io.ktor.http.HttpStatusCode.Forbidden)
+                            return@get call.respondText("No Access\n", status = HttpStatusCode.Forbidden)
                         }
 
                         if (state.fileList.isEmpty()) {
-                            return@get call.respondText("No File Selected\n", status = io.ktor.http.HttpStatusCode.NotFound)
+                            return@get call.respondText("No File Selected\n", status = HttpStatusCode.NotFound)
                         }
 
                         //  2. single file or zip
@@ -599,7 +598,7 @@ class FileServerService : Service() {
                         if (requestedFile != null || state.fileList.size == 1) {
                             val fileInfo = if (requestedFile != null) state.fileList.find { it.id == requestedFile } else state.fileList[0]
                             if (fileInfo == null) {
-                                return@get call.respondText("File not found.", status = io.ktor.http.HttpStatusCode.NotFound)
+                                return@get call.respondText("File not found.", status = HttpStatusCode.NotFound)
                             }
 
                             return@get sendFile(call, fileInfo, clientIp, action == "stream")
@@ -619,7 +618,7 @@ class FileServerService : Service() {
                         call.respondRedirect("/$token/stream")
                     }
                     get("{...}") {
-                        call.respondText("No Access\n", status = io.ktor.http.HttpStatusCode.Forbidden)
+                        call.respondText("No Access\n", status = HttpStatusCode.Forbidden)
                     }
                 }
             }.start(wait = false)

@@ -31,7 +31,6 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
@@ -78,10 +77,9 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        var spashScreen = installSplashScreen()
+        installSplashScreen()
 
         super.onCreate(savedInstanceState)
-
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             splashScreen.setOnExitAnimationListener { splashScreenView ->
@@ -308,7 +306,7 @@ fun MainScreen() {
                         LogScreen()
                     }
                     composable(Screen.Info.route) {
-                        InfoScreen({})
+                        InfoScreen()
                     }
                 }
             }
