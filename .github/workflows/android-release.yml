@@ -39,10 +39,23 @@ jobs:
           # Hier legst du fest, wie die FERTIGE (signierte) Datei heißen soll
           output: LocalShare-${{ github.ref_name }}.apk
 
+      - name: Rename and Prepare Files
+        run: |
+          # 1. Die unsignierte Datei umbenennen
+          mv app/build/outputs/apk/release/app-release-unsigned.apk \
+             app/build/outputs/apk/release/LocalShare-${{ github.ref_name }}-unsigned.apk
+          
+          # 2. Die signierte Datei umbenennen (wir nutzen den Output der Action)
+          mv ${{ steps.sign_app.outputs.signedReleaseFile }} \
+             app/build/outputs/apk/release/LocalShare-${{ github.ref_name }}.apk
+
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
         with:
-          # Wir laden NUR die signierte Datei hoch, die aus 'output' kommt
-          files: ${{ steps.sign_app.outputs.signedReleaseFile }}
+          # Hier listen wir jetzt EXAKT auf, welche zwei Dateien hochgeladen werden sollen
+          files: |
+            app/build/outputs/apk/release/LocalShare-${{ github.ref_name }}.apk
+            app/build/outputs/apk/release/LocalShare-${{ github.ref_name }}-unsigned.apk
+          fail_on_unresolved_entities: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
