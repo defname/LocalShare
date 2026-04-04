@@ -1,53 +1,101 @@
-# SendFile
+# LocalShare
 
-SendFile is a simple utility for sharing files from your Android device to other devices on the same local network. It runs a local HTTP server, allowing anyone on the network to access shared files through a standard web browser—no cloud services or external accounts required.
+![Logo](raw_assets/logo.svg)
 
-> [!IMPORTANT]
-> **Security Notice**: Files are transferred over unencrypted HTTP. This application is intended for use within **trusted local networks** only. Avoid sharing sensitive information or using the app on public Wi-Fi.
+LocalShare is a small Android app for sharing files with other devices
+on the same local network.
+
+It runs a lightweight HTTP server on your phone, so files can be
+accessed from any browser — no cables, no cloud, no internet required.
+
+## Why this exists
+
+I originally built this to stream movies from my phone to a tablet or
+laptop without copying them first.
+
+While there are many file-sharing solutions out there, none quite fit my specific workflow:
+
+- **SHTTPS:** I previously used [Simple HTTP Server](https://github.com/truefedex/shttps). While it's a great tool, it serves an entire folder at a time. I wanted a more surgical approach: picking specific files via the Android **Share menu** and serving only those.
+- **LocalSend:** I am a big fan of [LocalSend](https://github.com/localsend/localsend) because of its excellent usability and "one-tap" feel. However, LocalSend is primarily designed for file transfers, not for direct media streaming with full seeking support in a browser or external video player.
+- **Others** Many other "simple" apps are cluttered with intrusive ads or lock features behind a subscription.
+
+**LocalShare is the hybrid:** It combines the seamless usability of LocalSend's share-sheet integration with the universal accessibility of a web server.
+
+## My Goal for LocalShare
+1. **Share via System Share Sheet:** Select files in any app and serve them instantly.
+2. **Universal Access:** Access files from any browser or directly in video players (like VLC or MPC) on other devices.
+3. **Multi-File Support:** Share one or many files at once without extra steps.
 
 ## Features
 
-- **Direct Sharing**: Start a local server to share files instantly with PCs, tablets, or other phones.
-- **Transfer Modes**:
-  - **Download**: Save individual files or multiple files as a dynamically generated ZIP archive.
-  - **Streaming**: Stream video and audio files directly in the browser with seeking support (Partial Content).
-- **Security & Access Control**:
-  - **Tokens**: Protect access with auto-generated or custom security tokens.
-  - **Permissions**: Every new connection must be manually approved via system notifications.
-  - **IP Management**: Easily whitelist trusted devices or block specific IP addresses.
-- **Modern UI**:
-  - Built with **Jetpack Compose** and **Material 3**.
-  - **Navigation Drawer** for quick access to logs and settings.
-  - **QR Codes**: Instant connection by scanning a code.
-  - **Dark Mode**: Full support for system themes.
-- **Monitoring**: Built-in log viewer to track server activity in real-time.
+-   **Easy sharing**
+    -   Share files directly via the Android share sheet
+    -   Generate a link or QR code for quick access
+    -   **100% Ad-free and Open Source**
+-   **Multiple files support**
+    -   Share multiple files at once
+    -   **Smart Zipping:** Generates a ZIP archive **on-the-fly**. It uses zero extra storage on your phone, as the archive is streamed directly to the requester.
+    -   Or browse files individually in the browser and download/stream them one by one
+-   **Optimized for Streaming**
+    -   Stream video/audio directly in any modern browser or external player.
+    -   **Seeking support** (HTTP Range requests), allowing you to skip ahead in a movie without downloading the entire file first.
+-   **Access control**
+    -   Token-based access protection
+    -   Optional approval for new devices via notification
+    -   IP whitelist & blacklist with timeouts
+-   **Visibility**
+    -   Built-in log viewer to monitor activity in real time
+-   **UI**
+    -   Built with Jetpack Compose & Material 3
+    -   Dark mode support
+    -   Simple, functional interface
 
-## How to Use
+## How it works
 
-1. **Select Files**: Use the "Add Files" button or share files from other Android apps into SendFile.
-2. **Setup**: Choose the network interface (IP) and configure a token if needed.
-3. **Start**: Tap "Run Server". A foreground service will keep the server active.
-4. **Connect**: Other devices can open the displayed URL or scan the QR code.
-5. **Authorize**: Tap "Allow" on the system notification when a device attempts to connect.
+1.  Add files inside the app or share them from another app
+2.  Choose the network you want to use (e.g. Wi-Fi, mobile data, or hotspot)
+3.  Start the server
+4.  Open the shown link on another device (or scan the QR code)
+5.  Approve the connection if required
+6.  Download or stream the files
 
-## Tech Stack
+## Security note
 
-- **UI**: Jetpack Compose & Material 3
-- **Server**: [Ktor](https://ktor.io/) (Netty engine)
-- **Navigation**: Compose Navigation
-- **Image Loading**: [Coil](https://coil-kt.github.io/coil/) (SVG support via Papirus icons)
-- **Utilities**: ZXing (QR Codes), Coroutines & Flow
+> [!IMPORTANT]
+> Files are transferred over plain HTTP.
 
-## Build & Installation
+LocalShare is designed for **trusted local networks only** (e.g. your home Wi-Fi).
+Avoid using it on public or untrusted networks, especially for sensitive data.
 
-1. Clone the repository.
-2. Open the project in **Android Studio**.
-3. **Requirement**: Python 3 must be installed on your system (a build task uses it to map file icons).
-4. Build and deploy to your device.
+## Permissions
+
+-   **Notifications**
+    Required because the server runs as a foreground service.
+    Also used to prompt you when new devices try to connect.
+
+## Building the project
+
+### Requirements
+
+-   Android SDK / Android Studio
+-   Python 3 (used by a small build script)
+
+### Steps
+
+1.  Clone the repository
+2.  Open it in Android Studio
+3.  Make sure Python 3 is available in your system PATH
+4.  Build and run
+
+> [!NOTE]
+> The Papirus icon set is not included in the repo.
+> It will be downloaded and processed automatically during the build.
 
 ## License & Credits
 
-- **License**: This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
-- **Icons**: This app uses icons from the **Papirus Icon Theme**, licensed under **GPL-3.0**.
-  - Authors: Papirus Development Team
-  - Source: [GitHub](https://github.com/PapirusDevelopmentTeam/papirus-icon-theme)
+-   **License**: GNU General Public License v3.0 (GPL-3.0)
+
+-   **Icons**: Papirus Icon Theme
+    Licensed under GPL-3.0
+    Maintained by the Papirus Development Team
+    https://github.com/PapirusDevelopmentTeam/papirus-icon-theme

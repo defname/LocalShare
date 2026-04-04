@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import shutil
 import subprocess
 import os
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 # Pfade relativ zum Skript-Speicherort definieren
@@ -32,6 +33,19 @@ KOTLIN_OUTPUT_FILE = BASE_DIR / "app/src/main/java/com/defname/localshare/IconMa
 ZIP_TEMP_FILE = BASE_DIR / "icons_temp.zip"
 
 icons_copied = 0
+
+def get_android_string(file_path, string_name):
+    if not os.path.exists(file_path):
+        return None
+
+    tree = ET.parse(file_path)
+    root = tree.getroot()
+
+    # Suche nach <string name="dein_name">Wert</string>
+    for s in root.findall('string'):
+        if s.get('name') == string_name:
+            return s.text
+    return None
 
 def download_icons():
     if (RAW_ASSETS_DIR / ICON_SET_DIR).exists():
