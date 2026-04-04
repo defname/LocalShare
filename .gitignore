@@ -14,3 +14,10 @@
 .cxx
 local.properties
 /.idea
+app/release/
+app/src/main/assets/fileicons/
+app/src/main/assets/listing_tmp.html
+app/src/main/assets/listing_tmp2.html
+app/src/main/java/com/defname/localshare/IconMap.kt
+raw_assets/icons/
+raw_assets/logo.png
