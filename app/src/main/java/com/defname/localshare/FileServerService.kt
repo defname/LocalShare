@@ -22,9 +22,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
-import android.os.Build
 import android.os.IBinder
-import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
@@ -73,8 +71,6 @@ class FileServerService : Service() {
     private var server: EmbeddedServer<*,*>? = null
     private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var idleTimeoutJob: Job? = null
-    private var wakeLock: PowerManager.WakeLock? = null
-
 
     override fun onCreate() {
         super.onCreate()
@@ -83,10 +79,7 @@ class FileServerService : Service() {
 
         serviceScope.launch {
             ServerRepository.state.collect { state ->
-                updateWakeLock(state.keepScreenOn, state.isRunning)
-
                 if (state.isRunning) {
-
                     if (state.activeClients.isEmpty()) {
                         resetIdleTimer()
                     } else {
@@ -117,40 +110,14 @@ class FileServerService : Service() {
         }
     }
 
-    private fun updateWakeLock(keepScreenOn: Boolean, isRunning: Boolean) {
-        if (keepScreenOn && isRunning) {
-            if (wakeLock == null) {
-                val powerManager = getSystemService(POWER_SERVICE) as PowerManager
-                // SCREEN_BRIGHT_WAKE_LOCK hält das Display an
-                // ACQUIRE_CAUSES_WAKEUP schaltet es ggf. sogar ein
-                wakeLock = powerManager.newWakeLock(
-                    PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
-                    "SendFile::KeepScreenOn"
-                )
-            }
-            if (wakeLock?.isHeld == false) {
-                wakeLock?.acquire()
-                Log.d("FileServerService", "WakeLock acquired: Display forced ON")
-            }
-        } else {
-            if (wakeLock?.isHeld == true) {
-                wakeLock?.release()
-                Log.d("FileServerService", "WakeLock released")
-            }
-            wakeLock = null
-        }
-    }
-
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                "my_channel_id",
-                "File Transfer Service",
-                NotificationManager.IMPORTANCE_HIGH
-            )
-            val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(channel)
-        }
+        val channel = NotificationChannel(
+            "my_channel_id",
+            "File Transfer Service",
+            NotificationManager.IMPORTANCE_HIGH
+        )
+        val manager = getSystemService(NotificationManager::class.java)
+        manager.createNotificationChannel(channel)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
