@@ -63,6 +63,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -249,7 +250,9 @@ class FileServerService : Service() {
             })
         } catch (e: Exception) {
             Log.e("FileServerService", "Error during file transfer", e)
-            inputStream.close()
+            withContext(Dispatchers.IO) {
+                inputStream.close()
+            }
         }
     }
 

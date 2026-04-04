@@ -159,7 +159,7 @@ object ServerRepository {
         context.stopService(intent)
     }
 
-    /* setting state for for the service */
+    /* setting state for the service */
     fun onServerStarted() {
         _state.update { it.copy(isRunning = true) }
         Log.d("ServerRepository", "Server started")

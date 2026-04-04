@@ -65,7 +65,7 @@ def download_icons():
 
 def copy_icon_file(file):
     dst = ASSETS_DEST_DIR / file.name
-    if (dst.is_file()):
+    if dst.is_file():
         return
     if not file.is_file():
         print(f"{file} is not a file")

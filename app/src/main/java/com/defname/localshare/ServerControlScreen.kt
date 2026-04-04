@@ -71,6 +71,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -248,7 +249,7 @@ fun IpAddressSelector() {
 @Composable
 fun LogList(maxEntries: Int = 0) {
     val state by ServerRepository.state.collectAsState()
-    var dropDownIdx by remember { mutableStateOf<Int>(-1) }
+    var dropDownIdx by remember { mutableIntStateOf(-1) }
 
     val logsToShow = if (maxEntries > 0) {
         state.logs.reversed().take(maxEntries)
