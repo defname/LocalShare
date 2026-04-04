@@ -91,13 +91,13 @@ def main():
         if not (file.is_file() or file.is_symlink) or not file.suffix == ".svg":
             continue
 
-        print(f"   - {file}")
+        # print(f"   - {file}")
 
         mime = file.stem  # z.B. "application-pdf"
 
         if file.is_symlink():
             linked_file = file.resolve()
-            print("         symlink -> " + str(linked_file))
+            # print("         symlink -> " + str(linked_file))
             if not linked_file.is_file():
                 print(f"Linked file {linked_file} does not exist. Skipping")
                 continue
