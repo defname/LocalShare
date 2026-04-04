@@ -1,0 +1,3 @@
+[submodule "raw_assets/icons"]
+	path = raw_assets/icons
+	url = https://github.com/PapirusDevelopmentTeam/papirus-icon-theme

@@ -25,7 +25,7 @@ from pathlib import Path
 # Pfade relativ zum Skript-Speicherort definieren
 GIT_REPO_URL = "https://github.com/PapirusDevelopmentTeam/papirus-icon-theme"
 BASE_DIR = Path(__file__).parent.parent
-ICON_SET_DIR = "papirus-icon-theme"
+ICON_SET_DIR = ""
 RAW_ASSETS_DIR = BASE_DIR / "raw_assets/icons" / ICON_SET_DIR
 ICON_SOURCE_DIR = RAW_ASSETS_DIR / "Papirus/64x64/mimetypes"
 ASSETS_DEST_DIR = BASE_DIR / "app/src/main/assets/fileicons"
@@ -145,5 +145,5 @@ def main():
     print(f"   - Mapping in {KOTLIN_OUTPUT_FILE} mit ({len(icon_map)})generiert.")
 
 if __name__ == "__main__":
-    download_icons()
+    # download_icons()
     main()
