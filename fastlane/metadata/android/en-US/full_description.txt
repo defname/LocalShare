@@ -1,0 +1,13 @@
+<p>
+LocalShare is a lightweight utility to share files from your Android device with any other device in the same local network (Wi-Fi or Hotspot). It starts a local HTTP server, allowing other devices to download files using a simple web browser—no additional software required on the receiving end.
+</p>
+
+<h3>Features:</h3>
+
+<ul>
+    <li>Share files within your local network easily.</li>
+    <li>Add files directly in the app or via the Android share sheet.</li>
+    <li>Integrated QR code generator for quick access by other devices.</li>
+    <li>Compatible with any web browser.</li>
+    <li>Supports media streaming and seeking (ideal for video/audio).</li>
+    <li>Multiple files can be downloaded as a ZIP archive or browsed via a web interface.</li>

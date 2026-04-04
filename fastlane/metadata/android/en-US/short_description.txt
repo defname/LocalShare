@@ -1,0 +1,1 @@
+Simple local file sharing via a built-in HTTP server.
