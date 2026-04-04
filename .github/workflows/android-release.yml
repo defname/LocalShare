@@ -24,7 +24,7 @@ jobs:
 
       - name: Build Release APK
         run: ./gradlew assembleRelease
-
+    
       - name: Sign APK
         uses: r0adkll/sign-android-release@v1
         id: sign_app
@@ -33,13 +33,16 @@ jobs:
         with:
           releaseDirectory: app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.KEY_ALIAS }}
+          alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
+          # Hier legst du fest, wie die FERTIGE (signierte) Datei heißen soll
+          output: LocalShare-${{ github.ref_name }}.apk
 
-      - name: Upload Signed APK to Release
+      - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
         with:
+          # Wir laden NUR die signierte Datei hoch, die aus 'output' kommt
           files: ${{ steps.sign_app.outputs.signedReleaseFile }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
