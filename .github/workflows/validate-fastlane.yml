@@ -14,4 +14,4 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Fastlane Metadata Validator
-        uses: ashutoshgngwr/validate-fastlane-metadata@v2
+        uses: ashutoshgngwr/validate-fastlane-supply-metadata@v2
