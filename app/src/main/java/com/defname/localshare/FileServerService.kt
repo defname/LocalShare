@@ -113,8 +113,8 @@ class FileServerService : Service() {
 
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
-            "my_channel_id",
-            "File Transfer Service",
+            "localshare_channel",
+            getString(R.string.notification_channel_name),
             NotificationManager.IMPORTANCE_HIGH
         )
         val manager = getSystemService(NotificationManager::class.java)
@@ -149,9 +149,9 @@ class FileServerService : Service() {
                 )
 
                 // Notification bauen
-                val notification = NotificationCompat.Builder(this, "my_channel_id")
-                    .setContentTitle("Sharing Files...")
-                    .setContentText("Server is running.")
+                val notification = NotificationCompat.Builder(this, "localshare_channel")
+                    .setContentTitle(getString(R.string.service_notification_title))
+                    .setContentText(getString(R.string.server_notification_text))
                     .setSmallIcon(R.drawable.ic_launcher_foreground) // Teste mal ein Standard-Icon
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setOngoing(true) // Verhindert das Wegwischen durch den User
@@ -159,7 +159,7 @@ class FileServerService : Service() {
                     .setDeleteIntent(deletePendingIntent)
                     .addAction(
                         android.R.drawable.ic_menu_close_clear_cancel,
-                        "Stop Server",
+                        getString(R.string.service_notification_stop_server),
                         deletePendingIntent
                     )
                     .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
@@ -381,7 +381,7 @@ class FileServerService : Service() {
         }
     }
 
-    private fun showApprovalNotification(clientIp: String) {
+    private fun showApprovalNotification(clientIp: String, filename: String = "files") {
         val approveIntent = Intent(this, FileServerService::class.java).apply {
             action = "APPROVE_IP"
             putExtra("client_ip", clientIp)
@@ -407,13 +407,20 @@ class FileServerService : Service() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val notification = NotificationCompat.Builder(this, "my_channel_id")
-            .setContentTitle("Verbindungsanfrage")
-            .setContentText("Gerät $clientIp möchte Dateien laden.")
+        val notification = NotificationCompat.Builder(this, "localshare_channel")
+            .setContentTitle(getString(R.string.connection_request_notification_title))
+            .setContentText(
+                getString(
+                    R.string.connection_request_notification_text,
+                    clientIp,
+                    filename
+                ))
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .addAction(android.R.drawable.ic_menu_add, "Erlauben", approvePendingIntent)
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Blockieren", denyPendingIntent)
+            .addAction(android.R.drawable.ic_menu_add,
+                getString(R.string.connection_request_notification_accept), approvePendingIntent)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel,
+                getString(R.string.connection_request_notification_deny), denyPendingIntent)
             .setAutoCancel(true)
             .build()
 

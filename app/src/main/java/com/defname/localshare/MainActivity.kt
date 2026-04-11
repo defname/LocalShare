@@ -264,9 +264,9 @@ fun MainScreen() {
                     title = {
                         Text(
                             when (currentRoute) {
-                                Screen.Info.route -> "Info"
-                                Screen.Logs.route -> "Logs"
-                                Screen.Settings.route -> "Settings"
+                                Screen.Info.route -> stringResource(R.string.main_title_info)
+                                Screen.Logs.route -> stringResource(R.string.main_title_logs)
+                                Screen.Settings.route -> stringResource(R.string.main_title_settings)
                                 else -> stringResource(R.string.app_name)
                             }
                         )
@@ -279,11 +279,15 @@ fun MainScreen() {
                     navigationIcon = {
                         if (currentRoute == Screen.Main.route) {
                             IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                                Icon(Icons.Default.Menu, "Menu")
+                                Icon(Icons.Default.Menu,
+                                    stringResource(R.string.main_nav_icon_descr_menu)
+                                )
                             }
                         } else {
                             IconButton(onClick = { navController.popBackStack() }) {
-                                Icon(Icons.Default.ArrowBack, "Back")
+                                Icon(Icons.Default.ArrowBack,
+                                    stringResource(R.string.main_nav_icon_descr_back)
+                                )
                             }
                         }
                     },
@@ -292,14 +296,18 @@ fun MainScreen() {
                             Screen.Logs.route -> {
                                 if (state.logs.isNotEmpty()) {
                                     IconButton(onClick = { ServerRepository.clearLogs() }) {
-                                        Icon(Icons.Default.Clear, "Clear")
+                                        Icon(Icons.Default.Clear,
+                                            stringResource(R.string.main_action_button_descr_clear)
+                                        )
                                     }
                                 }
                             }
                             Screen.Main.route -> {
                                 if (state.isRunning) {
                                     IconButton(onClick = { showQrCodeDialog = true}) {
-                                        Icon(Icons.Default.QrCode2, "QR Code")
+                                        Icon(Icons.Default.QrCode2,
+                                            stringResource(R.string.main_action_button_descr_qr_code)
+                                        )
                                     }
                                 }
                             }
@@ -385,7 +393,7 @@ fun StartServerButton() {
                         contentColor = MaterialTheme.colorScheme.onTertiary
                     ),
                 ) {
-                    Text("Request Notification Permission")
+                    Text(stringResource(R.string.main_server_button_request_notification_permission))
                 }
             } else {
                 if (!state.isRunning) {
@@ -398,9 +406,9 @@ fun StartServerButton() {
                             contentColor = MaterialTheme.colorScheme.onPrimaryFixed
                         )
                     ) {
-                        Icon(imageVector = Icons.Default.Send, contentDescription = "Start Server")
+                        Icon(imageVector = Icons.Default.Send, contentDescription = stringResource(R.string.main_server_button_start))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Run Server")
+                        Text(stringResource(R.string.main_server_button_start))
                     }
                 } else {
                     // Button zum Stoppen (wenn er schon läuft)
@@ -412,9 +420,11 @@ fun StartServerButton() {
                             contentColor = MaterialTheme.colorScheme.onError
                         ),
                     ) {
-                        Icon(imageVector = Icons.Default.Block, contentDescription = "Stop Server")
+                        Icon(imageVector = Icons.Default.Block, contentDescription = stringResource(
+                            R.string.main_server_button_stop
+                        ))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Stop Server")
+                        Text(stringResource(R.string.main_server_button_stop))
                     }
                 }
             }

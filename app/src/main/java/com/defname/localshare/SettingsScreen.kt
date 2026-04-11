@@ -36,6 +36,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -48,20 +49,20 @@ fun SettingsScreen() {
         // Das Scrollen kommt ja bereits vom MainScreen (MainActivity)
     ) {
         // Gruppe 1: Server Konfiguration
-        SettingsGroup(title = "Server Configuration") {
+        SettingsGroup(title = stringResource(R.string.settings_server_title)) {
             // Port Einstellung
             SettingsRow {
                 TextField(
                     value = state.port.toString(),
                     enabled = !state.isRunning,
-                    label = { Text("Port (1024 - 65535)") },
+                    label = { Text(stringResource(R.string.settings_server_port_label)) },
                     modifier = Modifier.weight(1f),
                     supportingText = {
                         if (state.isRunning) {
-                            Text("This option is not available while the server is running.")
+                            Text(stringResource(R.string.settings_server_port_hint_not_available))
                         }
                         else {
-                            Text("Port to listen on")
+                            Text(stringResource(R.string.settings_server_port_hint))
                         }
                     },
                     onValueChange = {
@@ -73,10 +74,10 @@ fun SettingsScreen() {
             SettingsRow {
                 TextField(
                     value = state.idleTimeoutSeconds.toString(),
-                    label = { Text("Idle Timeout (seconds)") },
+                    label = { Text(stringResource(R.string.settings_server_timeout_label)) },
                     modifier = Modifier.weight(1f),
                     supportingText = {
-                        Text("Time after which the server will stop if no clients are connected")
+                        Text(stringResource(R.string.settings_server_timeout_hint))
                     },
                     onValueChange = {
                         ServerRepository.setIdleTimeoutSeconds(it.toIntOrNull() ?: 30)
@@ -86,10 +87,10 @@ fun SettingsScreen() {
         }
 
         // Gruppe 2: Sicherheit
-        SettingsGroup(title = "Security") {
+        SettingsGroup(title = stringResource(R.string.settings_security_title)) {
             SettingsSwitchRow(
-                title = "Require Manual Approval",
-                subtitle = "Ask for permission before any download starts",
+                title = stringResource(R.string.settings_security_require_approval_label),
+                subtitle = stringResource(R.string.settings_security_require_approval_hint),
                 checked = state.requireApproval,
                 onCheckedChange = { ServerRepository.setRequireApproval(it) }
             )
@@ -98,10 +99,10 @@ fun SettingsScreen() {
                 SettingsRow{
                     TextField(
                         value = state.whiteListEntryTTLSeconds.toString(),
-                        label = { Text("Whitelist Entry TTL (seconds)") },
+                        label = { Text(stringResource(R.string.settings_security_whitelist_ttl_label)) },
                         modifier = Modifier.weight(1f),
                         supportingText = {
-                            Text("Time after which an entry in the whitelist will become invalid.")
+                            Text(stringResource(R.string.settings_security_whitelist_ttl_hint))
                         },
                         onValueChange = {
                             ServerRepository.setWhiteListEntryTTLSeconds(it.toIntOrNull() ?: 30)
@@ -111,17 +112,17 @@ fun SettingsScreen() {
             }
         }
 
-        SettingsGroup(title = "Misc") {
+        SettingsGroup(title = stringResource(R.string.settings_misc_title)) {
             SettingsSwitchRow(
-                title = "Clear File List on Share",
-                subtitle = "Automatically remove existing files when adding new ones from other apps.",
+                title = stringResource(R.string.settings_misc_clear_file_list_on_share_label),
+                subtitle = stringResource(R.string.settings_misc_clear_file_list_on_share_hint),
                 checked = state.clearFileListOnSendIntent,
                 onCheckedChange = { ServerRepository.setClearFilesListOnSendIntent(it) }
             )
 
             SettingsSwitchRow(
-                title = "Keep Screen On",
-                subtitle = "Prevent device from sleeping while server is running.",
+                title = stringResource(R.string.settings_misc_keep_screen_on_label),
+                subtitle = stringResource(R.string.settings_misc_keep_screen_on_hint),
                 checked = state.keepScreenOn,
                 onCheckedChange = { ServerRepository.setKeepScreenOn(it) }
             )

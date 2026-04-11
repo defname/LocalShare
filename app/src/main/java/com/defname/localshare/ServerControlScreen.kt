@@ -84,6 +84,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -203,7 +204,7 @@ fun IpAddressSelector() {
             value = selectedOption,
             onValueChange = {},
             readOnly = true, // Verhindert Tastatureingabe
-            label = { Text("Bind Server to IP") },
+            label = { Text(stringResource(R.string.servercontrolscreen_bind_server_input_label)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
             modifier = Modifier
@@ -218,7 +219,7 @@ fun IpAddressSelector() {
         ) {
             // Option 1: Alle Interfaces
             DropdownMenuItem(
-                text = { Text("All Interfaces (0.0.0.0)") },
+                text = { Text(stringResource(R.string.servercontrolscreen_bind_server_input_default)) },
                 onClick = {
                     ServerRepository.setSelectedIp(null)
                     expanded = false
@@ -294,7 +295,11 @@ fun LogList(maxEntries: Int = 0) {
                 ) {
                     if (ServerRepository.isWhitelisted(log.clientIp)) {
                         DropdownMenuItem(
-                            text = { Text("Remove ${log.clientIp} from whitelist") },
+                            text = { Text(
+                                stringResource(
+                                    R.string.servercontrolscreen_remove_from_whitelist,
+                                    log.clientIp
+                                )) },
                             leadingIcon = {
                                 Icon(
                                     Icons.Default.Block,
@@ -310,7 +315,11 @@ fun LogList(maxEntries: Int = 0) {
                     }
                     if (ServerRepository.isBlacklisted(log.clientIp)) {
                         DropdownMenuItem(
-                            text = { Text("Remove ${log.clientIp} from blacklist") },
+                            text = { Text(
+                                stringResource(
+                                    R.string.servercontrolscreen_remove_from_blacklist,
+                                    log.clientIp
+                                )) },
                             leadingIcon = {
                                 Icon(Icons.Default.Undo, contentDescription = null, tint = Color.Green)
                             },
@@ -322,7 +331,11 @@ fun LogList(maxEntries: Int = 0) {
                     }
                     else {
                         DropdownMenuItem(
-                            text = { Text("Add ${log.clientIp} to blacklist") },
+                            text = { Text(
+                                stringResource(
+                                    R.string.servercontrolscreen__add_to_blacklist,
+                                    log.clientIp
+                                )) },
                             leadingIcon = {
                                 Icon(
                                     Icons.Default.Block,
@@ -368,7 +381,7 @@ fun ServerControlScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
         Row (verticalAlignment = Alignment.CenterVertically){
             Text(
-                "Shared Files",
+                stringResource(R.string.servercontrolscreen_shared_files_caption),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
@@ -383,7 +396,7 @@ fun ServerControlScreen(navController: NavController) {
                     ) {
                         Icon(
                             imageVector = Icons.Default.Clear,
-                            contentDescription = "Clear",
+                            contentDescription = stringResource(R.string.servercontrollscreen_filelist_icon_descr_clear),
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -392,8 +405,16 @@ fun ServerControlScreen(navController: NavController) {
         }
 
         if (state.fileList.isNotEmpty()) {
-            Text("Files: ${state.fileList.size}", style = MaterialTheme.typography.bodySmall)
-            Text("Total Size: ${Formatter.formatFileSize(context, state.fileList.sumOf { it.size })}", style = MaterialTheme.typography.bodySmall)
+            Text(
+                stringResource(
+                    R.string.servercontrolscreen_shared_files_number,
+                    state.fileList.size
+                ), style = MaterialTheme.typography.bodySmall)
+            Text(
+                stringResource(
+                    R.string.servercontrolscreen_shared_files_total_size,
+                    Formatter.formatFileSize(context, state.fileList.sumOf { it.size })
+                ), style = MaterialTheme.typography.bodySmall)
             FileCarousel(filesToDelete, toggleFileSelection)
         }
         Row {
@@ -408,32 +429,32 @@ fun ServerControlScreen(navController: NavController) {
                     ),
                     onClick = { filesToDelete.forEach { uri -> ServerRepository.removeFile(uri) }; filesToDelete = emptySet() }
                 ) {
-                    Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
+                    Icon(imageVector = Icons.Default.Delete, contentDescription = stringResource(R.string.servercontrolscreen_shared_files_delete_file))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Remove")
+                    Text(stringResource(R.string.servercontrolscreen_shared_files_delete_file))
                 }
                 Button(
                     onClick = { filesToDelete = emptySet() }
                 ) {
-                    Icon(imageVector = Icons.Default.Cancel, contentDescription = "Cancel")
+                    Icon(imageVector = Icons.Default.Cancel, contentDescription = stringResource(R.string.servercontrolscreen_shared_files_delete_file_cancel))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Cancel")
+                    Text(stringResource(R.string.servercontrolscreen_shared_files_delete_file_cancel))
                 }
             }
             else {
                 Button(
                     onClick = { filePickerDialog.launch("*/*") }
                 ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
+                    Icon(imageVector = Icons.Default.Add, contentDescription = stringResource(R.string.servercontrolscreen_add_files_icon_description_add))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Add Files")
+                    Text(stringResource(R.string.servercontrolsscreen_add_files_button_caption))
                 }
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            "Server Settings",
+            stringResource(R.string.servercontrolscreen_server_settings_caption),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -442,7 +463,7 @@ fun ServerControlScreen(navController: NavController) {
         Row(Modifier.padding(8.dp)) {
             OutlinedTextField(
                 value = state.token,
-                label = { Text("Token") },
+                label = { Text(stringResource(R.string.servercontrolscreen_token_input_caption)) },
                 singleLine = true,
                 onValueChange = { ServerRepository.setToken(it) },
                 enabled = true,
@@ -450,7 +471,7 @@ fun ServerControlScreen(navController: NavController) {
                     .weight(2f)
                     .fillMaxWidth(),
                 trailingIcon = { IconButton(onClick = { ServerRepository.setRandomToken() }) {
-                    Icon(Icons.Default.Refresh, contentDescription = "Generate Random Token")
+                    Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.servercontrolscreen_generate_random_token_icon_description))
                 } }
             )
         }
@@ -459,7 +480,7 @@ fun ServerControlScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            "Server Settings",
+            stringResource(R.string.servercontrollscreen_serverurls_caption),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -478,11 +499,15 @@ fun ServerControlScreen(navController: NavController) {
             val baseUrl = "http://$ipAddress:${state.port}/${state.token}"
             for (action in listOf("stream", "download")) {
                 val url = "$baseUrl/$action"
-                Card(modifier = Modifier.padding(horizontal = 8.dp).padding(bottom = 8.dp)) {
+                Card(modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .padding(bottom = 8.dp)) {
                     Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = if (action == "stream") Icons.Default.Stream else Icons.Default.Download,
-                            contentDescription = if (action == "stream") "Stream" else "Download",
+                            contentDescription = if (action == "stream") stringResource(R.string.servercontrollscreen_server_urls_icon_descr_stream) else stringResource(
+                                R.string.servercontrollscreen_server_urls_icon_descr_download
+                            ),
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -492,7 +517,9 @@ fun ServerControlScreen(navController: NavController) {
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         IconButton(onClick = { shareText(context, url) }) {
-                            Icon(imageVector = Icons.Default.Share, contentDescription = "Share")
+                            Icon(imageVector = Icons.Default.Share, contentDescription = stringResource(
+                                R.string.servercontrollscreen_serverurls_icon_descr_share
+                            ))
                         }
                     }
                 }
@@ -504,7 +531,7 @@ fun ServerControlScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
         Row (verticalAlignment = Alignment.CenterVertically){
             Text(
-                "Recent Logs",
+                stringResource(R.string.servercontrollscreen_logs_caption),
 
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
@@ -520,7 +547,7 @@ fun ServerControlScreen(navController: NavController) {
                     ) {
                         Icon(
                             imageVector = Icons.Default.List,
-                            contentDescription = "Expand",
+                            contentDescription = stringResource(R.string.servercontrollscreen_logs_expand),
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -538,7 +565,10 @@ fun ServerControlScreen(navController: NavController) {
                 Spacer(Modifier.height(16.dp))
 
                 Text(
-                    "Active Clients (${state.activeClients.size})",
+                    stringResource(
+                        R.string.servercontrollscreen_active_clients_caption,
+                        state.activeClients.size
+                    ),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
@@ -569,7 +599,7 @@ fun ServerControlScreen(navController: NavController) {
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Block,
-                                contentDescription = "Ban",
+                                contentDescription = stringResource(R.string.servercontrollscreen_active_clients_ban),
                                 tint = Color.Red
                             )
                         }
@@ -581,7 +611,10 @@ fun ServerControlScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    "Banned IPs (${state.blacklist.size})",
+                    stringResource(
+                        R.string.servercontrollscreen_banned_ips_caption,
+                        state.blacklist.size
+                    ),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
@@ -611,7 +644,7 @@ fun ServerControlScreen(navController: NavController) {
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Undo,
-                                contentDescription = "Unban",
+                                contentDescription = stringResource(R.string.servercontrollscreen_icon_descr_unban),
                                 tint = Color.Green
                             )
                         }
