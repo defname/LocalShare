@@ -17,8 +17,6 @@
  */
 package com.defname.localshare
 
-import android.content.pm.PackageManager
-import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -44,43 +42,29 @@ import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
+import com.defname.localshare.ui.theme.SendFileTheme
 
 @Composable
 fun InfoScreen() {
     val context = LocalContext.current
 
-    // Daten sicher abrufen
-    val packageInfo = remember {
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.packageManager.getPackageInfo(context.packageName, PackageManager.PackageInfoFlags.of(0))
-            } else {
-                @Suppress("DEPRECATION")
-                context.packageManager.getPackageInfo(context.packageName, 0)
-            }
-        } catch (_: PackageManager.NameNotFoundException) {
-            null
-        }
-    }
-
     val appName = stringResource(id = R.string.app_name)
     val appIcon = remember {
         ContextCompat.getDrawable(context, R.drawable.ic_launcher_foreground)
     }
-    val versionName = packageInfo?.versionName ?: "Unknown"
-    val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-        packageInfo?.longVersionCode ?: 0L
-    } else {
-        @Suppress("DEPRECATION")
-        packageInfo?.versionCode?.toLong() ?: 0L
-    }
+    
+    // Zugriff auf das von Gradle generierte BuildConfig
+    val versionName = BuildConfig.VERSION_NAME
+    val versionCode = BuildConfig.VERSION_CODE
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .padding(16.dp)
     ) {
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -122,7 +106,7 @@ fun InfoScreen() {
 
         val papirusUrl = stringResource(R.string.icon_theme_url)
         val annotatedDescription = buildAnnotatedString {
-            append("Licensed  under ${stringResource(R.string.icon_theme_license)}\n")
+            append("Licensed under ${stringResource(R.string.icon_theme_license)}\n")
             withLink(
                 LinkAnnotation.Url(
                     url = papirusUrl,
@@ -164,5 +148,24 @@ fun InfoRow(label: String, value: String) {
     ) {
         Text(label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
         Text(value, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun InfoRowPreview() {
+    SendFileTheme {
+        InfoRow(
+            label = "Version",
+            value = "1.0.0"
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun InfoScreenPreview() {
+    SendFileTheme {
+        InfoScreen()
     }
 }
