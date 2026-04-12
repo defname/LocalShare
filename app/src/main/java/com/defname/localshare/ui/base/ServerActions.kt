@@ -1,6 +1,5 @@
 package com.defname.localshare.ui.base
 
-import android.content.Context
 import com.defname.localshare.ServerRepository
 
 interface ServerAccessControlActions {

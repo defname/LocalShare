@@ -70,9 +70,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -91,12 +89,10 @@ import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
 import com.defname.localshare.FileInfo
-import com.defname.localshare.MainViewModel
 import com.defname.localshare.NetworkInfo
 import com.defname.localshare.R
 import com.defname.localshare.Screen
 import com.defname.localshare.ServerRepository
-import com.defname.localshare.getViewModel
 import com.defname.localshare.ui.components.LogList
 
 fun shareText(context: Context, text: String) {

@@ -1,7 +1,6 @@
 package com.defname.localshare.ui.screens.servercontrol
 
 import android.net.Uri
-import com.defname.localshare.FileInfo
 import com.defname.localshare.NetworkInfo
 import com.defname.localshare.ServerState
 import com.defname.localshare.ui.components.LogListEntry
