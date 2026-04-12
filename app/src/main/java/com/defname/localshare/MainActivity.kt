@@ -93,7 +93,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.defname.localshare.ui.theme.SendFileTheme
+import com.defname.localshare.ui.theme.LocalShareTheme
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -132,7 +132,7 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            SendFileTheme {
+            LocalShareTheme {
                 MainScreen()
             }
         }

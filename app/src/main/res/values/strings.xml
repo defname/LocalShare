@@ -12,7 +12,7 @@
     <string name="servercontrolscreen_bind_server_input_default">All Interfaces (0.0.0.0)</string>
     <string name="servercontrolscreen_remove_from_whitelist">Remove %1$s from whitelist</string>
     <string name="servercontrolscreen_remove_from_blacklist">Remove %1$s from blacklist</string>
-    <string name="servercontrolscreen__add_to_blacklist">Add %1$s to blacklist</string>
+    <string name="servercontrolscreen_add_to_blacklist">Add %1$s to blacklist</string>
     <string name="servercontrolscreen_shared_files_caption">Shared Files</string>
     <string name="servercontrolscreen_shared_files_number">Files: %1$d</string>
     <string name="servercontrolscreen_shared_files_total_size">Total Size: %1$s</string>

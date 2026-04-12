@@ -248,114 +248,6 @@ fun IpAddressSelector() {
 }
 
 @Composable
-fun LogList(maxEntries: Int = 0) {
-    val state by ServerRepository.state.collectAsState()
-    var dropDownIdx by remember { mutableIntStateOf(-1) }
-
-    val logsToShow = if (maxEntries > 0) {
-        state.logs.reversed().take(maxEntries)
-    } else {
-        state.logs.reversed()
-    }
-
-    Column {
-        logsToShow.forEachIndexed { idx, log ->
-            Box {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp, 4.dp)
-                        .combinedClickable(
-                            onClick = { },
-                            onLongClick = { dropDownIdx = idx }
-                        )
-                ) {
-                    Text("${log.status}", color = if (log.status >= 400) Color.Red else Color.Green)
-                    Spacer(Modifier.width(8.dp))
-                    Text(log.method)
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        log.path,
-                        modifier = Modifier.weight(1f),
-                        //style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.StartEllipsis
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        log.clientIp,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (ServerRepository.isBlacklisted(log.clientIp)) Color.Red else if (ServerRepository.isWhitelisted(log.clientIp)) Color.Green else MaterialTheme.colorScheme.outline
-                    )
-                }
-
-                DropdownMenu(
-                    expanded = dropDownIdx == idx,
-                    onDismissRequest = { dropDownIdx = -1 }
-                ) {
-                    if (ServerRepository.isWhitelisted(log.clientIp)) {
-                        DropdownMenuItem(
-                            text = { Text(
-                                stringResource(
-                                    R.string.servercontrolscreen_remove_from_whitelist,
-                                    log.clientIp
-                                )) },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Default.Block,
-                                    contentDescription = null,
-                                    //tint = Color.Red
-                                )
-                            },
-                            onClick = {
-                                ServerRepository.removeFromWhitelist(log.clientIp)
-                                dropDownIdx = -1
-                            }
-                        )
-                    }
-                    if (ServerRepository.isBlacklisted(log.clientIp)) {
-                        DropdownMenuItem(
-                            text = { Text(
-                                stringResource(
-                                    R.string.servercontrolscreen_remove_from_blacklist,
-                                    log.clientIp
-                                )) },
-                            leadingIcon = {
-                                Icon(Icons.Default.Undo, contentDescription = null, tint = Color.Green)
-                            },
-                            onClick = {
-                                ServerRepository.removeFromBlacklist(log.clientIp)
-                                dropDownIdx = -1
-                            }
-                        )
-                    }
-                    else {
-                        DropdownMenuItem(
-                            text = { Text(
-                                stringResource(
-                                    R.string.servercontrolscreen__add_to_blacklist,
-                                    log.clientIp
-                                )) },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Default.Block,
-                                    contentDescription = null,
-                                    tint = Color.Red
-                                )
-                            },
-                            onClick = {
-                                ServerRepository.addToBlacklist(log.clientIp)
-                                dropDownIdx = -1
-                            }
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
 fun ServerControlScreen(navController: NavController) {
     val state by ServerRepository.state.collectAsState()
     val context = LocalContext.current
@@ -556,7 +448,7 @@ fun ServerControlScreen(navController: NavController) {
         }
         Spacer(modifier = Modifier.height(8.dp))
 
-        LogList(4)
+        // LogList(4)
 
 
         if (state.isRunning) {

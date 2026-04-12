@@ -29,13 +29,21 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.util.UUID
 import androidx.core.content.edit
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 data class LogEntry (
     val timestamp: Long = System.currentTimeMillis(),
     val method: String,
     val path: String,
     val status: Int,
-    val clientIp: String
+    val clientIp: String,
+    val id: String = UUID.randomUUID().toString()
 )
 
 data class ConnectionRequest(
@@ -74,6 +82,9 @@ object ServerRepository {
     private val _state = MutableStateFlow(ServerState())
     private lateinit var _sharedPrefs: SharedPreferences
 
+    private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var cleanupJob: Job? = null
+
     /** Public state flow (read-only) */
     val state: StateFlow<ServerState> = _state.asStateFlow()  //< public state flow (readonly)
 
@@ -83,6 +94,8 @@ object ServerRepository {
         _sharedPrefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
         val sharedToken = _sharedPrefs.getString("token", UUID.randomUUID().toString())
         val sharedSelectedIp = _sharedPrefs.getString("selectedIp", "0.0.0.0")
+
+        startCleanupJob()
 
         _state.update{ it.copy(
             token = sharedToken ?: UUID.randomUUID().toString(),
@@ -96,6 +109,32 @@ object ServerRepository {
             clearFileListOnSendIntent = _sharedPrefs.getBoolean("clearFileListOnSendIntent", false)
         )}
     }
+
+    private fun cleanupExpiredWhitelistEntries() {
+        val now = System.currentTimeMillis()
+        _state.update { currentState ->
+            val ttl = _state.value.whiteListEntryTTLSeconds * 1000L
+            val validEntries = currentState.whitelist.filter { entry ->
+                entry.timestamp + ttl >= now
+            }
+            if (validEntries.size != currentState.whitelist.size) {
+                currentState.copy(whitelist = validEntries)
+            } else {
+                currentState
+            }
+        }
+    }
+
+    private fun startCleanupJob() {
+        cleanupJob?.cancel()
+        cleanupJob = repositoryScope.launch {
+            while (isActive) {
+                delay(60_000)
+                cleanupExpiredWhitelistEntries()
+            }
+        }
+    }
+
 
     fun setSelectedIp(ip: String?) {
         _state.update { it.copy(selectedIp = ip ?: "0.0.0.0") }
@@ -218,15 +257,12 @@ object ServerRepository {
     }
 
     fun isWhitelisted(ip: String): Boolean {
-        val entry = _state.value.whitelist.find{ e -> e.ip == ip }
-        if (entry == null) {
-            return false
-        }
-        if (entry.timestamp + _state.value.whiteListEntryTTLSeconds * 1000 < System.currentTimeMillis()) {
-            removeFromWhitelist(ip)
-            return false
-        }
-        return true
+        val entry = _state.value.whitelist.find { it.ip == ip } ?: return false
+        val ttlMillis = _state.value.whiteListEntryTTLSeconds * 1000L
+
+        // only return if the entry is still valid
+        return (entry.timestamp + ttlMillis) > System.currentTimeMillis()
+
     }
 
     fun setWhiteListEntryTTLSeconds(seconds: Int) {

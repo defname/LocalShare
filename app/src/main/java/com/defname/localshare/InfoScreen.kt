@@ -46,7 +46,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
-import com.defname.localshare.ui.theme.SendFileTheme
+import com.defname.localshare.ui.theme.LocalShareTheme
 
 @Composable
 fun InfoScreen() {
@@ -154,7 +154,7 @@ fun InfoRow(label: String, value: String) {
 @Preview(showBackground = true)
 @Composable
 fun InfoRowPreview() {
-    SendFileTheme {
+    LocalShareTheme {
         InfoRow(
             label = "Version",
             value = "1.0.0"
@@ -165,7 +165,7 @@ fun InfoRowPreview() {
 @Preview(showBackground = true)
 @Composable
 fun InfoScreenPreview() {
-    SendFileTheme {
+    LocalShareTheme {
         InfoScreen()
     }
 }
