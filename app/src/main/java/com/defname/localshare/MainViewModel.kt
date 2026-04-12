@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.defname.localshare.ui.components.LogListEntry
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -30,27 +31,32 @@ data class LogListState(
     val contextMenuFor: LogEntry? = null
 )
 
+data class ServerControlScreenUiState(
+    val ipAddressSelectorExpanded: Boolean = false
+)
+
 data class AppUiState(
     //val main: MainScreenState = MainScreenState(),
+    val server: ServerState = ServerState(),
     val logs: LogListState = LogListState(),
-    val isServerRunning: Boolean = false
+    val serverControlScreen: ServerControlScreenUiState = ServerControlScreenUiState()
 )
 
 class MainViewModel(private val repository: ServerRepository) : ViewModel() {
 
     // Lokale UI-States (Sachen, die nicht ins Repo gehören)
-    private val _contextMenuFor = MutableStateFlow<LogEntry?>(null)
-
+    private val _logsContextMenuFor = MutableStateFlow<LogEntry?>(null)
+    private val _mainIpAddressSelectorExpanded = MutableStateFlow<Boolean>(false)
 
     // Der "Master-State", den alle Screens beobachten
     val uiState: StateFlow<AppUiState> = combine(
         repository.state,
-        _contextMenuFor
-    ) { repoState, menuEntry ->
+        _logsContextMenuFor,
+        _mainIpAddressSelectorExpanded
+    ) { serverState, logsContextMenuFor, mainIpAddressSelectorExpanded ->
         AppUiState(
-            isServerRunning = repoState.isRunning,
             logs = LogListState(
-                entries = repoState.logs
+                entries = serverState.logs
                     .map {
                         LogListEntry(
                             it,
@@ -58,18 +64,22 @@ class MainViewModel(private val repository: ServerRepository) : ViewModel() {
                             repository.isBlacklisted(it.clientIp)
                         ) }
                     .reversed(),
-                contextMenuFor = menuEntry
+                contextMenuFor = logsContextMenuFor
             ),
-            // settings = ...
+            serverControlScreen = ServerControlScreenUiState(
+                mainIpAddressSelectorExpanded
+            ),
+            server = serverState
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AppUiState())
 
     // Aktionen (Events)
-    fun openLogMenu(entry: LogEntry) { _contextMenuFor.value = entry }
-    fun closeLogMenu() { _contextMenuFor.value = null }
+    fun openLogMenu(entry: LogEntry) { _logsContextMenuFor.value = entry }
+    fun closeLogMenu() { _logsContextMenuFor.value = null }
 
     fun addToBlackList(ip: String) { repository.addToBlacklist(ip) }
     fun removeFromBlackList(ip: String) { repository.removeFromBlacklist(ip) }
     fun removeFromWhiteList(ip: String) { repository.removeFromWhitelist(ip) }
 
+    fun toggleIpAddressSelectorExpanded() { _mainIpAddressSelectorExpanded.value = !_mainIpAddressSelectorExpanded.value }
 }

@@ -93,6 +93,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.defname.localshare.ui.screens.logs.LogsScreen
+import com.defname.localshare.ui.screens.servercontrol.ServerControlScreen
+import com.defname.localshare.ui.screens.settings.SettingsScreen
 import com.defname.localshare.ui.theme.LocalShareTheme
 import kotlinx.coroutines.launch
 
@@ -152,12 +155,12 @@ class MainActivity : ComponentActivity() {
         if (intent.action == Intent.ACTION_SEND) {
             if (intent.hasExtra(Intent.EXTRA_STREAM)) {
                 val uri = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
-                uri?.let { ServerRepository.addFile(this, it) }
+                uri?.let { ServerRepository.addFile(it) }
             }
         } else if (intent.action == Intent.ACTION_SEND_MULTIPLE) {
             if (intent.hasExtra(Intent.EXTRA_STREAM)) {
                 val uris = IntentCompat.getParcelableArrayListExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
-                uris?.let { ServerRepository.addFiles(this, it) }
+                uris?.let { ServerRepository.addFiles(it) }
             }
         }
     }
@@ -338,7 +341,7 @@ fun MainScreen() {
                         SettingsScreen()
                     }
                     composable(Screen.Logs.route) {
-                        LogScreen()
+                        LogsScreen()
                     }
                     composable(Screen.Info.route) {
                         InfoScreen()
@@ -400,7 +403,7 @@ fun StartServerButton() {
                     // Button zum Starten
                     Button(
                         modifier = Modifier.fillMaxWidth(),
-                        onClick = { ServerRepository.startServer(context) },
+                        onClick = { ServerRepository.startServer() },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primaryFixed,
                             contentColor = MaterialTheme.colorScheme.onPrimaryFixed
@@ -414,7 +417,7 @@ fun StartServerButton() {
                     // Button zum Stoppen (wenn er schon läuft)
                     Button(
                         modifier = Modifier.fillMaxWidth(),
-                        onClick = { ServerRepository.stopServer(context) },
+                        onClick = { ServerRepository.stopServer() },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.error,
                             contentColor = MaterialTheme.colorScheme.onError

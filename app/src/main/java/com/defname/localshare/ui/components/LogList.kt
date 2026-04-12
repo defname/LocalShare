@@ -1,34 +1,13 @@
-/*
- * LocalShare - Share files locally
- * Copyright (C) 2024 defname
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
-package com.defname.localshare
+package com.defname.localshare.ui.components
 
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Undo
@@ -38,45 +17,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.defname.localshare.LogEntry
+import com.defname.localshare.R
+import com.defname.localshare.ServerRepository
 import com.defname.localshare.ui.theme.LocalShareTheme
-
-@Composable
-fun LogScreen(viewModel: MainViewModel = getViewModel()) {
-    val state = viewModel.uiState.collectAsState()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-        )
-    {
-        Spacer(modifier = Modifier.height(16.dp))
-        LogList(
-            entries = state.value.logs.entries,
-            contextMenuFor = state.value.logs.contextMenuFor,
-            onContextMenuOpen = { viewModel.openLogMenu(it) },
-            onContextMenuClose = { viewModel.closeLogMenu() },
-            onAddToBlackList = { viewModel.addToBlackList(it) },
-            onRemoveFromBlackList = { viewModel.removeFromBlackList(it) },
-            onRemoveFromWhiteList = { viewModel.removeFromWhiteList(it) }
-        )
-    }
-}
-
-@Preview
-@Composable
-fun LogScreenPreview() {
-    LocalShareTheme {
-        LogScreen()
-    }
-}
-
 
 
 data class LogListEntry(
@@ -85,10 +35,20 @@ data class LogListEntry(
     val isBlackListed: Boolean
 )
 
+fun List<LogEntry>.toLogListEntries(): List<LogListEntry> {
+    return this.map { entry ->
+        LogListEntry(
+            entry,
+            ServerRepository.isWhitelisted(entry.clientIp),
+            ServerRepository.isBlacklisted(entry.clientIp)
+        )
+    }.reversed()
+}
+
 @Composable
 fun LogList(
     entries: List<LogListEntry>,
-    contextMenuFor: LogEntry? = null,
+    menuOpenForId: String? = null,
 
     onContextMenuOpen: (LogEntry) -> Unit = {},
     onContextMenuClose: () -> Unit = {},
@@ -130,7 +90,7 @@ fun LogList(
 
                 LogEntryContextMenu(
                     ipAddress = entry.logEntry.clientIp,
-                    visible = contextMenuFor?.id == entry.logEntry.id,
+                    visible = menuOpenForId == entry.logEntry.id,
                     isWhiteListed = entry.isWhiteListed,
                     isBlackListed = entry.isBlackListed,
                     onDismiss = { onContextMenuClose() },

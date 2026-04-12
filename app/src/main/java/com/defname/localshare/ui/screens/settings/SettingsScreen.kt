@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.defname.localshare
+package com.defname.localshare.ui.screens.settings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -37,11 +37,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.defname.localshare.MainViewModel
+import com.defname.localshare.R
+import com.defname.localshare.getViewModel
+import com.defname.localshare.ui.theme.LocalShareTheme
 
 @Composable
-fun SettingsScreen() {
-    val state by ServerRepository.state.collectAsState()
+fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
+    val state by viewModel.state.collectAsState()
 
     Column(
         modifier = Modifier
@@ -53,12 +59,12 @@ fun SettingsScreen() {
             // Port Einstellung
             SettingsRow {
                 TextField(
-                    value = state.port.toString(),
-                    enabled = !state.isRunning,
+                    value = state.server.port.toString(),
+                    enabled = !state.server.isRunning,
                     label = { Text(stringResource(R.string.settings_server_port_label)) },
                     modifier = Modifier.weight(1f),
                     supportingText = {
-                        if (state.isRunning) {
+                        if (state.server.isRunning) {
                             Text(stringResource(R.string.settings_server_port_hint_not_available))
                         }
                         else {
@@ -66,21 +72,21 @@ fun SettingsScreen() {
                         }
                     },
                     onValueChange = {
-                        ServerRepository.setPort(it.toIntOrNull() ?: 8080)
+                        viewModel.setPort(it.toIntOrNull() ?: 8080)
                     }
                 )
             }
 
             SettingsRow {
                 TextField(
-                    value = state.idleTimeoutSeconds.toString(),
+                    value = state.server.idleTimeoutSeconds.toString(),
                     label = { Text(stringResource(R.string.settings_server_timeout_label)) },
                     modifier = Modifier.weight(1f),
                     supportingText = {
                         Text(stringResource(R.string.settings_server_timeout_hint))
                     },
                     onValueChange = {
-                        ServerRepository.setIdleTimeoutSeconds(it.toIntOrNull() ?: 30)
+                        viewModel.setIdleTimeoutSeconds(it.toIntOrNull() ?: 30)
                     }
                 )
             }
@@ -91,21 +97,21 @@ fun SettingsScreen() {
             SettingsSwitchRow(
                 title = stringResource(R.string.settings_security_require_approval_label),
                 subtitle = stringResource(R.string.settings_security_require_approval_hint),
-                checked = state.requireApproval,
-                onCheckedChange = { ServerRepository.setRequireApproval(it) }
+                checked = state.server.requireApproval,
+                onCheckedChange = { viewModel.setRequireApproval(it) }
             )
 
-            if (state.requireApproval) {
+            if (state.server.requireApproval) {
                 SettingsRow{
                     TextField(
-                        value = state.whiteListEntryTTLSeconds.toString(),
+                        value = state.server.whiteListEntryTTLSeconds.toString(),
                         label = { Text(stringResource(R.string.settings_security_whitelist_ttl_label)) },
                         modifier = Modifier.weight(1f),
                         supportingText = {
                             Text(stringResource(R.string.settings_security_whitelist_ttl_hint))
                         },
                         onValueChange = {
-                            ServerRepository.setWhiteListEntryTTLSeconds(it.toIntOrNull() ?: 30)
+                            viewModel.setWhiteListEntryTTLSeconds(it.toIntOrNull() ?: 30)
                         }
                     )
                 }
@@ -116,19 +122,29 @@ fun SettingsScreen() {
             SettingsSwitchRow(
                 title = stringResource(R.string.settings_misc_clear_file_list_on_share_label),
                 subtitle = stringResource(R.string.settings_misc_clear_file_list_on_share_hint),
-                checked = state.clearFileListOnSendIntent,
-                onCheckedChange = { ServerRepository.setClearFilesListOnSendIntent(it) }
+                checked = state.server.clearFileListOnSendIntent,
+                onCheckedChange = { viewModel.setClearFilesListOnSendIntent(it) }
             )
 
             SettingsSwitchRow(
                 title = stringResource(R.string.settings_misc_keep_screen_on_label),
                 subtitle = stringResource(R.string.settings_misc_keep_screen_on_hint),
-                checked = state.keepScreenOn,
-                onCheckedChange = { ServerRepository.setKeepScreenOn(it) }
+                checked = state.server.keepScreenOn,
+                onCheckedChange = { viewModel.setKeepScreenOn(it) }
             )
         }
     }
 }
+
+
+@Preview
+@Composable
+fun SettingsScreenPreview() {
+    LocalShareTheme {
+        SettingsScreen()
+    }
+}
+
 
 @Composable
 fun SettingsGroup(title: String, content: @Composable ColumnScope.() -> Unit) {

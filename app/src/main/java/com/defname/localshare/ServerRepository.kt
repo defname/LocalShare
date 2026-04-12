@@ -85,11 +85,14 @@ object ServerRepository {
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var cleanupJob: Job? = null
 
+    private lateinit var appContext: Context
+
     /** Public state flow (read-only) */
     val state: StateFlow<ServerState> = _state.asStateFlow()  //< public state flow (readonly)
 
 
     fun init(context: Context) {
+        appContext = context.applicationContext
         updateLocalIpAddresses()
         _sharedPrefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
         val sharedToken = _sharedPrefs.getString("token", UUID.randomUUID().toString())
@@ -142,17 +145,17 @@ object ServerRepository {
 
     }
 
-    fun addFile(context: Context, uri: Uri) {
+    fun addFile(uri: Uri) {
         if (_state.value.fileList.find { it.uri == uri } != null) {
             return
         }
         _state.update { it.copy(
-            fileList = it.fileList + getFileInfo(context, uri)
+            fileList = it.fileList + getFileInfo(appContext, uri)
         )}
     }
 
-    fun addFiles(context: Context, uris: List<Uri>) {
-        uris.forEach { addFile(context, it) }
+    fun addFiles(uris: List<Uri>) {
+        uris.forEach { addFile(it) }
     }
 
     fun removeFile(uri: Uri) {
@@ -184,18 +187,18 @@ object ServerRepository {
     }
 
 
-    fun startServer(context: Context) {
-        val intent = Intent(context, FileServerService::class.java).apply {
+    fun startServer() {
+        val intent = Intent(appContext, FileServerService::class.java).apply {
             action = "START_SERVER"
         }
-        context.startForegroundService(intent)
+        appContext.startForegroundService(intent)
     }
 
-    fun stopServer(context: Context) {
-        val intent = Intent(context, FileServerService::class.java).apply {
+    fun stopServer() {
+        val intent = Intent(appContext, FileServerService::class.java).apply {
             action = "STOP_SERVER"
         }
-        context.stopService(intent)
+        appContext.stopService(intent)
     }
 
     /* setting state for the service */

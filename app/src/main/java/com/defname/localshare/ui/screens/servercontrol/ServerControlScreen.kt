@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.defname.localshare
+package com.defname.localshare.ui.screens.servercontrol
 
 import android.content.Context
 import android.content.Intent
@@ -54,7 +54,6 @@ import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -71,7 +70,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -85,13 +83,21 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
+import com.defname.localshare.FileInfo
+import com.defname.localshare.MainViewModel
+import com.defname.localshare.NetworkInfo
+import com.defname.localshare.R
+import com.defname.localshare.Screen
+import com.defname.localshare.ServerRepository
+import com.defname.localshare.getViewModel
+import com.defname.localshare.ui.components.LogList
 
 fun shareText(context: Context, text: String) {
     val sendIntent = Intent().apply {
@@ -106,10 +112,10 @@ fun shareText(context: Context, text: String) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FileCarousel(
-    selectedFiles: Set<Uri>,
-    onToggleSelection: (Uri) -> Unit
+    fileList: List<FileInfo> = emptyList(),
+    selectedFiles: Set<Uri> = emptySet(),
+    onToggleSelection: (Uri) -> Unit = {}
 ) {
-    val state by ServerRepository.state.collectAsState()
     val context = LocalContext.current
     val svgImageLoader = remember {
         ImageLoader.Builder(context)
@@ -118,7 +124,7 @@ fun FileCarousel(
     }
 
     HorizontalMultiBrowseCarousel(
-        state = rememberCarouselState { state.fileList.size },
+        state = rememberCarouselState { fileList.size },
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
@@ -129,7 +135,7 @@ fun FileCarousel(
         minSmallItemWidth = 48.dp,
         contentPadding = PaddingValues(horizontal = 8.dp)
     ) { i ->
-        val item = state.fileList[i]
+        val item = fileList[i]
         val isSelected = selectedFiles.contains(item.uri)
 
         Card(
@@ -181,27 +187,25 @@ fun FileCarousel(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun IpAddressSelector() {
-    val state by ServerRepository.state.collectAsState()
-    var expanded by remember { mutableStateOf(false) }
-
-    // Wir zeigen die aktuell gewählte IP oder "All Interfaces" an
-    val selectedOption = state.selectedIp
-
+fun IpAddressSelector(
+    modifier: Modifier = Modifier,
+    addresses: List<NetworkInfo> = emptyList(),
+    selectedAdress: String? = null,
+    expanded: Boolean = false,
+    enabled: Boolean = false,
+    onExpandedChange: () -> Unit = {},
+    onAddressSelected: (String?) -> Unit = {},
+    onDismiss: () -> Unit = {},
+) {
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = {
-            expanded = !expanded
-            if (it) {
-                ServerRepository.updateLocalIpAddresses()
-            }
-        },
+        onExpandedChange = { onExpandedChange() },
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
     ) {
         OutlinedTextField(
-            value = selectedOption,
+            value = selectedAdress ?: "0.0.0.0",
             onValueChange = {},
             readOnly = true, // Verhindert Tastatureingabe
             label = { Text(stringResource(R.string.servercontrolscreen_bind_server_input_label)) },
@@ -210,25 +214,25 @@ fun IpAddressSelector() {
             modifier = Modifier
                 .menuAnchor()
                 .fillMaxWidth(),
-            enabled = !state.isRunning
+            enabled = enabled
         )
 
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { onDismiss() }
         ) {
             // Option 1: Alle Interfaces
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.servercontrolscreen_bind_server_input_default)) },
                 onClick = {
-                    ServerRepository.setSelectedIp(null)
-                    expanded = false
+                    onAddressSelected(null)
+                    onDismiss()
                 },
                 contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
             )
 
             // Dynamische Optionen aus der IP-Liste
-            state.localIpAddresses.forEach { netInfo ->
+            addresses.forEach { netInfo ->
                 DropdownMenuItem(
                     text = {
                         Column {
@@ -237,8 +241,8 @@ fun IpAddressSelector() {
                         }
                     },
                     onClick = {
-                        ServerRepository.setSelectedIp(netInfo.ip)
-                        expanded = false
+                        onAddressSelected(netInfo.ip)
+                        onDismiss()
                     },
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                 )
@@ -248,23 +252,12 @@ fun IpAddressSelector() {
 }
 
 @Composable
-fun ServerControlScreen(navController: NavController) {
-    val state by ServerRepository.state.collectAsState()
+fun ServerControlScreen(navController: NavController, viewModel: ServerControlViewModel = viewModel()) {
+    val state by viewModel.state.collectAsState()
     val context = LocalContext.current
 
-    var filesToDelete by remember { mutableStateOf(setOf<Uri>()) }
-    val toggleFileSelection = { uri: Uri ->
-        filesToDelete = if (filesToDelete.contains(uri)) {
-            filesToDelete - uri
-        } else {
-            filesToDelete + uri
-        }
-    }
-
     val filePickerDialog = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
-        if (uris.isNotEmpty()) {
-            ServerRepository.addFiles(context, uris)
-        }
+        viewModel.addFiles(uris)
     }
 
     Column (
@@ -280,10 +273,10 @@ fun ServerControlScreen(navController: NavController) {
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .weight(1f)
             )
-            if (state.fileList.isNotEmpty()) {
+            if (state.server.fileList.isNotEmpty()) {
                 CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
                     IconButton(
-                        onClick = { ServerRepository.clearFiles(); filesToDelete = emptySet() },
+                        onClick = { viewModel.clearFiles() },
                         modifier = Modifier.size(24.dp)
                     ) {
                         Icon(
@@ -296,22 +289,26 @@ fun ServerControlScreen(navController: NavController) {
             }
         }
 
-        if (state.fileList.isNotEmpty()) {
+        if (state.server.fileList.isNotEmpty()) {
             Text(
                 stringResource(
                     R.string.servercontrolscreen_shared_files_number,
-                    state.fileList.size
+                    state.server.fileList.size
                 ), style = MaterialTheme.typography.bodySmall)
             Text(
                 stringResource(
                     R.string.servercontrolscreen_shared_files_total_size,
-                    Formatter.formatFileSize(context, state.fileList.sumOf { it.size })
+                    Formatter.formatFileSize(context, state.server.fileList.sumOf { it.size })
                 ), style = MaterialTheme.typography.bodySmall)
-            FileCarousel(filesToDelete, toggleFileSelection)
+            FileCarousel(
+                fileList = state.server.fileList,
+                selectedFiles = state.filesToDelete,
+                onToggleSelection = { viewModel.toggleFileToDelete(it) },
+            )
         }
         Row {
             Spacer(Modifier.weight(1f))
-            if (filesToDelete.isNotEmpty()) {
+            if (state.filesToDelete.isNotEmpty()) {
                 Button(
                     modifier = Modifier
                         .padding(end = 8.dp),
@@ -319,14 +316,14 @@ fun ServerControlScreen(navController: NavController) {
                         containerColor = MaterialTheme.colorScheme.error,
                         contentColor = MaterialTheme.colorScheme.onError
                     ),
-                    onClick = { filesToDelete.forEach { uri -> ServerRepository.removeFile(uri) }; filesToDelete = emptySet() }
+                    onClick = { viewModel.removeFiles() }
                 ) {
                     Icon(imageVector = Icons.Default.Delete, contentDescription = stringResource(R.string.servercontrolscreen_shared_files_delete_file))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(stringResource(R.string.servercontrolscreen_shared_files_delete_file))
                 }
                 Button(
-                    onClick = { filesToDelete = emptySet() }
+                    onClick = { viewModel.clearFilesToDelete() }
                 ) {
                     Icon(imageVector = Icons.Default.Cancel, contentDescription = stringResource(R.string.servercontrolscreen_shared_files_delete_file_cancel))
                     Spacer(modifier = Modifier.width(8.dp))
@@ -354,7 +351,7 @@ fun ServerControlScreen(navController: NavController) {
 
         Row(Modifier.padding(8.dp)) {
             OutlinedTextField(
-                value = state.token,
+                value = state.server.token,
                 label = { Text(stringResource(R.string.servercontrolscreen_token_input_caption)) },
                 singleLine = true,
                 onValueChange = { ServerRepository.setToken(it) },
@@ -368,7 +365,15 @@ fun ServerControlScreen(navController: NavController) {
             )
         }
 
-        IpAddressSelector()
+        IpAddressSelector(
+            addresses = state.localIpAddresses,
+            selectedAdress = state.server.selectedIp,
+            expanded = state.ipAddressSelectorExpanded,
+            enabled = state.ipAddressSelectorEnabled,
+            onExpandedChange = { viewModel.ipAddressSelectorExpandedChange() },
+            onAddressSelected = { ip -> viewModel.setSeletectedIp(ip) },
+            onDismiss = { viewModel.collapseIpAddressSelector() }
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -379,16 +384,16 @@ fun ServerControlScreen(navController: NavController) {
         )
         Spacer(modifier = Modifier.height(8.dp))
 
-        val usedAddresses: List<String> = remember(state.selectedIp, state.localIpAddresses) {
-            if (state.selectedIp != "0.0.0.0") {
-                listOf(state.selectedIp)
+        val usedAddresses: List<String> = remember(state.server.selectedIp, state.localIpAddresses) {
+            if (state.server.selectedIp != "0.0.0.0") {
+                listOf(state.server.selectedIp)
             } else {
                 state.localIpAddresses.map { it.ip }
             }
         }
 
         for (ipAddress in usedAddresses) {
-            val baseUrl = "http://$ipAddress:${state.port}/${state.token}"
+            val baseUrl = "http://$ipAddress:${state.server.port}/${state.server.token}"
             for (action in listOf("stream", "download")) {
                 val url = "$baseUrl/$action"
                 Card(modifier = Modifier
@@ -431,7 +436,7 @@ fun ServerControlScreen(navController: NavController) {
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .weight(1f)
             )
-            if (state.logs.size > 4) {
+            if (state.server.logs.size > state.logCount) {
                 CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
                     IconButton(
                         onClick = { navController.navigate(Screen.Logs.route) },
@@ -448,18 +453,26 @@ fun ServerControlScreen(navController: NavController) {
         }
         Spacer(modifier = Modifier.height(8.dp))
 
-        // LogList(4)
+        LogList(
+            entries = state.logEntries,
+            menuOpenForId = state.logMenuOpenForId,
+            onContextMenuOpen = { viewModel.logMenuOpenForId(it.id) },
+            onContextMenuClose = { viewModel.logMenuClose() },
+            onAddToBlackList = { viewModel.addToBlacklist(it) },
+            onRemoveFromBlackList = { viewModel.removeFromBlacklist(it) },
+            onRemoveFromWhiteList = { viewModel.removeFromWhitelist(it) }
+        )
 
 
-        if (state.isRunning) {
+        if (state.server.isRunning) {
 
-            if (state.activeClients.isNotEmpty()) {
+            if (state.server.activeClients.isNotEmpty()) {
                 Spacer(Modifier.height(16.dp))
 
                 Text(
                     stringResource(
                         R.string.servercontrollscreen_active_clients_caption,
-                        state.activeClients.size
+                        state.server.activeClients.size
                     ),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
@@ -468,7 +481,7 @@ fun ServerControlScreen(navController: NavController) {
                         .padding(top = 16.dp)
                 )
 
-                state.activeClients.distinct().forEach { ip ->
+                state.server.activeClients.distinct().forEach { ip ->
                     Row(
                         Modifier
                             .padding(8.dp)
@@ -499,13 +512,13 @@ fun ServerControlScreen(navController: NavController) {
                 }
             }
 
-            if (state.blacklist.isNotEmpty()) {
+            if (state.server.blacklist.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
                     stringResource(
                         R.string.servercontrollscreen_banned_ips_caption,
-                        state.blacklist.size
+                        state.server.blacklist.size
                     ),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
@@ -513,7 +526,7 @@ fun ServerControlScreen(navController: NavController) {
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 )
 
-                state.blacklist.distinct().forEach { ip ->
+                state.server.blacklist.distinct().forEach { ip ->
                     Row(
                         Modifier
                             .padding(8.dp)
