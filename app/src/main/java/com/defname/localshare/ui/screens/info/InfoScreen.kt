@@ -15,10 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.defname.localshare
+package com.defname.localshare.ui.screens.info
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,16 +37,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
+import com.defname.localshare.BuildConfig
+import com.defname.localshare.R
 import com.defname.localshare.ui.theme.LocalShareTheme
 
 @Composable
@@ -60,6 +65,9 @@ fun InfoScreen() {
     // Zugriff auf das von Gradle generierte BuildConfig
     val versionName = BuildConfig.VERSION_NAME
     val versionCode = BuildConfig.VERSION_CODE
+    val license = stringResource(id = R.string.app_license)
+    val srcUrl = stringResource(id = R.string.app_src_url)
+
 
     Column(
         modifier = Modifier
@@ -96,6 +104,22 @@ fun InfoScreen() {
                 InfoRow(label = "Version", value = versionName)
                 InfoRow(label = "Build Number", value = versionCode.toString())
                 InfoRow(label = "Package Name", value = context.packageName)
+                InfoRow(label = "License", value = license)
+                InfoRow(label = "Source", value = buildAnnotatedString {
+                    withLink(
+                        LinkAnnotation.Url(
+                            url = srcUrl,
+                            styles = TextLinkStyles(
+                                style = SpanStyle(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    textDecoration = TextDecoration.Underline
+                                )
+                            )
+                        )
+                    ) {
+                        append(srcUrl)
+                    }
+                })
             }
         }
         Spacer(Modifier.height(32.dp))
@@ -138,16 +162,22 @@ fun InfoScreen() {
     }
 }
 
+
 @Composable
 fun InfoRow(label: String, value: String) {
-    Row(
+    InfoRow(label, AnnotatedString(value))
+}
+@Composable
+fun InfoRow(label: String, value: AnnotatedString) {
+    FlowRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
-        Text(value, style = MaterialTheme.typography.bodyMedium)
+        Text(value, style = MaterialTheme.typography.bodyMedium, overflow = TextOverflow.Ellipsis)
     }
 }
 

@@ -93,6 +93,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.defname.localshare.ui.screens.info.InfoScreen
 import com.defname.localshare.ui.screens.logs.LogsScreen
 import com.defname.localshare.ui.screens.servercontrol.ServerControlScreen
 import com.defname.localshare.ui.screens.settings.SettingsScreen
