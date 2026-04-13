@@ -54,6 +54,13 @@ android {
             excludes += "/META-INF/okio.kotlin_module"
         }
     }
+
+    sourceSets {
+        getByName("main") {
+            kotlin.srcDir(layout.buildDirectory.dir("generated/source/iconmap/main/kotlin"))
+            assets.srcDir(layout.buildDirectory.dir("generated/assets/iconmap/main"))
+        }
+    }
 }
 
 dependencies {
@@ -91,16 +98,24 @@ val generateIconMapping = tasks.register<Exec>("generateIconMapping") {
     group = "build setup"
     description = "Generate Kotlin file for the icon mapping."
 
-    // path to the script
-    commandLine("/usr/bin/python3", "${rootProject.projectDir}/buildScripts/generate_icon_mapping.py")
+    val outputDir = layout.buildDirectory.dir("generated/source/iconmap/main/kotlin").get().asFile
+    val assetsDir = layout.buildDirectory.dir("generated/assets/iconmap/main").get().asFile
+    
+    commandLine(
+        "/usr/bin/python3", 
+        "${rootProject.projectDir}/buildScripts/generate_icon_mapping.py",
+        outputDir.absolutePath,
+        assetsDir.absolutePath
+    )
 
-    // specify working directory
-    // workingDir = File("${rootProject.projectDir}    // specify working directory
-    // workingDir = File("${rootProject.projectDir}")
+    outputs.dir(outputDir)
+    outputs.dir(assetsDir)
 
-    // error handling
     doFirst {
-        println("Start generating icon mapping...")
+        println("Generating IconMap to: $outputDir")
+        println("Generating Icons to: $assetsDir")
+        outputDir.mkdirs()
+        assetsDir.mkdirs()
     }
 }
 

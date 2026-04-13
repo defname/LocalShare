@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import shutil
 import subprocess
 import os
+import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -28,9 +29,19 @@ BASE_DIR = Path(__file__).parent.parent
 ICON_SET_DIR = ""
 RAW_ASSETS_DIR = BASE_DIR / "raw_assets/icons" / ICON_SET_DIR
 ICON_SOURCE_DIR = RAW_ASSETS_DIR / "Papirus/64x64/mimetypes"
-ASSETS_DEST_DIR = BASE_DIR / "app/src/main/assets/fileicons"
+
+# Standard-Pfade, falls kein Argument übergeben wird
 KOTLIN_OUTPUT_FILE = BASE_DIR / "app/src/main/java/com/defname/localshare/IconMap.kt"
-ZIP_TEMP_FILE = BASE_DIR / "icons_temp.zip"
+ASSETS_DEST_DIR = BASE_DIR / "app/src/main/assets/fileicons"
+
+# Falls Argumente übergeben wurden, nutzen wir diese
+if len(sys.argv) > 1:
+    generated_kotlin_base_path = Path(sys.argv[1])
+    KOTLIN_OUTPUT_FILE = generated_kotlin_base_path / "com/defname/localshare/IconMap.kt"
+
+if len(sys.argv) > 2:
+    generated_assets_base_path = Path(sys.argv[2])
+    ASSETS_DEST_DIR = generated_assets_base_path / "fileicons"
 
 icons_copied = 0
 
@@ -109,6 +120,9 @@ def main():
 
         icon_map[mime] = filename
 
+    # ✨ Verzeichnisse für Kotlin Datei erstellen
+    KOTLIN_OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
+
     # ✨ Kotlin Datei generieren
     with open(KOTLIN_OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write("package com.defname.localshare\n\n")
@@ -142,7 +156,7 @@ def main():
     global icons_copied
     print(f">> Erledigt!")
     print(f"   - {icons_copied} Icons nach {ASSETS_DEST_DIR} kopiert.")
-    print(f"   - Mapping in {KOTLIN_OUTPUT_FILE} mit ({len(icon_map)})generiert.")
+    print(f"   - Mapping in {KOTLIN_OUTPUT_FILE} mit ({len(icon_map)}) generiert.")
 
 if __name__ == "__main__":
     # download_icons()
