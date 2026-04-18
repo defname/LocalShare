@@ -1,0 +1,66 @@
+/*
+ * LocalShare - Share files locally
+ * Copyright (C) 2024 defname
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package com.defname.localshare.data
+
+import android.net.Uri
+import com.defname.localshare.domain.model.FileInfo
+import com.defname.localshare.domain.repository.FileProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+
+
+data class RuntimeData(
+    val fileList: List<FileInfo> = emptyList(),
+    val activeClients: List<String> = emptyList(),
+    val isRunning: Boolean = false,
+)
+
+class ServiceRepository(
+    repositoryScope: CoroutineScope
+) : FileProvider {
+    private val _runtimeState = MutableStateFlow(RuntimeData())
+    val runtimeState = _runtimeState.asStateFlow()
+
+    override val fileList: StateFlow<List<FileInfo>> = _runtimeState
+        .map { it.fileList }
+        .distinctUntilChanged()
+        .stateIn(
+            repositoryScope,
+            started = SharingStarted.Eagerly,
+            initialValue = emptyList()
+        )
+
+    fun addFile(file: FileInfo) { _runtimeState.update { it.copy(fileList = it.fileList + file) } }
+    fun removeFile(uri: Uri) { _runtimeState.update { it.copy(fileList = it.fileList.filter { it.uri != uri }) } }
+    fun clearFiles() { _runtimeState.update { it.copy(fileList = emptyList()) } }
+
+    fun clientConnected(ip: String) { _runtimeState.update { it.copy(activeClients = it.activeClients + ip) } }
+    fun clientDisconnected(ip: String) { _runtimeState.update { it.copy(activeClients = it.activeClients - ip) } }
+
+    fun serverStarted() { _runtimeState.update { it.copy(isRunning = true) } }
+    fun serverStopped() { _runtimeState.update { it.copy(isRunning = false) } }
+
+}
+
