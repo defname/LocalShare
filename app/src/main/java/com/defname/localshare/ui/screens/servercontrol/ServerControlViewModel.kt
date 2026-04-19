@@ -3,17 +3,17 @@ package com.defname.localshare.ui.screens.servercontrol
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.defname.localshare.NetworkInfo
 import com.defname.localshare.data.LogsRepository
+import com.defname.localshare.data.NetworkInfoProvider
 import com.defname.localshare.data.RuntimeData
 import com.defname.localshare.data.SecurityRepository
 import com.defname.localshare.data.ServiceRepository
 import com.defname.localshare.domain.model.LogEntry
+import com.defname.localshare.domain.model.NetworkInfo
 import com.defname.localshare.domain.model.Settings
 import com.defname.localshare.domain.model.WhiteListEntry
 import com.defname.localshare.domain.repository.SettingsRepository
 import com.defname.localshare.domain.usecase.AddFilesUseCase
-import com.defname.localshare.getLocalIpAddresses
 import com.defname.localshare.ui.components.toLogListEntries
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -34,7 +34,8 @@ class ServerControlViewModel(
     private val serviceRepository: ServiceRepository,
     private val logsRepository: LogsRepository,
     private val settingsRepository: SettingsRepository,
-    private val securityRepository: SecurityRepository
+    private val securityRepository: SecurityRepository,
+    private val networkInfoProvider: NetworkInfoProvider
 ) : ViewModel() {
     /**
      * StateFlow for the log entry for which the context menu should be shown.
@@ -131,7 +132,7 @@ class ServerControlViewModel(
         _uiState.update {
             it.copy(
                 ipAddressSelectorExpanded = !_uiState.value.ipAddressSelectorExpanded,
-                localIpAddresses = getLocalIpAddresses()
+                localIpAddresses = networkInfoProvider.getLocalIpAddresses()
             )
         }
     }

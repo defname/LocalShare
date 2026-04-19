@@ -118,7 +118,9 @@ fun MainScreen(
                     startDestination = Screen.Main.route,
                 ) {
                     composable(Screen.Main.route) {
-                        ServerControlScreen()
+                        ServerControlScreen(
+                            onNavigateToLogs = { scope.launch { navController.navigate(Screen.Logs.route) } }
+                        )
                     }
                     composable(Screen.Settings.route) {
                         SettingsScreen()

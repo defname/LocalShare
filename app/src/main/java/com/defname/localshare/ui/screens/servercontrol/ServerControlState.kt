@@ -1,8 +1,8 @@
 package com.defname.localshare.ui.screens.servercontrol
 
 import android.net.Uri
-import com.defname.localshare.NetworkInfo
 import com.defname.localshare.domain.model.FileInfo
+import com.defname.localshare.domain.model.NetworkInfo
 import com.defname.localshare.domain.model.WhiteListEntry
 import com.defname.localshare.ui.components.LogListEntry
 

@@ -5,6 +5,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.defname.localshare.data.DataStoreSettingsRepository
 import com.defname.localshare.data.FileInfoProvider
 import com.defname.localshare.data.LogsRepository
+import com.defname.localshare.data.NetworkInfoProvider
 import com.defname.localshare.data.PermissionRepository
 import com.defname.localshare.data.SecurityRepository
 import com.defname.localshare.data.ServiceRepository
@@ -33,6 +34,7 @@ val appModule = module {
     single { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
 
     single { FileInfoProvider(androidContext().contentResolver) }
+    single { NetworkInfoProvider() }
 
     single { androidContext().dataStore }
 
@@ -50,7 +52,7 @@ val appModule = module {
     factory { ServerSecurityHandler(get(), get()) }
 
     viewModel { MainViewModel(get(), get(), get(), get()) }
-    viewModel { ServerControlViewModel(get(), get(), get(), get(), get()) }
+    viewModel { ServerControlViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { LogsViewModel(get(), get(), get()) }
     viewModel { SettingsViewModel(get(), get()) }
 }

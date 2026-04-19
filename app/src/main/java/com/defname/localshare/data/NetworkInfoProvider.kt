@@ -1,6 +1,6 @@
 package com.defname.localshare.data
 
-import com.defname.localshare.NetworkInfo
+import com.defname.localshare.domain.model.NetworkInfo
 import java.net.NetworkInterface
 
 class NetworkInfoProvider {

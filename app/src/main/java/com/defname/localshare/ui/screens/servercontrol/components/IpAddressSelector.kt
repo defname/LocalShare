@@ -1,0 +1,84 @@
+package com.defname.localshare.ui.screens.servercontrol.components
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import com.defname.localshare.R
+import com.defname.localshare.domain.model.NetworkInfo
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun IpAddressSelector(
+    modifier: Modifier = Modifier,
+    addresses: List<NetworkInfo> = emptyList(),
+    selectedAdress: String? = null,
+    expanded: Boolean = false,
+    enabled: Boolean = false,
+    onExpandedChange: () -> Unit = {},
+    onAddressSelected: (String?) -> Unit = {},
+    onDismiss: () -> Unit = {},
+) {
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { onExpandedChange() },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        OutlinedTextField(
+            value = selectedAdress ?: "0.0.0.0",
+            onValueChange = {},
+            readOnly = true, // Verhindert Tastatureingabe
+            label = { Text(stringResource(R.string.servercontrolscreen_bind_server_input_label)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth(),
+            enabled = enabled
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { onDismiss() }
+        ) {
+            // Option 1: Alle Interfaces
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.servercontrolscreen_bind_server_input_default)) },
+                onClick = {
+                    onAddressSelected(null)
+                    onDismiss()
+                },
+                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+            )
+
+            // Dynamische Optionen aus der IP-Liste
+            addresses.forEach { netInfo ->
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(netInfo.ip)
+                            Text(netInfo.interfaceName, style = MaterialTheme.typography.labelSmall)
+                        }
+                    },
+                    onClick = {
+                        onAddressSelected(netInfo.ip)
+                        onDismiss()
+                    },
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                )
+            }
+        }
+    }
+}

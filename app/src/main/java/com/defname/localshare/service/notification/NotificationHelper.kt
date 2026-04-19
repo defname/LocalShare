@@ -14,6 +14,7 @@ import com.defname.localshare.service.LocalShareService
 class NotificationHelper(private val context: Context) {
     companion object {
         const val CHANNEL_ID = "local_share_server_channel"
+        const val APPROVAL_CHANNEL_ID = "local_share_approval_channel"
         const val NOTIFICATION_ID = 1
     }
 
@@ -22,15 +23,29 @@ class NotificationHelper(private val context: Context) {
     }
 
     private fun createNotificationChannel() {
-        val channel = NotificationChannel(
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        // Channel für den dauerhaften Server-Dienst (niedrige Wichtigkeit, damit es nicht nervt)
+        val serverChannel = NotificationChannel(
             CHANNEL_ID,
             context.getString(R.string.notification_channel_name),
             NotificationManager.IMPORTANCE_LOW
         ).apply {
             description = context.getString(R.string.notification_channel_description)
         }
-        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.createNotificationChannel(channel)
+        manager.createNotificationChannel(serverChannel)
+
+        // Channel für Approvals (hohe Wichtigkeit für Heads-up / Banner oben)
+        val approvalChannel = NotificationChannel(
+            APPROVAL_CHANNEL_ID,
+            context.getString(R.string.connection_request_notification_title),
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = context.getString(R.string.notification_channel_description)
+            enableVibration(true)
+            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+        }
+        manager.createNotificationChannel(approvalChannel)
     }
 
     fun buildBaseNotification(serverIp: String, port: Int): Notification {
@@ -49,7 +64,7 @@ class NotificationHelper(private val context: Context) {
         return NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle(context.getString(R.string.service_notification_title))
             .setContentText(context.getString(R.string.server_notification_text, serverIp, port))
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // System-Icon als Fallback
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setOngoing(true)
             .setContentIntent(pendingIntent)
             .addAction(0, context.getString(R.string.service_notification_stop_server), stopPendingIntent)
@@ -70,15 +85,16 @@ class NotificationHelper(private val context: Context) {
         }
         val denyPending = PendingIntent.getService(context, clientIp.hashCode(), denyIntent, PendingIntent.FLAG_IMMUTABLE)
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+        val notification = NotificationCompat.Builder(context, APPROVAL_CHANNEL_ID)
             .setContentTitle(context.getString(R.string.connection_request_notification_title))
             .setContentText(context.getString(R.string.connection_request_notification_text, clientIp, filename))
-            // .setSmallIcon(R.drawable.ic_security)
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // System-Icon als Fallback
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setDefaults(Notification.DEFAULT_ALL) // Wichtig für Heads-up (Ton/Vibration)
             .addAction(0, context.getString(R.string.connection_request_notification_accept), approvePending)
             .addAction(0, context.getString(R.string.connection_request_notification_deny), denyPending)
+            .setAutoCancel(true)
             .build()
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

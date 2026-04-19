@@ -7,16 +7,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Undo
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -67,9 +70,20 @@ fun LogList(
                         .combinedClickable(
                             onClick = { },
                             onLongClick = { onContextMenuOpen(entry.logEntry) }
-                        )
+                        ),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("${entry.logEntry.status}", color = if (entry.logEntry.status >= 400) Color.Red else Color.Green)
+                    if (entry.logEntry.status == 0) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            "${entry.logEntry.status}",
+                            color = if (entry.logEntry.status >= 400) Color.Red else Color.Green
+                        )
+                    }
                     Spacer(Modifier.width(8.dp))
                     Text(entry.logEntry.method)
                     Spacer(Modifier.width(8.dp))

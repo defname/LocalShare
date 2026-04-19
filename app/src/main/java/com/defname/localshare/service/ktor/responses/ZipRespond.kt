@@ -30,11 +30,10 @@ suspend fun ApplicationCall.sendZip(
         contentType = ContentType.Application.Zip
     ) {
         try {
-            // ZipOutputStream auf Ktor Channel
             val zip = ZipOutputStream(this.toOutputStream())
 
             for (fileInfo in files) {
-                if (securityHandler.mayContinueDownload(this@sendZip.request)) {
+                if (!securityHandler.mayContinueDownload(this@sendZip.request)) {
                     val clientIp = this@sendZip.request.local.remoteHost
                     Log.d("FileServerService", "Stopping ZIP: Client $clientIp was banned.")
                     break // Schleife abbrechen
@@ -52,8 +51,8 @@ suspend fun ApplicationCall.sendZip(
                         val buffer = ByteArray(8192)
                         var read: Int
                         while (input.read(buffer).also { read = it } != -1) {
-                            // 3. Check wÄhrend des Kopierens der aktuellen Datei
-                            if (securityHandler.mayContinueDownload(this@sendZip.request)) {
+                            // 3. Check während des Kopierens der aktuellen Datei
+                            if (!securityHandler.mayContinueDownload(this@sendZip.request)) {
                                 throw CancellationException("Client banned during file streaming")
                             }
                             zip.write(buffer, 0, read)

@@ -19,17 +19,12 @@ package com.defname.localshare.ui.screens.servercontrol
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.text.format.Formatter
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,7 +33,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Block
@@ -54,18 +48,12 @@ import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
-import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -74,23 +62,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import coil.ImageLoader
-import coil.compose.AsyncImage
-import coil.decode.SvgDecoder
-import com.defname.localshare.NetworkInfo
 import com.defname.localshare.R
-import com.defname.localshare.domain.model.FileInfo
 import com.defname.localshare.ui.components.LogList
+import com.defname.localshare.ui.screens.servercontrol.components.FileCarousel
+import com.defname.localshare.ui.screens.servercontrol.components.IpAddressSelector
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -104,155 +84,15 @@ fun shareText(context: Context, text: String) {
     context.startActivity(shareIntent)
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FileCarousel(
-    fileList: List<FileInfo> = emptyList(),
-    selectedFiles: Set<Uri> = emptySet(),
-    onToggleSelection: (Uri) -> Unit = {}
+fun ServerControlScreen(
+    viewModel: ServerControlViewModel = koinViewModel(),
+    onNavigateToLogs: () -> Unit = {}
 ) {
-    val context = LocalContext.current
-    val svgImageLoader = remember {
-        ImageLoader.Builder(context)
-            .components { add(SvgDecoder.Factory())}
-            .build()
-    }
-
-    HorizontalMultiBrowseCarousel(
-        state = rememberCarouselState { fileList.size },
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .padding(top = 16.dp, bottom = 16.dp),
-        preferredItemWidth = 48.dp,
-        itemSpacing = 8.dp,
-        maxSmallItemWidth = 48.dp,
-        minSmallItemWidth = 48.dp,
-        contentPadding = PaddingValues(horizontal = 8.dp)
-    ) { i ->
-        val item = fileList[i]
-        val isSelected = selectedFiles.contains(item.uri)
-
-        Card(
-            Modifier
-                .maskClip(MaterialTheme.shapes.medium)
-                .combinedClickable(
-                    onClick = { if (selectedFiles.isNotEmpty()) onToggleSelection(item.uri) },
-                    onLongClick = { onToggleSelection(item.uri) }
-                )
-        ) {
-            if (item.filePreview != null) {
-                Image(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .maskClip(MaterialTheme.shapes.small)
-                        .alpha(if (isSelected) 0.3f else 1f),
-                    bitmap = item.filePreview.asImageBitmap(),
-                    contentDescription = item.name,
-                    contentScale = ContentScale.Crop,
-                    colorFilter = if (isSelected) {
-                        ColorFilter.tint(MaterialTheme.colorScheme.error.copy(alpha = 0.5f), BlendMode.SrcAtop)
-                    } else null
-                )
-            } else {
-                val iconFilename = item.iconFile
-                val assetPath = "file:///android_asset/fileicons/$iconFilename"
-
-                Box(
-                    Modifier
-                        .size(48.dp)
-                        .background(
-                            if (isSelected) MaterialTheme.colorScheme.error
-                            else MaterialTheme.colorScheme.surfaceVariant
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    AsyncImage(
-                        model = assetPath,
-                        imageLoader = svgImageLoader, // Hier wird der SVG-Decoder genutzt
-                        contentDescription = item.name,
-                        modifier = Modifier.size(32.dp),
-                    )
-                }
-            }
-        }
-    }
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun IpAddressSelector(
-    modifier: Modifier = Modifier,
-    addresses: List<NetworkInfo> = emptyList(),
-    selectedAdress: String? = null,
-    expanded: Boolean = false,
-    enabled: Boolean = false,
-    onExpandedChange: () -> Unit = {},
-    onAddressSelected: (String?) -> Unit = {},
-    onDismiss: () -> Unit = {},
-) {
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { onExpandedChange() },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-    ) {
-        OutlinedTextField(
-            value = selectedAdress ?: "0.0.0.0",
-            onValueChange = {},
-            readOnly = true, // Verhindert Tastatureingabe
-            label = { Text(stringResource(R.string.servercontrolscreen_bind_server_input_label)) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-            modifier = Modifier
-                .menuAnchor()
-                .fillMaxWidth(),
-            enabled = enabled
-        )
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { onDismiss() }
-        ) {
-            // Option 1: Alle Interfaces
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.servercontrolscreen_bind_server_input_default)) },
-                onClick = {
-                    onAddressSelected(null)
-                    onDismiss()
-                },
-                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-            )
-
-            // Dynamische Optionen aus der IP-Liste
-            addresses.forEach { netInfo ->
-                DropdownMenuItem(
-                    text = {
-                        Column {
-                            Text(netInfo.ip)
-                            Text(netInfo.interfaceName, style = MaterialTheme.typography.labelSmall)
-                        }
-                    },
-                    onClick = {
-                        onAddressSelected(netInfo.ip)
-                        onDismiss()
-                    },
-                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun ServerControlScreen(viewModel: ServerControlViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
 
     val scope = rememberCoroutineScope()
-
 
     val filePickerDialog = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
         viewModel.addFiles(uris)
@@ -437,7 +277,7 @@ fun ServerControlScreen(viewModel: ServerControlViewModel = koinViewModel()) {
             if (state.showExpandLogsButton) {
                 CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
                     IconButton(
-                        onClick = { TODO() },
+                        onClick = onNavigateToLogs,
                         modifier = Modifier.size(24.dp)
                     ) {
                         Icon(
