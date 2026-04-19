@@ -2,13 +2,22 @@ package com.defname.localshare.ui.screens.servercontrol
 
 import android.net.Uri
 import com.defname.localshare.NetworkInfo
-import com.defname.localshare.ServerState
+import com.defname.localshare.domain.model.FileInfo
+import com.defname.localshare.domain.model.WhiteListEntry
 import com.defname.localshare.ui.components.LogListEntry
 
 data class ServerControlState(
-    val server: ServerState = ServerState(),
+    val token: String = "",
 
-    val logCount: Int = 4,
+    val selectedIpAdress: String = "0.0.0.0",
+    val port: Int = 8080,
+
+    val fileList: List<FileInfo> = emptyList(),
+    val isRunning: Boolean = false,
+    val activeClients: List<String> = emptyList(),
+    val blacklist: Set<String> = emptySet(),
+    val whitelist: List<WhiteListEntry> = emptyList(),
+
     val logEntries: List<LogListEntry> = emptyList(),
     val logMenuOpenForId: String? = null,
 
@@ -19,4 +28,6 @@ data class ServerControlState(
     val ipAddressSelectorExpanded: Boolean = false,
     val ipAddressSelectorEnabled: Boolean = false,
 
-)
+    val showExpandLogsButton: Boolean = false
+
+    )

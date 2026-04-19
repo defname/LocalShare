@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
+        android:name=".LocalShareApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -15,6 +16,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
         android:theme="@style/Theme.LocalShare">
         <activity
             android:name=".MainActivity"
@@ -36,7 +38,7 @@
         </activity>
 
         <service
-            android:name=".FileServerService"
+            android:name=".service.LocalShareService"
             android:foregroundServiceType="dataSync"
             android:enabled="true"
             android:exported="false" />

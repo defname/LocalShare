@@ -23,9 +23,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.defname.localshare.LogEntry
 import com.defname.localshare.R
-import com.defname.localshare.ServerRepository
+import com.defname.localshare.data.SecurityRepository
+import com.defname.localshare.domain.model.LogEntry
 import com.defname.localshare.ui.theme.LocalShareTheme
 
 
@@ -35,12 +35,12 @@ data class LogListEntry(
     val isBlackListed: Boolean
 )
 
-fun List<LogEntry>.toLogListEntries(): List<LogListEntry> {
+fun List<LogEntry>.toLogListEntries(securityRepository: SecurityRepository): List<LogListEntry> {
     return this.map { entry ->
         LogListEntry(
             entry,
-            ServerRepository.isWhitelisted(entry.clientIp),
-            ServerRepository.isBlacklisted(entry.clientIp)
+            securityRepository.isWhitelisted(entry.clientIp),
+            securityRepository.isBlacklisted(entry.clientIp)
         )
     }.reversed()
 }

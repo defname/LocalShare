@@ -9,13 +9,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 
 data class MainState(
-    val title: String = DrawerItem.Main.label,
-    val drawerItems: List<DrawerItem> = listOf(
-        DrawerItem.Main,
-        DrawerItem.Logs,
-        DrawerItem.Settings,
-        DrawerItem.Info
-    ),
+    val navigationItems: List<NavigationItem> = listOf(
+        Screen.Main,
+        Screen.Logs,
+        Screen.Settings,
+        Screen.Info
+    ).map {
+        NavigationItem(it.route, it.label, it.icon)
+    },
 
     val isServerRunning: Boolean = false,
     val hasLogs: Boolean = false,
@@ -23,9 +24,27 @@ data class MainState(
     val isNotificationPermissionGranted: Boolean = false
 )
 
-sealed class DrawerItem(val route: String, val label: String, val icon: ImageVector) {
-    object Main : DrawerItem("main", "Server", Icons.Default.Send)
-    object Logs : DrawerItem("logs", "Logs", Icons.Default.List)
-    object Settings : DrawerItem("settings", "Settings", Icons.Default.Settings)
-    object Info : DrawerItem("info", "Info", Icons.Default.Info)
+class NavigationItem(
+    val route: String,
+    val label: String,
+    val icon: ImageVector
+)
+
+sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
+    object Main : Screen("main", "Server", Icons.Default.Send)
+    object Logs : Screen("logs", "Logs", Icons.Default.List)
+    object Settings : Screen("settings", "Settings", Icons.Default.Settings)
+    object Info : Screen("info", "Info", Icons.Default.Info)
+
+    companion object {
+        fun fromRoute(route: String?): Screen {
+            return when (route?.substringBefore("/")) {
+                Main.route -> Main
+                Settings.route -> Settings
+                Logs.route -> Logs
+                Info.route -> Info
+                else -> Main
+            }
+        }
+    }
 }

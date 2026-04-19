@@ -71,6 +71,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -83,17 +84,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
-import com.defname.localshare.FileInfo
 import com.defname.localshare.NetworkInfo
 import com.defname.localshare.R
-import com.defname.localshare.Screen
-import com.defname.localshare.ServerRepository
+import com.defname.localshare.domain.model.FileInfo
 import com.defname.localshare.ui.components.LogList
+import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 
 fun shareText(context: Context, text: String) {
     val sendIntent = Intent().apply {
@@ -248,9 +247,12 @@ fun IpAddressSelector(
 }
 
 @Composable
-fun ServerControlScreen(navController: NavController, viewModel: ServerControlViewModel = viewModel()) {
+fun ServerControlScreen(viewModel: ServerControlViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
+
+    val scope = rememberCoroutineScope()
+
 
     val filePickerDialog = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
         viewModel.addFiles(uris)
@@ -269,7 +271,7 @@ fun ServerControlScreen(navController: NavController, viewModel: ServerControlVi
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .weight(1f)
             )
-            if (state.server.fileList.isNotEmpty()) {
+            if (state.fileList.isNotEmpty()) {
                 CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
                     IconButton(
                         onClick = { viewModel.clearFiles() },
@@ -285,19 +287,19 @@ fun ServerControlScreen(navController: NavController, viewModel: ServerControlVi
             }
         }
 
-        if (state.server.fileList.isNotEmpty()) {
+        if (state.fileList.isNotEmpty()) {
             Text(
                 stringResource(
                     R.string.servercontrolscreen_shared_files_number,
-                    state.server.fileList.size
+                    state.fileList.size
                 ), style = MaterialTheme.typography.bodySmall)
             Text(
                 stringResource(
                     R.string.servercontrolscreen_shared_files_total_size,
-                    Formatter.formatFileSize(context, state.server.fileList.sumOf { it.size })
+                    Formatter.formatFileSize(context, state.fileList.sumOf { it.size })
                 ), style = MaterialTheme.typography.bodySmall)
             FileCarousel(
-                fileList = state.server.fileList,
+                fileList = state.fileList,
                 selectedFiles = state.filesToDelete,
                 onToggleSelection = { viewModel.toggleFileToDelete(it) },
             )
@@ -347,15 +349,15 @@ fun ServerControlScreen(navController: NavController, viewModel: ServerControlVi
 
         Row(Modifier.padding(8.dp)) {
             OutlinedTextField(
-                value = state.server.token,
+                value = state.token,
                 label = { Text(stringResource(R.string.servercontrolscreen_token_input_caption)) },
                 singleLine = true,
-                onValueChange = { ServerRepository.setToken(it) },
+                onValueChange = { scope.launch { viewModel.onTokenChange(it) } },
                 enabled = true,
                 modifier = Modifier
                     .weight(2f)
                     .fillMaxWidth(),
-                trailingIcon = { IconButton(onClick = { ServerRepository.setRandomToken() }) {
+                trailingIcon = { IconButton(onClick = { scope.launch { viewModel.onRandomTokenClick() } }) {
                     Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.servercontrolscreen_generate_random_token_icon_description))
                 } }
             )
@@ -363,11 +365,11 @@ fun ServerControlScreen(navController: NavController, viewModel: ServerControlVi
 
         IpAddressSelector(
             addresses = state.localIpAddresses,
-            selectedAdress = state.server.selectedIp,
+            selectedAdress = state.selectedIpAdress,
             expanded = state.ipAddressSelectorExpanded,
             enabled = state.ipAddressSelectorEnabled,
             onExpandedChange = { viewModel.ipAddressSelectorExpandedChange() },
-            onAddressSelected = { ip -> viewModel.setSeletectedIp(ip) },
+            onAddressSelected = { scope.launch { viewModel.setSeletectedIp(it) } },
             onDismiss = { viewModel.collapseIpAddressSelector() }
         )
 
@@ -380,16 +382,16 @@ fun ServerControlScreen(navController: NavController, viewModel: ServerControlVi
         )
         Spacer(modifier = Modifier.height(8.dp))
 
-        val usedAddresses: List<String> = remember(state.server.selectedIp, state.localIpAddresses) {
-            if (state.server.selectedIp != "0.0.0.0") {
-                listOf(state.server.selectedIp)
+        val usedAddresses: List<String> = remember(state.selectedIpAdress, state.localIpAddresses) {
+            if (state.selectedIpAdress != "0.0.0.0") {
+                listOf(state.selectedIpAdress)
             } else {
                 state.localIpAddresses.map { it.ip }
             }
         }
 
         for (ipAddress in usedAddresses) {
-            val baseUrl = "http://$ipAddress:${state.server.port}/${state.server.token}"
+            val baseUrl = "http://$ipAddress:${state.port}/${state.token}"
             for (action in listOf("stream", "download")) {
                 val url = "$baseUrl/$action"
                 Card(modifier = Modifier
@@ -432,10 +434,10 @@ fun ServerControlScreen(navController: NavController, viewModel: ServerControlVi
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .weight(1f)
             )
-            if (state.server.logs.size > state.logCount) {
+            if (state.showExpandLogsButton) {
                 CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
                     IconButton(
-                        onClick = { navController.navigate(Screen.Logs.route) },
+                        onClick = { TODO() },
                         modifier = Modifier.size(24.dp)
                     ) {
                         Icon(
@@ -460,15 +462,15 @@ fun ServerControlScreen(navController: NavController, viewModel: ServerControlVi
         )
 
 
-        if (state.server.isRunning) {
+        if (state.isRunning) {
 
-            if (state.server.activeClients.isNotEmpty()) {
+            if (state.activeClients.isNotEmpty()) {
                 Spacer(Modifier.height(16.dp))
 
                 Text(
                     stringResource(
                         R.string.servercontrollscreen_active_clients_caption,
-                        state.server.activeClients.size
+                        state.activeClients.size
                     ),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
@@ -477,7 +479,7 @@ fun ServerControlScreen(navController: NavController, viewModel: ServerControlVi
                         .padding(top = 16.dp)
                 )
 
-                state.server.activeClients.distinct().forEach { ip ->
+                state.activeClients.distinct().forEach { ip ->
                     Row(
                         Modifier
                             .padding(8.dp)
@@ -496,7 +498,7 @@ fun ServerControlScreen(navController: NavController, viewModel: ServerControlVi
                                 .padding(start = 8.dp)
                         )
                         IconButton(
-                            onClick = { ServerRepository.addToBlacklist(ip) }
+                            onClick = { viewModel.addToBlacklist(ip) }
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Block,
@@ -508,13 +510,13 @@ fun ServerControlScreen(navController: NavController, viewModel: ServerControlVi
                 }
             }
 
-            if (state.server.blacklist.isNotEmpty()) {
+            if (state.blacklist.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
                     stringResource(
                         R.string.servercontrollscreen_banned_ips_caption,
-                        state.server.blacklist.size
+                        state.blacklist.size
                     ),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
@@ -522,7 +524,7 @@ fun ServerControlScreen(navController: NavController, viewModel: ServerControlVi
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 )
 
-                state.server.blacklist.distinct().forEach { ip ->
+                state.blacklist.distinct().forEach { ip ->
                     Row(
                         Modifier
                             .padding(8.dp)
@@ -541,7 +543,7 @@ fun ServerControlScreen(navController: NavController, viewModel: ServerControlVi
                                 .padding(start = 8.dp)
                         )
                         IconButton(
-                            onClick = { ServerRepository.removeFromBlacklist(ip) }
+                            onClick = { viewModel.removeFromBlacklist(ip) }
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Undo,

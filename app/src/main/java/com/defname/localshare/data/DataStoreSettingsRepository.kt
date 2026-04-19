@@ -31,7 +31,7 @@ class DataStoreSettingsRepository(
         .map {
             Settings(
                 token = it[Keys.TOKEN] ?: UUID.randomUUID().toString(),
-                port = it[Keys.PORT] ?: 8080,
+                serverPort = it[Keys.PORT] ?: 8080,
                 serverIp = it[Keys.SERVER_IP] ?: "0.0.0.0",
                 serverIdleTimeoutSeconds = it[Keys.SERVER_IDLE_TIMEOUT_SECONDS] ?: 30,
                 requireApproval = it[Keys.REQUIRE_APPROVAL] ?: true,

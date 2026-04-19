@@ -2,42 +2,42 @@ package com.defname.localshare.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.defname.localshare.ServerRepository
+import com.defname.localshare.data.ServiceRepository
+import com.defname.localshare.domain.model.Settings
+import com.defname.localshare.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-class SettingsViewModel : ViewModel() {
-    val state: StateFlow<SettingsState> = ServerRepository.state
-        .map { SettingsState(server = it) }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = SettingsState()
-        )
+class SettingsViewModel(
+    private val settingsRepository: SettingsRepository,
+    private val serviceRepository: ServiceRepository
+) : ViewModel() {
+    val settings = settingsRepository.settingsFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = Settings()
+    )
 
-    fun setPort(port: Int) {
-        ServerRepository.setPort(port)
+    val runtimeState = serviceRepository.runtimeState
+
+    suspend fun setPort(port: Int) {
+        settingsRepository.setPort(port)
     }
 
-    fun setIdleTimeoutSeconds(seconds: Int) {
-        ServerRepository.setIdleTimeoutSeconds(seconds)
+    suspend fun setIdleTimeoutSeconds(seconds: Int) {
+        settingsRepository.setServerIdleTimeoutSeconds(seconds)
     }
 
-    fun setRequireApproval(requireApproval: Boolean) {
-        ServerRepository.setRequireApproval(requireApproval)
+    suspend fun setRequireApproval(requireApproval: Boolean) {
+        settingsRepository.setRequireApproval(requireApproval)
     }
 
-    fun setWhiteListEntryTTLSeconds(seconds: Int) {
-        ServerRepository.setWhiteListEntryTTLSeconds(seconds)
+    suspend fun setWhiteListEntryTTLSeconds(seconds: Int) {
+        settingsRepository.setWhitelistEntryTTLSeconds(seconds)
     }
 
-    fun setClearFilesListOnSendIntent(clear: Boolean) {
-        ServerRepository.setClearFilesListOnSendIntent(clear)
+    suspend fun setClearFilesListOnSendIntent(clear: Boolean) {
+        settingsRepository.setClearFileListOnShareIntent(clear)
     }
 
-    fun setKeepScreenOn(keepScreenOn: Boolean) {
-        ServerRepository.setKeepScreenOn(keepScreenOn)
-    }
 }

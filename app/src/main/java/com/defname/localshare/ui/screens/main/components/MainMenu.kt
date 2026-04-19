@@ -17,12 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.defname.localshare.R
-import com.defname.localshare.ui.screens.main.DrawerItem
+import com.defname.localshare.ui.screens.main.NavigationItem
 
 @Composable
 fun MainMenu(
-    drawerItems: List<DrawerItem>,
-    onItemClick: (DrawerItem) -> Unit,
+    drawerItems: List<NavigationItem>,
+    onItemClick: (String) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
 
@@ -43,7 +43,7 @@ fun MainMenu(
                 icon = { Icon(item.icon, contentDescription = null) },
                 label = { Text(item.label) },
                 // selected = currentRoute == item.route,
-                onClick = { onItemClick(item) },
+                onClick = { onItemClick(item.route) },
                 selected = false,
                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
             )

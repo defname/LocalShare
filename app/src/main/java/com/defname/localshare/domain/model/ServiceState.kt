@@ -1,8 +1,5 @@
 package com.defname.localshare.domain.model
 
-import com.defname.localshare.ConnectionRequest
-import com.defname.localshare.FileInfo
-import com.defname.localshare.WhiteListEntry
 import java.util.UUID
 
 data class ServiceState(

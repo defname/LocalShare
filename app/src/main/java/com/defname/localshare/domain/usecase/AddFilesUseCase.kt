@@ -8,8 +8,13 @@ class AddFilesUseCase(
     val fileInfoProvider: FileInfoProvider,
     val serviceRepository: ServiceRepository
 ) {
-    fun invoke(uri: Uri) {
+    operator fun invoke(uri: Uri) {
         val fileInfo = fileInfoProvider.getFileInfo(uri)
         serviceRepository.addFile(fileInfo)
+    }
+    operator fun invoke(uris: List<Uri>) {
+        for (uri in uris) {
+            invoke(uri)
+        }
     }
 }

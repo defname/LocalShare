@@ -26,12 +26,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 import com.defname.localshare.ui.components.LogList
 import com.defname.localshare.ui.theme.LocalShareTheme
 
 @Composable
-fun LogsScreen(viewModel: LogsViewModel = viewModel()) {
+fun LogsScreen(viewModel: LogsViewModel = koinViewModel()) {
     val state = viewModel.state.collectAsState()
 
     Column(

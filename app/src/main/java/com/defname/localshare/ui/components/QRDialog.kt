@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.defname.localshare
+package com.defname.localshare.ui.components
 
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -36,11 +36,9 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -66,15 +64,12 @@ fun generateQRCode(data: String, size: Int = 512): Bitmap {
 
 
 @Composable
-fun QrCodeDialog(onDismiss: () -> Unit, fileId: String? = null) {
-    val serverState by ServerRepository.state.collectAsState()
-    var createDownloadLink by remember { mutableStateOf(false) }
-
-    // Reagiert auf fileId, den Toggle UND auf Änderungen im serverState (IP/Port/Token)
-    val url = remember(fileId, createDownloadLink, serverState.selectedIp, serverState.port, serverState.token) {
-        ServerRepository.getServerAdress(fileId, createDownloadLink)
-    }
-
+fun QRDialog(
+    url: String,
+    isStream: Boolean,
+    onToggleIsStream: () -> Unit,
+    onDismiss: () -> Unit
+) {
     // Das QR-Bitmap generieren (reagiert auf die neue URL)
     val qrBitmap by remember(url) {
         mutableStateOf(generateQRCode(url))
@@ -104,8 +99,8 @@ fun QrCodeDialog(onDismiss: () -> Unit, fileId: String? = null) {
                             index = 0,
                             count = 2
                         ),
-                        onClick = { createDownloadLink = true },
-                        selected = createDownloadLink,
+                        onClick = onToggleIsStream,
+                        selected = !isStream,
                         label = { Text("Download") },
                         icon = { Icon(imageVector = Icons.Default.Download, contentDescription = "Download") }
                     )
@@ -114,8 +109,8 @@ fun QrCodeDialog(onDismiss: () -> Unit, fileId: String? = null) {
                             index = 1,
                             count = 2
                         ),
-                        onClick = { createDownloadLink = false },
-                        selected = !createDownloadLink,
+                        onClick = onToggleIsStream,
+                        selected = isStream,
                         label = { Text("Stream") },
                         icon = { Icon(imageVector = Icons.Default.Stream, contentDescription = "Download") }
                     )

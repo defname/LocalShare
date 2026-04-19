@@ -34,18 +34,22 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.defname.localshare.R
 import com.defname.localshare.ui.theme.LocalShareTheme
+import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
-    val state by viewModel.state.collectAsState()
+fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
+    val settings by viewModel.settings.collectAsState()
+    val runtimeState by viewModel.runtimeState.collectAsState()
+    val scope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -57,12 +61,12 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
             // Port Einstellung
             SettingsRow {
                 TextField(
-                    value = state.server.port.toString(),
-                    enabled = !state.server.isRunning,
+                    value = settings.serverPort.toString(),
+                    enabled = !runtimeState.isRunning,
                     label = { Text(stringResource(R.string.settings_server_port_label)) },
                     modifier = Modifier.weight(1f),
                     supportingText = {
-                        if (state.server.isRunning) {
+                        if (runtimeState.isRunning) {
                             Text(stringResource(R.string.settings_server_port_hint_not_available))
                         }
                         else {
@@ -70,21 +74,21 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
                         }
                     },
                     onValueChange = {
-                        viewModel.setPort(it.toIntOrNull() ?: 8080)
+                        scope.launch { viewModel.setPort(it.toIntOrNull() ?: 8080) }
                     }
                 )
             }
 
             SettingsRow {
                 TextField(
-                    value = state.server.idleTimeoutSeconds.toString(),
+                    value = settings.serverIdleTimeoutSeconds.toString(),
                     label = { Text(stringResource(R.string.settings_server_timeout_label)) },
                     modifier = Modifier.weight(1f),
                     supportingText = {
                         Text(stringResource(R.string.settings_server_timeout_hint))
                     },
                     onValueChange = {
-                        viewModel.setIdleTimeoutSeconds(it.toIntOrNull() ?: 30)
+                        scope.launch { viewModel.setIdleTimeoutSeconds(it.toIntOrNull() ?: 30) }
                     }
                 )
             }
@@ -95,21 +99,21 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
             SettingsSwitchRow(
                 title = stringResource(R.string.settings_security_require_approval_label),
                 subtitle = stringResource(R.string.settings_security_require_approval_hint),
-                checked = state.server.requireApproval,
-                onCheckedChange = { viewModel.setRequireApproval(it) }
+                checked = settings.requireApproval,
+                onCheckedChange = { scope.launch { viewModel.setRequireApproval(it) } }
             )
 
-            if (state.server.requireApproval) {
+            if (settings.requireApproval) {
                 SettingsRow{
                     TextField(
-                        value = state.server.whiteListEntryTTLSeconds.toString(),
+                        value = settings.whitelistEntryTTLSeconds.toString(),
                         label = { Text(stringResource(R.string.settings_security_whitelist_ttl_label)) },
                         modifier = Modifier.weight(1f),
                         supportingText = {
                             Text(stringResource(R.string.settings_security_whitelist_ttl_hint))
                         },
                         onValueChange = {
-                            viewModel.setWhiteListEntryTTLSeconds(it.toIntOrNull() ?: 30)
+                            scope.launch { viewModel.setWhiteListEntryTTLSeconds(it.toIntOrNull() ?: 30) }
                         }
                     )
                 }
@@ -120,15 +124,8 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
             SettingsSwitchRow(
                 title = stringResource(R.string.settings_misc_clear_file_list_on_share_label),
                 subtitle = stringResource(R.string.settings_misc_clear_file_list_on_share_hint),
-                checked = state.server.clearFileListOnSendIntent,
-                onCheckedChange = { viewModel.setClearFilesListOnSendIntent(it) }
-            )
-
-            SettingsSwitchRow(
-                title = stringResource(R.string.settings_misc_keep_screen_on_label),
-                subtitle = stringResource(R.string.settings_misc_keep_screen_on_hint),
-                checked = state.server.keepScreenOn,
-                onCheckedChange = { viewModel.setKeepScreenOn(it) }
+                checked = settings.clearFileListOnShareIntent,
+                onCheckedChange = { scope.launch { viewModel.setClearFilesListOnSendIntent(it) } }
             )
         }
     }
