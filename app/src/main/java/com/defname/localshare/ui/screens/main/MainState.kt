@@ -21,6 +21,8 @@ data class MainState(
     val isServerRunning: Boolean = false,
     val hasLogs: Boolean = false,
     val showQrDialog: Boolean = false,
+    val qrForStream: Boolean = false,
+    val qrFullLink: String = "",
     val isNotificationPermissionGranted: Boolean = false
 )
 

@@ -56,7 +56,10 @@ class SecurityRepository(
 
     fun isApprovalRequired(): Boolean { return settings.value.requireApproval }
 
-    fun addToBlacklist(ip: String) { _blacklist.update { it + ip } }
+    fun addToBlacklist(ip: String) {
+        removeFromWhitelist(ip)
+        _blacklist.update { it + ip }
+    }
     fun removeFromBlacklist(ip: String) { _blacklist.update { it - ip } }
     fun isBlacklisted(ip: String): Boolean { return _blacklist.value.contains(ip) }
 

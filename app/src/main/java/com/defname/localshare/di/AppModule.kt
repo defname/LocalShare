@@ -51,7 +51,7 @@ val appModule = module {
     factory { ManageServiceUseCase(get()) }
     factory { ServerSecurityHandler(get(), get()) }
 
-    viewModel { MainViewModel(get(), get(), get(), get()) }
+    viewModel { MainViewModel(get(), get(), get(), get(), get()) }
     viewModel { ServerControlViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { LogsViewModel(get(), get(), get()) }
     viewModel { SettingsViewModel(get(), get()) }

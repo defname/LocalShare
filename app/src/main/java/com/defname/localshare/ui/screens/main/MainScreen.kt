@@ -57,7 +57,7 @@ fun MainScreen(
     }
 
     if (state.showQrDialog) {
-        QRDialog("foobar", false, {}, { viewModel.hideQrDialog() })
+        QRDialog(state.qrFullLink, state.qrForStream, { viewModel.toggleQrForStream() }, { viewModel.hideQrDialog() })
     }
 
     ModalNavigationDrawer(

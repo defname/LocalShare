@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.defname.localshare.data.LogsRepository
 import com.defname.localshare.data.PermissionRepository
 import com.defname.localshare.data.ServiceRepository
+import com.defname.localshare.domain.repository.SettingsRepository
 import com.defname.localshare.domain.usecase.ManageServiceUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -12,19 +13,24 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
+private data class QrState(
+    val showQrDialog: Boolean,
+    val qrForStream: Boolean
+)
 
 class MainViewModel(
     private val logsRepository: LogsRepository,
     private val serviceRepository: ServiceRepository,
+    private val settingsRepository: SettingsRepository,
     private val permissionRepository: PermissionRepository,
     private val manageServiceUseCase: ManageServiceUseCase
 ) : ViewModel() {
     fun showQrDialog() {
-        _showQrDialog.update { true }
+        _qrState.update { it.copy(showQrDialog = true) }
     }
 
     fun hideQrDialog() {
-        _showQrDialog.update { false }
+        _qrState.update { it.copy(showQrDialog = false) }
     }
 
     fun clearLogs() {
@@ -43,15 +49,36 @@ class MainViewModel(
         manageServiceUseCase.stopService()
     }
 
-    private val _showQrDialog = MutableStateFlow(false)
+    fun toggleQrForStream() {
+        _qrState.update { it.copy(qrForStream = !it.qrForStream) }
+    }
+
+    private val _qrState = MutableStateFlow(QrState(false, false))
+
+    private fun getQrLink(qrForStream: Boolean, token: String, ip: String, port: Int): String {
+        return if (qrForStream) {
+            "http://$ip:$port/stream/$token"
+        } else {
+            "http://$ip:$port/download/$token"
+        }
+    }
+
     val state = combine(
-        _showQrDialog,
+        _qrState,
+        settingsRepository.settingsFlow,
         logsRepository.logs,
         serviceRepository.runtimeState,
         permissionRepository.hasNotificationPermission
-    ) { showQrDialog, logs, runtimeState, hasNotificationPermission ->
+    ) { qrState, settings, logs, runtimeState, hasNotificationPermission ->
         MainState(
-            showQrDialog = showQrDialog,
+            showQrDialog = qrState.showQrDialog,
+            qrForStream = qrState.qrForStream,
+            qrFullLink = getQrLink(
+                qrState.qrForStream,
+                settings.token,
+                settings.serverIp,
+                settings.serverPort
+            ),
             hasLogs = logs.isNotEmpty(),
             isServerRunning = runtimeState.isRunning,
             isNotificationPermissionGranted = hasNotificationPermission
