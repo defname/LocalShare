@@ -3,6 +3,7 @@ package com.defname.localshare.ui.screens.main
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.defname.localshare.data.LogsRepository
+import com.defname.localshare.data.NetworkInfoProvider
 import com.defname.localshare.data.PermissionRepository
 import com.defname.localshare.data.ServiceRepository
 import com.defname.localshare.domain.repository.SettingsRepository
@@ -23,7 +24,8 @@ class MainViewModel(
     private val serviceRepository: ServiceRepository,
     private val settingsRepository: SettingsRepository,
     private val permissionRepository: PermissionRepository,
-    private val manageServiceUseCase: ManageServiceUseCase
+    private val manageServiceUseCase: ManageServiceUseCase,
+    private val networkInfoProvider: NetworkInfoProvider
 ) : ViewModel() {
     fun showQrDialog() {
         _qrState.update { it.copy(showQrDialog = true) }
@@ -70,13 +72,19 @@ class MainViewModel(
         serviceRepository.runtimeState,
         permissionRepository.hasNotificationPermission
     ) { qrState, settings, logs, runtimeState, hasNotificationPermission ->
+        var qrCodeIp = settings.serverIp
+        if (qrCodeIp == "0.0.0.0") {
+            val addresses = networkInfoProvider.getLocalIpAddresses()
+            qrCodeIp = networkInfoProvider.getSmartDefaultIp(addresses)
+        }
+
         MainState(
             showQrDialog = qrState.showQrDialog,
             qrForStream = qrState.qrForStream,
             qrFullLink = getQrLink(
                 qrState.qrForStream,
                 settings.token,
-                settings.serverIp,
+                qrCodeIp,
                 settings.serverPort
             ),
             hasLogs = logs.isNotEmpty(),
