@@ -78,6 +78,7 @@ class ServerControlViewModel(
             port = settings.serverPort,
             fileList = runtimeState.fileList,
             isRunning = runtimeState.serviceState == RuntimeState.RUNNING,
+            serviceState = runtimeState.serviceState,
             activeClients = runtimeState.activeClients,
             blacklist = securityRepository.blacklist.value,
             whitelist = securityRepository.whitelist.value,

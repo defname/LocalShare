@@ -48,7 +48,12 @@ fun IpAddressSelector(
                 .menuAnchor()
                 .fillMaxWidth(),
             enabled = enabled,
-            supportingText = { if (!isSelectedAddressValid) Text(stringResource(R.string.ipaddressseelector_selected_ip_is_not_available)) }
+            supportingText = {
+                if (!isSelectedAddressValid)
+                    Text(stringResource(R.string.ipaddressseelector_selected_ip_is_not_available))
+                else if (!enabled)
+                    Text(stringResource(R.string.ipaddressselector_only_available_when_server_is_stopped))
+            }
         )
 
         ExposedDropdownMenu(

@@ -3,7 +3,6 @@ package com.defname.localshare.ui.screens.main.components
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.QrCode2
@@ -40,7 +39,7 @@ fun MainTopBar(
         navigationIcon = {
             IconButton(onClick = onNavigationClick) {
                 Icon(
-                    imageVector = if (currentScreen == Screen.Main) Icons.Default.Menu else Icons.Default.ArrowBack,
+                    imageVector = Icons.Default.Menu,
                     contentDescription = null
                 )
             }
