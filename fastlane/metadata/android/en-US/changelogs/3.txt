@@ -1,1 +1,7 @@
 - Complete refactoring of the project's sourcecode
+- Improved user experience
+  - Add spinning icon to "Run Server" button during start and shutdown
+  - Improved error handling during server start
+  - More accurate active clients list
+  - Logs are added immediately when a client connects and are updated when the state of the connection changes
+- Remove unneeded "Keep screen on" option
