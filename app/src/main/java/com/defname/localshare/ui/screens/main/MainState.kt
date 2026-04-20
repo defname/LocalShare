@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.defname.localshare.data.RuntimeState
 
 
 data class MainState(
@@ -18,7 +19,7 @@ data class MainState(
         NavigationItem(it.route, it.label, it.icon)
     },
 
-    val isServerRunning: Boolean = false,
+    val serverState: RuntimeState = RuntimeState.STOPPED,
     val hasLogs: Boolean = false,
     val showQrDialog: Boolean = false,
     val qrForStream: Boolean = false,

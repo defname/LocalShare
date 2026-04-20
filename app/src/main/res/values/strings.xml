@@ -61,4 +61,7 @@
     <string name="settings_misc_keep_screen_on_label">Keep Screen On</string>
     <string name="settings_misc_keep_screen_on_hint">Prevent device from sleeping while server is running.</string>
     <string name="notification_channel_description">Status of the local file server</string>
+    <string name="main_server_button_starting">Server is starting</string>
+    <string name="main_server_button_stopping">Server is stopping</string>
+    <string name="ipaddressseelector_selected_ip_is_not_available">Selected IP is not available.</string>
 </resources>

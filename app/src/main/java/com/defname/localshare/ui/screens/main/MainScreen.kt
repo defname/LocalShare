@@ -24,6 +24,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.defname.localshare.data.RuntimeState
 import com.defname.localshare.ui.components.QRDialog
 import com.defname.localshare.ui.screens.info.InfoScreen
 import com.defname.localshare.ui.screens.logs.LogsScreen
@@ -85,7 +86,7 @@ fun MainScreen(
             topBar = {
                 MainTopBar(
                     currentScreen = currentScreen,
-                    isServerRunning = state.isServerRunning,
+                    isServerRunning = state.serverState == RuntimeState.RUNNING,
                     hasLogs = state.hasLogs,
                     onNavigationClick = { scope.launch { drawerState.open() } },
                     onQrClick = { viewModel.showQrDialog() },
@@ -94,7 +95,7 @@ fun MainScreen(
             },
             bottomBar = {
                 StartServerButton(
-                    serverIsRunning = state.isServerRunning,
+                    serverState = state.serverState,
                     hasNotificationPermission = state.isNotificationPermissionGranted,
                     requestNotificationPermission = {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

@@ -48,7 +48,7 @@ class NotificationHelper(private val context: Context) {
         manager.createNotificationChannel(approvalChannel)
     }
 
-    fun buildBaseNotification(serverIp: String, port: Int): Notification {
+    fun buildBaseNotification(serverIp: String, port: Int, isRunning: Boolean): Notification {
         val mainActivityIntent = Intent(context, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
             context, 0, mainActivityIntent, PendingIntent.FLAG_IMMUTABLE

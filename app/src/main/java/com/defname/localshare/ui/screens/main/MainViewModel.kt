@@ -80,7 +80,7 @@ class MainViewModel(
                 settings.serverPort
             ),
             hasLogs = logs.isNotEmpty(),
-            isServerRunning = runtimeState.isRunning,
+            serverState = runtimeState.serviceState,
             isNotificationPermissionGranted = hasNotificationPermission
         )
     }.stateIn(

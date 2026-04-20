@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.defname.localshare.data.LogsRepository
 import com.defname.localshare.data.NetworkInfoProvider
 import com.defname.localshare.data.RuntimeData
+import com.defname.localshare.data.RuntimeState
 import com.defname.localshare.data.SecurityRepository
 import com.defname.localshare.data.ServiceRepository
 import com.defname.localshare.domain.model.LogEntry
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 private data class InternalUiState(
     val logMenuId: String? = null,
@@ -67,12 +69,15 @@ class ServerControlViewModel(
         val whitelist = states[4] as List<WhiteListEntry>
         val uiState = states[5] as InternalUiState
 
+        val localAddresses = networkInfoProvider.getLocalIpAddresses() + NetworkInfo("0.0.0.0", "any")
+
         ServerControlState(
             token = settings.token,
-            selectedIpAdress = settings.serverIp,
+            selectedIpAddress = settings.serverIp,
+            isSelectedIpAddressValid = localAddresses.any { it.ip == settings.serverIp },
             port = settings.serverPort,
             fileList = runtimeState.fileList,
-            isRunning = runtimeState.isRunning,
+            isRunning = runtimeState.serviceState == RuntimeState.RUNNING,
             activeClients = runtimeState.activeClients,
             blacklist = securityRepository.blacklist.value,
             whitelist = securityRepository.whitelist.value,
@@ -81,7 +86,7 @@ class ServerControlViewModel(
             filesToDelete = uiState.filesToDelete,
             localIpAddresses = uiState.localIpAddresses,
             ipAddressSelectorExpanded = uiState.ipAddressSelectorExpanded,
-            ipAddressSelectorEnabled = !runtimeState.isRunning,
+            ipAddressSelectorEnabled = runtimeState.serviceState == RuntimeState.STOPPED,
             showExpandLogsButton = logs.size > logCount
         )
     }.stateIn(
@@ -129,10 +134,21 @@ class ServerControlViewModel(
     }
 
     fun ipAddressSelectorExpandedChange() {
+        val addresses = networkInfoProvider.getLocalIpAddresses()
+        val currentSettingsIp = settingsState.value.serverIp
+
+        // Falls die aktuelle IP nicht mehr existiert, korrigieren wir sie
+        if (addresses.none { it.ip == currentSettingsIp } && currentSettingsIp != "0.0.0.0") {
+            val fallbackIp = networkInfoProvider.getSmartDefaultIp(addresses)
+            viewModelScope.launch {
+                settingsRepository.setServerIp(fallbackIp)
+            }
+        }
+
         _uiState.update {
             it.copy(
                 ipAddressSelectorExpanded = !_uiState.value.ipAddressSelectorExpanded,
-                localIpAddresses = networkInfoProvider.getLocalIpAddresses()
+                localIpAddresses = addresses
             )
         }
     }

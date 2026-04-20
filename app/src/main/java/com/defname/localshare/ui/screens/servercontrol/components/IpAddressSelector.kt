@@ -20,9 +20,9 @@ import com.defname.localshare.domain.model.NetworkInfo
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IpAddressSelector(
-    modifier: Modifier = Modifier,
     addresses: List<NetworkInfo> = emptyList(),
-    selectedAdress: String? = null,
+    selectedAddress: String? = null,
+    isSelectedAddressValid: Boolean = true,
     expanded: Boolean = false,
     enabled: Boolean = false,
     onExpandedChange: () -> Unit = {},
@@ -37,16 +37,18 @@ fun IpAddressSelector(
             .padding(8.dp)
     ) {
         OutlinedTextField(
-            value = selectedAdress ?: "0.0.0.0",
+            value = selectedAddress ?: "0.0.0.0",
             onValueChange = {},
-            readOnly = true, // Verhindert Tastatureingabe
+            readOnly = true,
             label = { Text(stringResource(R.string.servercontrolscreen_bind_server_input_label)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+            isError = !isSelectedAddressValid,
             modifier = Modifier
                 .menuAnchor()
                 .fillMaxWidth(),
-            enabled = enabled
+            enabled = enabled,
+            supportingText = { if (!isSelectedAddressValid) Text(stringResource(R.string.ipaddressseelector_selected_ip_is_not_available)) }
         )
 
         ExposedDropdownMenu(

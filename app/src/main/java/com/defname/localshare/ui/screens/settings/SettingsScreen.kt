@@ -41,6 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.defname.localshare.R
+import com.defname.localshare.data.RuntimeState
 import com.defname.localshare.ui.theme.LocalShareTheme
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -62,11 +63,11 @@ fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
             SettingsRow {
                 TextField(
                     value = settings.serverPort.toString(),
-                    enabled = !runtimeState.isRunning,
+                    enabled = runtimeState.serviceState == RuntimeState.STOPPED,
                     label = { Text(stringResource(R.string.settings_server_port_label)) },
                     modifier = Modifier.weight(1f),
                     supportingText = {
-                        if (runtimeState.isRunning) {
+                        if (runtimeState.serviceState != RuntimeState.STOPPED) {
                             Text(stringResource(R.string.settings_server_port_hint_not_available))
                         }
                         else {

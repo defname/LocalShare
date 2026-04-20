@@ -30,11 +30,17 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
+enum class RuntimeState {
+    RUNNING,
+    STARTING,
+    STOPPING,
+    STOPPED
+}
 
 data class RuntimeData(
     val fileList: List<FileInfo> = emptyList(),
     val activeClients: List<String> = emptyList(),
-    val isRunning: Boolean = false,
+    val serviceState: RuntimeState = RuntimeState.STOPPED,
 )
 
 class ServiceRepository(
@@ -59,8 +65,12 @@ class ServiceRepository(
     fun clientConnected(ip: String) { _runtimeState.update { it.copy(activeClients = it.activeClients + ip) } }
     fun clientDisconnected(ip: String) { _runtimeState.update { it.copy(activeClients = it.activeClients - ip) } }
 
-    fun serverStarted() { _runtimeState.update { it.copy(isRunning = true) } }
-    fun serverStopped() { _runtimeState.update { it.copy(isRunning = false) } }
+    fun serverStarting() { _runtimeState.update { it.copy(serviceState = RuntimeState.STARTING) } }
+    fun serverStarted() { _runtimeState.update { it.copy(serviceState = RuntimeState.RUNNING) } }
+    fun serverStopping() { _runtimeState.update { it.copy(serviceState = RuntimeState.STOPPING) } }
+    fun serverStopped() { _runtimeState.update { it.copy(serviceState = RuntimeState.STOPPED) } }
+
+    fun serverRunning() = _runtimeState.value.serviceState == RuntimeState.RUNNING
 
 }
 

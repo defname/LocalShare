@@ -9,7 +9,8 @@ import com.defname.localshare.ui.components.LogListEntry
 data class ServerControlState(
     val token: String = "",
 
-    val selectedIpAdress: String = "0.0.0.0",
+    val selectedIpAddress: String = "0.0.0.0",
+    val isSelectedIpAddressValid: Boolean = true,
     val port: Int = 8080,
 
     val fileList: List<FileInfo> = emptyList(),

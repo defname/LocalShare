@@ -205,7 +205,8 @@ fun ServerControlScreen(
 
         IpAddressSelector(
             addresses = state.localIpAddresses,
-            selectedAdress = state.selectedIpAdress,
+            selectedAddress = state.selectedIpAddress,
+            isSelectedAddressValid = state.isSelectedIpAddressValid,
             expanded = state.ipAddressSelectorExpanded,
             enabled = state.ipAddressSelectorEnabled,
             onExpandedChange = { viewModel.ipAddressSelectorExpandedChange() },
@@ -222,9 +223,9 @@ fun ServerControlScreen(
         )
         Spacer(modifier = Modifier.height(8.dp))
 
-        val usedAddresses: List<String> = remember(state.selectedIpAdress, state.localIpAddresses) {
-            if (state.selectedIpAdress != "0.0.0.0") {
-                listOf(state.selectedIpAdress)
+        val usedAddresses: List<String> = remember(state.selectedIpAddress, state.localIpAddresses) {
+            if (state.selectedIpAddress != "0.0.0.0") {
+                listOf(state.selectedIpAddress)
             } else {
                 state.localIpAddresses.map { it.ip }
             }
