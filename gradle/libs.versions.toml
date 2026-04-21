@@ -38,6 +38,8 @@ ktor-server-netty = { group = "io.ktor", name = "ktor-server-netty", version.ref
 ktor-server-host-common = { group = "io.ktor", name = "ktor-server-host-common", version.ref = "ktorServerCore" }
 ktor-server-partialcontent = { group = "io.ktor", name = "ktor-server-partial-content", version.ref = "ktorServerCore" }
 ktor-server-html-builder = { group = "io.ktor", name = "ktor-server-html-builder", version.ref = "ktorServerCore" }
+ktor-server-sse = { group = "io.ktor", name = "ktor-server-sse", version.ref = "ktorServerCore" }
+ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktorServerCore" }
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 coil-svg = { group = "io.coil-kt", name = "coil-svg", version.ref = "coil" }

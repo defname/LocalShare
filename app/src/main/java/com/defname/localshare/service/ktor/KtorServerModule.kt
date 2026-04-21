@@ -5,6 +5,7 @@ import com.defname.localshare.data.LogsRepository
 import com.defname.localshare.data.ServiceRepository
 import com.defname.localshare.domain.model.LogEntry
 import com.defname.localshare.service.ServerSecurityHandler
+import com.defname.localshare.service.ktor.routes.getEvents
 import com.defname.localshare.service.ktor.routes.getFavIcon
 import com.defname.localshare.service.ktor.routes.getFile
 import com.defname.localshare.service.ktor.routes.getFileIcon
@@ -24,6 +25,7 @@ import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
+import io.ktor.server.sse.SSE
 
 fun Application.configureServerModule(
     serviceRepository: ServiceRepository,
@@ -33,6 +35,7 @@ fun Application.configureServerModule(
 ) {
     // 1. Plugins installieren (Wichtig für Video/Audio Streaming)
     install(PartialContent)
+    install(SSE)
 
     intercept(ApplicationCallPipeline.Monitoring) {
         val entry = LogEntry(
@@ -68,6 +71,8 @@ fun Application.configureServerModule(
         getThumbnail(securityHandler, serviceRepository, context)
 
         getFileIcon(securityHandler, context)
+
+        getEvents(securityHandler, serviceRepository, context)
 
         getFile(securityHandler, serviceRepository, context)
 

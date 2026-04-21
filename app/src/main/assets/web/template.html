@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en"
+      x-data="{
+        darkMode: localStorage.getItem('dark') === 'true' ||
+                 (!('dark' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+      }"
+      :class="{ 'dark': darkMode }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{appname}} - Shared Files</title>
+    <link rel="icon" type="image/png" href="/{{token}}/favicon">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <script>
+        window.initialFiles = {{filelist}};
+        function humanFileSize(size) {
+            if (size === 0) return '0 B';
+            const i = Math.floor(Math.log(size) / Math.log(1024));
+            return (size / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + ['B', 'kB', 'MB', 'GB', 'TB'][i];
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-900 dark:bg-slate-950 dark:text-gray-100 font-sans transition-colors duration-300">
+
+<header class="p-6 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+        <img src="/{{token}}/favicon/medium" alt="Logo" class="w-10 h-10" />
+        <h1 class="text-xl font-bold text-gray-800 dark:text-white">{{appname}}</h1>
+    </div>
+
+    <button @click="darkMode = !darkMode; localStorage.setItem('dark', darkMode)"
+            class="p-2 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors focus:outline-none cursor-pointer">
+        <svg x-show="darkMode" class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path>
+        </svg>
+        <svg x-show="!darkMode" class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+        </svg>
+    </button>
+</header>
+
+<div x-data="{
+        view: 'grid',
+        files: window.initialFiles,
+        sortKey: 'filename',
+        sortAsc: true,
+        get sortedFiles() {
+            return [...this.files].sort((a, b) => {
+                let valA = a[this.sortKey];
+                let valB = b[this.sortKey];
+                if (typeof valA === 'string') {
+                    valA = valA.toLowerCase();
+                    valB = valB.toLowerCase();
+                }
+                if (valA < valB) return this.sortAsc ? -1 : 1;
+                if (valA > valB) return this.sortAsc ? 1 : -1;
+                return 0;
+            });
+        },
+
+        initSSE() {
+            const eventSource = new EventSource('/{{token}}/events');
+
+            eventSource.addEventListener('add', (event) => {
+                const newFile = JSON.parse(event.data);
+                // Nur hinzufügen, wenn noch nicht da
+                if (!this.files.find(f => f.fileId === newFile.fileId)) {
+                    this.files.push(newFile);
+                }
+            });
+
+            eventSource.addEventListener('remove', (event) => {
+                const fileIdToRemove = event.data; // Im Beispiel oben senden wir nur die ID als String
+                this.files = this.files.filter(f => f.fileId !== fileIdToRemove);
+            });
+
+            eventSource.onerror = (err) => {
+                console.error('SSE failed, reconnecting...', err);
+            };
+        }
+    }"
+     x-init="initSSE()"
+     class="max-w-6xl mx-auto p-4">
+
+    <div class="flex flex-wrap justify-between items-center mb-8 gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
+        <div class="flex items-center gap-2">
+            <select x-model="sortKey" class="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm rounded-lg p-2 focus:ring-blue-500 dark:text-white">
+                <option value="filename">Filename</option>
+                <option value="size">Size</option>
+            </select>
+            <button @click="sortAsc = !sortAsc" class="p-2 bg-gray-100 dark:bg-slate-800 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 transition">
+                <span x-text="sortAsc ? '↓' : '↑'" class="dark:text-white"></span>
+            </button>
+            <div class="h-6 w-px bg-gray-200 dark:bg-slate-700 mx-2"></div>
+            <button @click="view = 'grid'" :class="view === 'grid' ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/40' : 'text-gray-500'" class="p-2 rounded-lg font-medium cursor-pointer">Grid</button>
+            <button @click="view = 'list'" :class="view === 'list' ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/40' : 'text-gray-500'" class="p-2 rounded-lg font-medium cursor-pointer">List</button>
+        </div>
+
+        <a href="/{{token}}/download" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-500/20">
+            Download All (ZIP)
+        </a>
+    </div>
+
+    <ul :class="view === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6' : 'flex flex-col space-y-3'" class="list-none p-0">
+        <template x-for="file in sortedFiles" :key="file.fileId">
+            <li :class="view === 'grid' ? 'bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden flex flex-col' : 'bg-white dark:bg-slate-900 p-3 rounded-xl border border-gray-100 dark:border-slate-800 flex items-center justify-between shadow-sm'">
+
+                <div :class="view === 'grid' ? 'contents' : 'flex items-center gap-4 w-full'">
+                    <div :class="view === 'grid' ? 'h-40 bg-gray-100 dark:bg-slate-800 flex items-center justify-center' : 'w-12 h-12 bg-gray-100 dark:bg-slate-800 rounded-lg flex-shrink-0 flex items-center justify-center'">
+                        <template x-if="file.hasThumbnail">
+                            <img :src="'/{{token}}/thumbnail/' + file.fileId" class="object-cover w-full h-full" />
+                        </template>
+                        <template x-if="!file.hasThumbnail">
+                            <img :src="'/{{token}}/icon/' + file.icon"
+                                 :class="view === 'grid' ? 'w-20 h-20 p-2' : 'w-8 h-8'"
+                                 class="object-contain" />
+                        </template>
+                    </div>
+
+                    <div :class="view === 'grid' ? 'p-4 flex flex-col flex-grow items-center text-center' : 'flex-grow grid grid-cols-2 md:grid-cols-4 items-center px-2'">
+                        <span x-text="file.filename" class="font-bold text-gray-900 dark:text-white truncate block w-full"></span>
+                        <span x-text="humanFileSize(file.size)" class="text-xs text-gray-500 dark:text-slate-400 font-mono"></span>
+
+                        <div class="mt-3 flex gap-2" :class="view === 'grid' ? 'mt-auto justify-center' : 'justify-end col-span-2 mt-0'">
+                            <a :href="'/{{token}}/download/' + file.fileId" class="text-[10px] uppercase tracking-wider bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-lg font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition">Get</a>
+                            <a :href="'/{{token}}/stream/' + file.fileId" class="text-[10px] uppercase tracking-wider bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-md shadow-blue-500/10">Open</a>
+                        </div>
+                    </div>
+                </div>
+            </li>
+        </template>
+    </ul>
+</div>
+
+<footer class="mt-20 p-8 text-center text-gray-400 dark:text-slate-500 text-sm border-t border-gray-100 dark:border-slate-800">
+    <p>Generated by <a href="{{appurl}}" class="text-blue-500 hover:underline">{{appname}}</a>.</p>
+    <p class="mt-1">Icons provided by <a href="https://github.com/PapirusDevelopmentTeam/papirus-icon-theme" target="_blank" class="text-blue-500 hover:underline">Papirus Development Team</a>.</p>
+</footer>
+
+</body>
+</html>
