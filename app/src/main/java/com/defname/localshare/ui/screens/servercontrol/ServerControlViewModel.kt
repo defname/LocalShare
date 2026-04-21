@@ -82,7 +82,7 @@ class ServerControlViewModel(
             activeClients = runtimeState.activeClients,
             blacklist = securityRepository.blacklist.value,
             whitelist = securityRepository.whitelist.value,
-            logEntries = logs.toLogListEntries(securityRepository).takeLast(logCount),
+            logEntries = logs.toLogListEntries(securityRepository).take(logCount),
             logMenuOpenForId = uiState.logMenuId,
             filesToDelete = uiState.filesToDelete,
             localIpAddresses = uiState.localIpAddresses,
