@@ -22,7 +22,7 @@ class ServerIdleManager(
                 serviceRepository.runtimeState, // Flow<Set<String>>
                 settingsRepository.settingsFlow // Flow<Settings>
             ) { runtimeState, settings ->
-                runtimeState.activeClients.isEmpty() to settings.serverIdleTimeoutSeconds
+                runtimeState.activeConnections.isEmpty() to settings.serverIdleTimeoutSeconds
             }.distinctUntilChanged()
                 .collect { (isEmpty, timeout) ->
                     timeoutJob?.cancel()

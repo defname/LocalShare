@@ -1,6 +1,7 @@
 package com.defname.localshare.ui.screens.servercontrol
 
 import android.net.Uri
+import com.defname.localshare.data.Connection
 import com.defname.localshare.data.RuntimeState
 import com.defname.localshare.domain.model.FileInfo
 import com.defname.localshare.domain.model.NetworkInfo
@@ -17,7 +18,7 @@ data class ServerControlState(
     val fileList: List<FileInfo> = emptyList(),
     val isRunning: Boolean = false,
     val serviceState: RuntimeState = RuntimeState.STOPPED,
-    val activeClients: List<String> = emptyList(),
+    val activeConnections: Set<Connection> = emptySet(),
     val blacklist: Set<String> = emptySet(),
     val whitelist: List<WhiteListEntry> = emptyList(),
 

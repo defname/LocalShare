@@ -1,6 +1,7 @@
 package com.defname.localshare.service.ktor
 
 import android.content.Context
+import com.defname.localshare.data.CallAttributes
 import com.defname.localshare.data.LogsRepository
 import com.defname.localshare.data.ServiceRepository
 import com.defname.localshare.domain.model.LogEntry
@@ -25,7 +26,6 @@ import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
-import io.ktor.server.sse.SSE
 
 fun Application.configureServerModule(
     serviceRepository: ServiceRepository,
@@ -33,9 +33,7 @@ fun Application.configureServerModule(
     securityHandler: ServerSecurityHandler,
     context: Context
 ) {
-    // 1. Plugins installieren (Wichtig für Video/Audio Streaming)
     install(PartialContent)
-    install(SSE)
 
     intercept(ApplicationCallPipeline.Monitoring) {
         val entry = LogEntry(
@@ -45,16 +43,21 @@ fun Application.configureServerModule(
         )
         val logEntryId = entry.id
         logsRepository.addLog(entry)
-        serviceRepository.clientConnected(call.request.local.remoteHost)
+        val connectionId = serviceRepository.clientConnected(
+            ip = call.request.local.remoteHost,
+            requestedUri = call.request.uri
+        )
+
+        call.attributes.put(CallAttributes.connectionId, connectionId)
 
         try {
             proceed()
         } finally {
             logsRepository.updateLogStatus(
                 logEntryId,
-                call.response.status()?.value ?: 0
+                call.response.status()?.value ?: -1
             )
-            serviceRepository.clientDisconnected(call.request.local.remoteHost)
+            serviceRepository.clientDisconnected(connectionId)
         }
 
     }

@@ -79,7 +79,7 @@ class ServerControlViewModel(
             fileList = runtimeState.fileList,
             isRunning = runtimeState.serviceState == RuntimeState.RUNNING,
             serviceState = runtimeState.serviceState,
-            activeClients = runtimeState.activeClients,
+            activeConnections = runtimeState.activeConnections,
             blacklist = securityRepository.blacklist.value,
             whitelist = securityRepository.whitelist.value,
             logEntries = logs.toLogListEntries(securityRepository).take(logCount),

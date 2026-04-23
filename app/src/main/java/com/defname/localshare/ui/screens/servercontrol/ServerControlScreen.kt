@@ -305,13 +305,13 @@ fun ServerControlScreen(
 
         if (state.isRunning) {
 
-            if (state.activeClients.isNotEmpty()) {
+            if (state.activeConnections.isNotEmpty()) {
                 Spacer(Modifier.height(16.dp))
 
                 Text(
                     stringResource(
                         R.string.servercontrollscreen_active_clients_caption,
-                        state.activeClients.size
+                        state.activeConnections.size
                     ),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
@@ -320,7 +320,7 @@ fun ServerControlScreen(
                         .padding(top = 16.dp)
                 )
 
-                state.activeClients.distinct().forEach { ip ->
+                state.activeConnections.forEach { conn ->
                     Row(
                         Modifier
                             .padding(8.dp)
@@ -334,12 +334,12 @@ fun ServerControlScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            ip, Modifier
+                            conn.clientIp, Modifier
                                 .weight(2f)
                                 .padding(start = 8.dp)
                         )
                         IconButton(
-                            onClick = { viewModel.addToBlacklist(ip) }
+                            onClick = { viewModel.addToBlacklist(conn.clientIp) }
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Block,
