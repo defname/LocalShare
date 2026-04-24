@@ -113,7 +113,7 @@ fun Route.getEvents(
                     // ❤️ Heartbeat Loop (prüft regelmäßig und hält Verbindung offen)
                     launch {
                         while (true) {
-                            delay(settingsRepository.settingsFlow.first().sseHeartbeatPeriodSeconds * 1000L)   // TODO Add to settings!
+                            delay(settingsRepository.settingsFlow.first().sseHeartbeatPeriodSeconds * 1000L)
                             if (!securityHandler.verifyAccess(call)) {
                                 disconnectReason = DisconnectReason.Unexpected.AuthInvalid
                                 this@coroutineScope.cancel("Access denied")
