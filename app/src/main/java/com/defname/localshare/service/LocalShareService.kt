@@ -3,6 +3,7 @@ package com.defname.localshare.service
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
+import android.net.Uri
 import android.os.IBinder
 import android.widget.Toast
 import com.defname.localshare.data.ConnectionLogsRepository
@@ -38,7 +39,10 @@ class LocalShareService : Service() {
         const val ACTION_STOP = "com.defname.localshare.STOP_SERVICE"
         const val APPROVE_IP = "com.defname.localshare.APPROVE_IP"
         const val DENY_IP = "com.defname.localshare.DENY_IP"
+        const val ACTION_GRANT_PERMISSION = "com.defname.localshare.GRANT_PERMISSION"
     }
+
+    private val activeUriPermissions = mutableSetOf<Uri>()
 
     override fun onCreate() {
         super.onCreate()
@@ -49,7 +53,20 @@ class LocalShareService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val ip = intent?.getStringExtra("ip") ?: ""
+        
+        // Delegierte Berechtigungen für den gesamten Prozess verankern
+        intent?.clipData?.let { clipData ->
+            for (i in 0 until clipData.itemCount) {
+                clipData.getItemAt(i).uri?.let { activeUriPermissions.add(it) }
+            }
+        }
+
         when (intent?.action) {
+            ACTION_GRANT_PERMISSION -> {
+                // Die URIs wurden bereits am Anfang der Funktion in activeUriPermissions
+                // gespeichert. Da ACTION_GRANT_PERMISSION nur aufgerufen wird, wenn der 
+                // Server bereits läuft, ist keine weitere Aktion nötig.
+            }
             ACTION_START -> startHttpServer()
             ACTION_STOP -> stopSelf()
             APPROVE_IP -> {

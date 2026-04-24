@@ -102,17 +102,36 @@ class MainActivity : ComponentActivity() {
             }
 
             // 3. Dateien hinzufügen
+            val urisToGrant = mutableListOf<Uri>()
             when (action) {
                 Intent.ACTION_SEND -> {
                     IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)?.let { uri ->
-                        addFilesUseCase(uri) // Nutzt den UseCase (mit FileInfoProvider)
+                        urisToGrant.add(uri)
+                        addFilesUseCase(uri)
                     }
                 }
                 Intent.ACTION_SEND_MULTIPLE -> {
                     IntentCompat.getParcelableArrayListExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)?.let { uris ->
-                        uris.forEach { addFilesUseCase(it) }
+                        uris.forEach { uri ->
+                            urisToGrant.add(uri)
+                            addFilesUseCase(uri)
+                        }
                     }
                 }
+            }
+
+            // 4. Permissions transferieren, falls der Server bereits läuft
+            if (urisToGrant.isNotEmpty() && serviceRepository.serverRunning()) {
+                val serviceIntent = Intent(this@MainActivity, com.defname.localshare.service.LocalShareService::class.java).apply {
+                    this.action = com.defname.localshare.service.LocalShareService.ACTION_GRANT_PERMISSION
+                    this.clipData = android.content.ClipData.newRawUri("Shared Files", urisToGrant.first()).apply {
+                        for (i in 1 until urisToGrant.size) {
+                            addItem(android.content.ClipData.Item(urisToGrant[i]))
+                        }
+                    }
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startForegroundService(serviceIntent)
             }
         }
     }

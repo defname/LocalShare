@@ -48,7 +48,7 @@ val appModule = module {
     single { ServerIdleManager(get(), get(), CoroutineScope(Dispatchers.Default + SupervisorJob())) }
 
     factory { AddFilesUseCase(get(), get()) }
-    factory { ManageServiceUseCase(get()) }
+    factory { ManageServiceUseCase(get(), get()) }
     factory { ServerSecurityHandler(get(), get()) }
 
     viewModel { MainViewModel(get(), get(), get(), get(), get(), get()) }
