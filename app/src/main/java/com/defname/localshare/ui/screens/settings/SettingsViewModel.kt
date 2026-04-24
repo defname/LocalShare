@@ -40,4 +40,7 @@ class SettingsViewModel(
         settingsRepository.setClearFileListOnShareIntent(clear)
     }
 
+    suspend fun setHeartbeatPeriodSeconds(seconds: Int) {
+        settingsRepository.setHeartbeatPeriodSeconds(seconds)
+    }
 }

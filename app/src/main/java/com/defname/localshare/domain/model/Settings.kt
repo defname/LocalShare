@@ -11,5 +11,5 @@ data class Settings(
     val approvalTimeoutSeconds: Int = 30,
     val whitelistEntryTTLSeconds: Int = 60 * 60,
     val clearFileListOnShareIntent: Boolean = false,
-    val keepScreenOn: Boolean = true
+    val sseHeartbeatPeriodSeconds: Int = 1
 )

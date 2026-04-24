@@ -5,6 +5,7 @@ import com.defname.localshare.data.CallAttributes
 import com.defname.localshare.data.ConnectionLogsRepository
 import com.defname.localshare.data.ServiceRepository
 import com.defname.localshare.domain.model.DisconnectReason
+import com.defname.localshare.domain.repository.SettingsRepository
 import com.defname.localshare.service.ServerSecurityHandler
 import com.defname.localshare.service.ktor.routes.getAssets
 import com.defname.localshare.service.ktor.routes.getEvents
@@ -31,6 +32,7 @@ import io.ktor.server.routing.routing
 fun Application.configureServerModule(
     serviceRepository: ServiceRepository,
     connectionLogsRepository: ConnectionLogsRepository,
+    settingsRepository: SettingsRepository,
     securityHandler: ServerSecurityHandler,
     context: Context
 ) {
@@ -75,7 +77,7 @@ fun Application.configureServerModule(
 
         getAssets(securityHandler, context)
 
-        getEvents(securityHandler, serviceRepository, connectionLogsRepository, context)
+        getEvents(securityHandler, serviceRepository, settingsRepository, connectionLogsRepository, context)
 
         getFile(securityHandler, serviceRepository, context)
 

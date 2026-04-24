@@ -19,7 +19,9 @@ class ConnectionLogsRepository {
 
 
     fun clearLogs() {
-        _connections.update { emptyList() }
+        _connections.update {
+            it.filter { entry -> entry.closedTimestamp == null }
+        }
     }
 
     fun clientConnected(
@@ -54,7 +56,4 @@ class ConnectionLogsRepository {
         }
     }
 
-    fun hasActiveConnections(): Boolean {
-        return _connections.value.any { it.closedTimestamp == null }
-    }
 }

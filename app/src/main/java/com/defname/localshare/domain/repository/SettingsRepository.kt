@@ -14,4 +14,5 @@ interface SettingsRepository {
     suspend fun setApprovalTimeoutSeconds(approvalTimeout: Int)
     suspend fun setWhitelistEntryTTLSeconds(whitelistEntryTTL: Int)
     suspend fun setClearFileListOnShareIntent(clearFileListOnShareIntent: Boolean)
+    suspend fun setHeartbeatPeriodSeconds(heartbeatPeriod: Int)
 }

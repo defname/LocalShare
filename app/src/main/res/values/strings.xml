@@ -65,4 +65,7 @@
     <string name="main_server_button_stopping">Server is stopping</string>
     <string name="ipaddressseelector_selected_ip_is_not_available">Selected IP is not available.</string>
     <string name="ipaddressselector_only_available_when_server_is_stopped">This option can only be changed when the server is stopped.</string>
+    <string name="settings_webinterface_title">Webinterface</string>
+    <string name="settings_webinterface_heartbeat_label">SSE Heartbeat Period</string>
+    <string name="settings_webinterface_heartbeat_hint">How many seconds between server-send events</string>
 </resources>

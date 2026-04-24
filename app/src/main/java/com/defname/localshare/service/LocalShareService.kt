@@ -100,6 +100,7 @@ class LocalShareService : Service() {
                             configureServerModule(
                                 serviceRepository = serviceRepository,
                                 connectionLogsRepository = logsRepository,
+                                settingsRepository = settingsRepository,
                                 securityHandler = securityHandler,
                                 context = this@LocalShareService.applicationContext
                             )

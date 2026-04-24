@@ -121,6 +121,22 @@ fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
             }
         }
 
+        SettingsGroup(title = stringResource(R.string.settings_webinterface_title)) {
+            SettingsRow{
+                TextField(
+                    value = settings.sseHeartbeatPeriodSeconds.toString(),
+                    label = { Text(stringResource(R.string.settings_webinterface_heartbeat_label)) },
+                    modifier = Modifier.weight(1f),
+                    supportingText = {
+                        Text(stringResource(R.string.settings_webinterface_heartbeat_hint))
+                    },
+                    onValueChange = {
+                        scope.launch { viewModel.setHeartbeatPeriodSeconds(it.toIntOrNull() ?: 1) }
+                    }
+                )
+            }
+        }
+
         SettingsGroup(title = stringResource(R.string.settings_misc_title)) {
             SettingsSwitchRow(
                 title = stringResource(R.string.settings_misc_clear_file_list_on_share_label),

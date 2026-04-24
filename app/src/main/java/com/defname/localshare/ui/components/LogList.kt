@@ -11,6 +11,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.QuestionMark
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -74,27 +78,38 @@ fun DisconnectReasonText(
         }
 
         is DisconnectReason.ServerShutdown -> {
-            Text(
-                "Server Shutdown",
-                color = Color.Green
+            Icon(
+                imageVector = Icons.Default.Stop,
+                contentDescription = "Server shutdown",
+                tint = Color.Red
             )
         }
 
         is DisconnectReason.Unexpected -> {
-            Text(
-                when (disconnectReason) {
-                    DisconnectReason.Unexpected.ClientGone -> "Client gone"
-                    DisconnectReason.Unexpected.AuthInvalid -> "Auth invalid"
-                    DisconnectReason.Unexpected.Unknown -> "Unknown"
-                    is DisconnectReason.Unexpected.Error -> disconnectReason.message ?: "Unknown"
-                },
-                color = when (disconnectReason) {
-                    DisconnectReason.Unexpected.ClientGone -> Color.Green
-                    DisconnectReason.Unexpected.AuthInvalid -> Color.Red
-                    DisconnectReason.Unexpected.Unknown -> Color.Red
-                    is DisconnectReason.Unexpected.Error -> Color.Red
-                }
-            )
+            when (disconnectReason) {
+                DisconnectReason.Unexpected.ClientGone -> Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Auth invalid",
+                    tint = Color.Green
+                )
+                DisconnectReason.Unexpected.AuthInvalid -> Icon(
+                    imageVector = Icons.Default.Shield,
+                    contentDescription = "Auth invalid",
+                    tint = Color.Red
+                )
+
+                DisconnectReason.Unexpected.Unknown -> Icon(
+                    imageVector = Icons.Default.QuestionMark,
+                    contentDescription = "Unknown",
+                    tint = Color.Red
+                )
+
+                is DisconnectReason.Unexpected.Error -> Icon(
+                    imageVector = Icons.Default.QuestionMark,
+                    contentDescription = disconnectReason.message ?: "Unknown",
+                    tint = Color.Red
+                )
+            }
         }
     }
 }
