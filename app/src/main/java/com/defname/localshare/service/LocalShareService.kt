@@ -5,7 +5,7 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import android.widget.Toast
-import com.defname.localshare.data.LogsRepository
+import com.defname.localshare.data.ConnectionLogsRepository
 import com.defname.localshare.data.ServiceRepository
 import com.defname.localshare.domain.repository.SettingsRepository
 import com.defname.localshare.service.ktor.configureServerModule
@@ -26,7 +26,7 @@ class LocalShareService : Service() {
     private val notificationHelper: NotificationHelper by inject()
     private val settingsRepository: SettingsRepository by inject()
     private val serviceRepository: ServiceRepository by inject()
-    private val logsRepository: LogsRepository by inject()
+    private val logsRepository: ConnectionLogsRepository by inject()
     private val securityHandler: ServerSecurityHandler by inject()
     private val idleManager: ServerIdleManager by inject()
 
@@ -99,7 +99,7 @@ class LocalShareService : Service() {
                         ) {
                             configureServerModule(
                                 serviceRepository = serviceRepository,
-                                logsRepository = logsRepository,
+                                connectionLogsRepository = logsRepository,
                                 securityHandler = securityHandler,
                                 context = this@LocalShareService.applicationContext
                             )

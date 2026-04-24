@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.preferencesDataStore
 import com.defname.localshare.data.DataStoreSettingsRepository
 import com.defname.localshare.data.FileInfoProvider
-import com.defname.localshare.data.LogsRepository
+import com.defname.localshare.data.ConnectionLogsRepository
 import com.defname.localshare.data.NetworkInfoProvider
 import com.defname.localshare.data.PermissionRepository
 import com.defname.localshare.data.SecurityRepository
@@ -29,7 +29,7 @@ import org.koin.dsl.module
 val Context.dataStore by preferencesDataStore(name = "settings")
 
 val appModule = module {
-    single { LogsRepository() }
+    single { ConnectionLogsRepository() }
 
     single { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
 

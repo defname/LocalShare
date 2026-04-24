@@ -1,6 +1,6 @@
 package com.defname.localshare.service
 
-import com.defname.localshare.data.ServiceRepository
+import com.defname.localshare.data.ConnectionLogsRepository
 import com.defname.localshare.domain.repository.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 class ServerIdleManager(
-    private val serviceRepository: ServiceRepository,
     private val settingsRepository: SettingsRepository,
+    private val connectionLogsRepository: ConnectionLogsRepository,
     private val scope: CoroutineScope
 ) {
     private var timeoutJob: Job? = null
@@ -19,14 +19,14 @@ class ServerIdleManager(
     fun startMonitoring(onTimeout: () -> Unit) {
         scope.launch {
             combine(
-                serviceRepository.runtimeState, // Flow<Set<String>>
+                connectionLogsRepository.hasActiveConnections, // Flow<Boolean>
                 settingsRepository.settingsFlow // Flow<Settings>
-            ) { runtimeState, settings ->
-                runtimeState.activeConnections.isEmpty() to settings.serverIdleTimeoutSeconds
+            ) { isActive, settings ->
+                isActive to settings.serverIdleTimeoutSeconds
             }.distinctUntilChanged()
-                .collect { (isEmpty, timeout) ->
+                .collect { (isActive, timeout) ->
                     timeoutJob?.cancel()
-                    if (isEmpty && timeout > 0) {
+                    if (!isActive && timeout > 0) {
                         timeoutJob = launch {
                             delay(timeout * 1000L)
                             onTimeout()

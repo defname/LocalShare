@@ -24,7 +24,6 @@ class DataStoreSettingsRepository(
         val APPROVAL_TIMEOUT_SECONDS = intPreferencesKey("approvalTimeout")
         val WHITELIST_ENTRY_TTL_SECONDS = intPreferencesKey("whitelistEntryTTL")
         val CLEAR_FILE_LIST_ON_SHARE_INTENT = booleanPreferencesKey("clearFileListOnShareIntent")
-        val KEEP_SCREEN_ON = booleanPreferencesKey("keepScreenOn")
     }
 
     override val settingsFlow: Flow<Settings> = store.data
@@ -37,8 +36,7 @@ class DataStoreSettingsRepository(
                 requireApproval = it[Keys.REQUIRE_APPROVAL] ?: true,
                 approvalTimeoutSeconds = it[Keys.APPROVAL_TIMEOUT_SECONDS] ?: 30,
                 whitelistEntryTTLSeconds = it[Keys.WHITELIST_ENTRY_TTL_SECONDS] ?: (60 * 60),
-                clearFileListOnShareIntent = it[Keys.CLEAR_FILE_LIST_ON_SHARE_INTENT] ?: false,
-                keepScreenOn = it[Keys.KEEP_SCREEN_ON] ?: false
+                clearFileListOnShareIntent = it[Keys.CLEAR_FILE_LIST_ON_SHARE_INTENT] ?: false
             )
         }
 
@@ -50,5 +48,4 @@ class DataStoreSettingsRepository(
     override suspend fun setApprovalTimeoutSeconds(approvalTimeout: Int) { store.edit { it[Keys.APPROVAL_TIMEOUT_SECONDS] = approvalTimeout } }
     override suspend fun setWhitelistEntryTTLSeconds(whitelistEntryTTL: Int) { store.edit { it[Keys.WHITELIST_ENTRY_TTL_SECONDS] = whitelistEntryTTL } }
     override suspend fun setClearFileListOnShareIntent(clearFileListOnShareIntent: Boolean) { store.edit { it[Keys.CLEAR_FILE_LIST_ON_SHARE_INTENT] = clearFileListOnShareIntent } }
-    override suspend fun setKeepScreenOn(keepScreenOn: Boolean) { store.edit { it[Keys.KEEP_SCREEN_ON] = keepScreenOn } }
 }

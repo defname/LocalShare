@@ -2,7 +2,7 @@ package com.defname.localshare.ui.screens.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.defname.localshare.data.LogsRepository
+import com.defname.localshare.data.ConnectionLogsRepository
 import com.defname.localshare.data.NetworkInfoProvider
 import com.defname.localshare.data.PermissionRepository
 import com.defname.localshare.data.ServiceRepository
@@ -20,7 +20,7 @@ private data class QrState(
 )
 
 class MainViewModel(
-    private val logsRepository: LogsRepository,
+    private val logsRepository: ConnectionLogsRepository,
     private val serviceRepository: ServiceRepository,
     private val settingsRepository: SettingsRepository,
     private val permissionRepository: PermissionRepository,
@@ -68,7 +68,7 @@ class MainViewModel(
     val state = combine(
         _qrState,
         settingsRepository.settingsFlow,
-        logsRepository.logs,
+        logsRepository.connections,
         serviceRepository.runtimeState,
         permissionRepository.hasNotificationPermission
     ) { qrState, settings, logs, runtimeState, hasNotificationPermission ->

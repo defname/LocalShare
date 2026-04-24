@@ -28,24 +28,75 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.defname.localshare.R
 import com.defname.localshare.data.SecurityRepository
-import com.defname.localshare.domain.model.LogEntry
+import com.defname.localshare.domain.model.ConnectionLogEntry
+import com.defname.localshare.domain.model.DisconnectReason
 import com.defname.localshare.ui.theme.LocalShareTheme
 
 
 data class LogListEntry(
-    val logEntry: LogEntry,
+    val logEntry: ConnectionLogEntry,
     val isWhiteListed: Boolean,
     val isBlackListed: Boolean
 )
 
-fun List<LogEntry>.toLogListEntries(securityRepository: SecurityRepository): List<LogListEntry> {
-    return this.map { entry ->
-        LogListEntry(
-            entry,
-            securityRepository.isWhitelisted(entry.clientIp),
-            securityRepository.isBlacklisted(entry.clientIp)
-        )
-    }.reversed()
+val cmpConnectionLogEntries = Comparator<ConnectionLogEntry> { a, b ->
+    if (a.closedTimestamp != null && b.closedTimestamp != null) {
+        (a.closedTimestamp - b.closedTimestamp).toInt()
+    }
+    else if (a.closedTimestamp != null) -1
+    else if (b.closedTimestamp != null) 1
+    else (a.openTimestamp - b.openTimestamp).toInt()
+}
+
+fun List<ConnectionLogEntry>.toLogListEntries(securityRepository: SecurityRepository): List<LogListEntry> {
+    return this
+        .sortedWith(cmpConnectionLogEntries)
+        .map { entry ->
+            LogListEntry(
+                entry,
+                securityRepository.isWhitelisted(entry.clientIp),
+                securityRepository.isBlacklisted(entry.clientIp)
+            )
+        }.reversed()
+}
+
+
+@Composable
+fun DisconnectReasonText(
+    disconnectReason: DisconnectReason
+) {
+    when (disconnectReason) {
+        is DisconnectReason.Expected -> {
+            Text(
+                "${disconnectReason.statusCode}",
+                color = if (disconnectReason.statusCode >= 400) Color.Red else Color.Green
+            )
+        }
+
+        is DisconnectReason.ServerShutdown -> {
+            Text(
+                "Server Shutdown",
+                color = Color.Green
+            )
+        }
+
+        is DisconnectReason.Unexpected -> {
+            Text(
+                when (disconnectReason) {
+                    DisconnectReason.Unexpected.ClientGone -> "Client gone"
+                    DisconnectReason.Unexpected.AuthInvalid -> "Auth invalid"
+                    DisconnectReason.Unexpected.Unknown -> "Unknown"
+                    is DisconnectReason.Unexpected.Error -> disconnectReason.message ?: "Unknown"
+                },
+                color = when (disconnectReason) {
+                    DisconnectReason.Unexpected.ClientGone -> Color.Green
+                    DisconnectReason.Unexpected.AuthInvalid -> Color.Red
+                    DisconnectReason.Unexpected.Unknown -> Color.Red
+                    is DisconnectReason.Unexpected.Error -> Color.Red
+                }
+            )
+        }
+    }
 }
 
 @Composable
@@ -53,7 +104,7 @@ fun LogList(
     entries: List<LogListEntry>,
     menuOpenForId: String? = null,
 
-    onContextMenuOpen: (LogEntry) -> Unit = {},
+    onContextMenuOpen: (ConnectionLogEntry) -> Unit = {},
     onContextMenuClose: () -> Unit = {},
 
     onAddToBlackList: (String) -> Unit = {},
@@ -73,16 +124,15 @@ fun LogList(
                         ),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (entry.logEntry.status == 0) {
+                    if (entry.logEntry.closedTimestamp == null) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(16.dp),
                             strokeWidth = 2.dp
                         )
+                    } else if (entry.logEntry.result != null) {
+                        DisconnectReasonText(entry.logEntry.result)
                     } else {
-                        Text(
-                            "${entry.logEntry.status}",
-                            color = if (entry.logEntry.status >= 400) Color.Red else Color.Green
-                        )
+                        Text("UNKNOWN")
                     }
                     Spacer(Modifier.width(8.dp))
                     Text(entry.logEntry.method)
@@ -124,34 +174,31 @@ fun LogListPreview() {
     LocalShareTheme {
         val entries = listOf(
             LogListEntry(
-                LogEntry(
+                ConnectionLogEntry(
                     method = "GET",
                     path = "/file.txt",
-                    status = 200,
                     clientIp = "192.168.0.1",
-                    timestamp = 123
+                    openTimestamp = 123
                 ),
                 isWhiteListed = true,
                 isBlackListed = false
             ),
             LogListEntry(
-                LogEntry(
+                ConnectionLogEntry(
                     method = "GET",
                     path = "/file.txt",
-                    status = 400,
                     clientIp = "192.168.0.2",
-                    timestamp = 125,
+                    openTimestamp = 125,
                 ),
                 isWhiteListed = false,
                 isBlackListed = true
             ),
             LogListEntry(
-                LogEntry(
+                ConnectionLogEntry(
                     method = "GET",
                     path = "/file.txt",
-                    status = 200,
                     clientIp = "192.168.0.5",
-                    timestamp = 126
+                    openTimestamp = 126
                 ),
                 isWhiteListed = true,
                 isBlackListed = false

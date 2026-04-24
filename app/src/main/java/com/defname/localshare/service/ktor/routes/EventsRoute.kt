@@ -3,7 +3,9 @@ package com.defname.localshare.service.ktor.routes
 import android.content.Context
 import android.util.Log
 import com.defname.localshare.data.CallAttributes
+import com.defname.localshare.data.ConnectionLogsRepository
 import com.defname.localshare.data.ServiceRepository
+import com.defname.localshare.domain.model.DisconnectReason
 import com.defname.localshare.domain.model.FileInfo
 import com.defname.localshare.service.ServerSecurityHandler
 import com.defname.localshare.service.ktor.json.toJsonString
@@ -49,6 +51,7 @@ fun Flow<List<FileInfo>>.asDeltaEvents(): Flow<FileDelta> = flow {
 fun Route.getEvents(
     securityHandler: ServerSecurityHandler,
     serviceRepository: ServiceRepository,
+    connectionLogsRepository: ConnectionLogsRepository,
     context: Context
 ) {
     get ("/{token}/events") {
@@ -66,18 +69,24 @@ fun Route.getEvents(
             // Wir nutzen den OutputStream, um die Kontrolle über das Flushing zu haben
             val writer = bufferedWriter()
 
+            // Standardmäßig gehen wir von einem Server-Shutdown aus
+            var disconnectReason: DisconnectReason = DisconnectReason.ServerShutdown
+
             try {
                 coroutineScope {
 
-                    // 🔄 Event-Collector (läuft parallel)
+                    // 🔄 Event-Collector (reagiert auf Datei-Änderungen)
                     launch {
-                        if (!securityHandler.verifyAccess(call)) {
-                            this@coroutineScope.cancel("Access denied")
-                        }
                         serviceRepository.fileList
                             .asDeltaEvents()
                             .drop(1)
                             .collect { delta ->
+                                // Sofort-Check bei Datei-Event (falls IP gerade gebannt wurde)
+                                if (!securityHandler.verifyAccess(call)) {
+                                    disconnectReason = DisconnectReason.Unexpected.AuthInvalid
+                                    this@coroutineScope.cancel("Access denied")
+                                    return@collect
+                                }
 
                                 val eventName = when (delta) {
                                     is FileDelta.Added -> "add"
@@ -98,65 +107,33 @@ fun Route.getEvents(
                             }
                     }
 
-                    // ❤️ Heartbeat Loop (wichtig!!)
+                    // ❤️ Heartbeat Loop (prüft regelmäßig und hält Verbindung offen)
                     launch {
                         while (true) {
+                            delay(1000)   // TODO Add to settings!
                             if (!securityHandler.verifyAccess(call)) {
+                                disconnectReason = DisconnectReason.Unexpected.AuthInvalid
                                 this@coroutineScope.cancel("Access denied")
                             }
                             writer.write(": heartbeat\n\n")
                             writer.flush()
-                            delay(1_000)
                         }
                     }
                 }
-
-
             } catch (e: Exception) {
-                // Wenn der Client die Verbindung trennt (Tab zu),
-                // wirft collect/flush eine Exception und wir landen hier.
-                Log.d("EvetsRoute", "Client disconnected: ${e.message}")
-            }
-            finally {
+                // Wenn es KEINE CancellationException ist (z.B. IOException weil Socket zu),
+                // dann ist der Client weg.
+                if (e !is kotlinx.coroutines.CancellationException) {
+                    disconnectReason = DisconnectReason.Unexpected.ClientGone
+                }
+            } finally {
                 val connectionId = call.attributes.getOrNull(CallAttributes.connectionId)
-                if (connectionId == null) {
-                    Log.d("FileServerService", "Client disconnected without connectionId")
+                if (connectionId != null) {
+                    connectionLogsRepository.clientDisconnected(connectionId, disconnectReason)
                 } else {
-                    serviceRepository.clientDisconnected(connectionId)
+                    Log.d("FileServerService", "Client disconnected without connectionId")
                 }
             }
         }
-
-        /*
-        serviceRepository.fileList
-            .asDeltaEvents()
-            .drop(1)
-            .collect { delta ->
-                if (!securityHandler.verifyAccess(routingCall)) {
-                    this@sse.close()
-                    throw CancellationException("Access denied")
-                }
-
-                try {
-                    when (delta) {
-                        is FileDelta.Added -> {
-                            send(ServerSentEvent(
-                                data = delta.file.toJsonString(),
-                                event = "add"
-                            ))
-                        }
-                        is FileDelta.Removed -> {
-                            send(ServerSentEvent(
-                                data = delta.fileId,
-                                event = "remove"
-                            ))
-                        }
-                    }
-                } catch (e: Exception) {
-                    throw e
-                }
-            }
-
-         */
     }
 }

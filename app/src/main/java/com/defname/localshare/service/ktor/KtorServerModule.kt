@@ -2,9 +2,9 @@ package com.defname.localshare.service.ktor
 
 import android.content.Context
 import com.defname.localshare.data.CallAttributes
-import com.defname.localshare.data.LogsRepository
+import com.defname.localshare.data.ConnectionLogsRepository
 import com.defname.localshare.data.ServiceRepository
-import com.defname.localshare.domain.model.LogEntry
+import com.defname.localshare.domain.model.DisconnectReason
 import com.defname.localshare.service.ServerSecurityHandler
 import com.defname.localshare.service.ktor.routes.getEvents
 import com.defname.localshare.service.ktor.routes.getFavIcon
@@ -29,23 +29,17 @@ import io.ktor.server.routing.routing
 
 fun Application.configureServerModule(
     serviceRepository: ServiceRepository,
-    logsRepository: LogsRepository,
+    connectionLogsRepository: ConnectionLogsRepository,
     securityHandler: ServerSecurityHandler,
     context: Context
 ) {
     install(PartialContent)
 
     intercept(ApplicationCallPipeline.Monitoring) {
-        val entry = LogEntry(
+        val connectionId = connectionLogsRepository.clientConnected(
             method = call.request.httpMethod.value,
             path = call.request.uri,
             clientIp = call.request.local.remoteHost
-        )
-        val logEntryId = entry.id
-        logsRepository.addLog(entry)
-        val connectionId = serviceRepository.clientConnected(
-            ip = call.request.local.remoteHost,
-            requestedUri = call.request.uri
         )
 
         call.attributes.put(CallAttributes.connectionId, connectionId)
@@ -53,11 +47,14 @@ fun Application.configureServerModule(
         try {
             proceed()
         } finally {
-            logsRepository.updateLogStatus(
-                logEntryId,
-                call.response.status()?.value ?: -1
+            val discconnectReason: DisconnectReason = call.response.status()?.let {
+                DisconnectReason.Expected(it.value)
+            } ?: DisconnectReason.Unexpected.Unknown
+
+            connectionLogsRepository.clientDisconnected(
+                connectionId,
+                discconnectReason
             )
-            serviceRepository.clientDisconnected(connectionId)
         }
 
     }
@@ -75,7 +72,7 @@ fun Application.configureServerModule(
 
         getFileIcon(securityHandler, context)
 
-        getEvents(securityHandler, serviceRepository, context)
+        getEvents(securityHandler, serviceRepository, connectionLogsRepository, context)
 
         getFile(securityHandler, serviceRepository, context)
 

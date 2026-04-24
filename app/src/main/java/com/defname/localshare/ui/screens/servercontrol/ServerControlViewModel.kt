@@ -3,13 +3,13 @@ package com.defname.localshare.ui.screens.servercontrol
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.defname.localshare.data.LogsRepository
+import com.defname.localshare.data.ConnectionLogsRepository
 import com.defname.localshare.data.NetworkInfoProvider
 import com.defname.localshare.data.RuntimeData
 import com.defname.localshare.data.RuntimeState
 import com.defname.localshare.data.SecurityRepository
 import com.defname.localshare.data.ServiceRepository
-import com.defname.localshare.domain.model.LogEntry
+import com.defname.localshare.domain.model.ConnectionLogEntry
 import com.defname.localshare.domain.model.NetworkInfo
 import com.defname.localshare.domain.model.Settings
 import com.defname.localshare.domain.model.WhiteListEntry
@@ -34,7 +34,7 @@ private data class InternalUiState(
 class ServerControlViewModel(
     private val addFilesUseCase: AddFilesUseCase,
     private val serviceRepository: ServiceRepository,
-    private val logsRepository: LogsRepository,
+    private val connectionLogsRepository: ConnectionLogsRepository,
     private val settingsRepository: SettingsRepository,
     private val securityRepository: SecurityRepository,
     private val networkInfoProvider: NetworkInfoProvider
@@ -54,7 +54,7 @@ class ServerControlViewModel(
 
     val state: StateFlow<ServerControlState> = combine(
         serviceRepository.runtimeState,
-        logsRepository.logs,
+        connectionLogsRepository.connections,
         settingsState,
         securityRepository.blacklist,
         securityRepository.whitelist,
@@ -63,7 +63,7 @@ class ServerControlViewModel(
     ) { states ->
 
         val runtimeState = states[0] as RuntimeData
-        val logs = states[1] as List<LogEntry>
+        val logs = states[1] as List<ConnectionLogEntry>
         val settings = states[2] as Settings
         val blacklist = states[3] as Set<String>
         val whitelist = states[4] as List<WhiteListEntry>
@@ -79,7 +79,6 @@ class ServerControlViewModel(
             fileList = runtimeState.fileList,
             isRunning = runtimeState.serviceState == RuntimeState.RUNNING,
             serviceState = runtimeState.serviceState,
-            activeConnections = runtimeState.activeConnections,
             blacklist = securityRepository.blacklist.value,
             whitelist = securityRepository.whitelist.value,
             logEntries = logs.toLogListEntries(securityRepository).take(logCount),

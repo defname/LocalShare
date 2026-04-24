@@ -2,7 +2,7 @@ package com.defname.localshare.ui.screens.logs
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.defname.localshare.data.LogsRepository
+import com.defname.localshare.data.ConnectionLogsRepository
 import com.defname.localshare.data.SecurityRepository
 import com.defname.localshare.data.ServiceRepository
 import com.defname.localshare.ui.components.toLogListEntries
@@ -14,14 +14,14 @@ import kotlinx.coroutines.flow.stateIn
 
 class LogsViewModel(
     private val serviceRepository: ServiceRepository,
-    private val logsRepository: LogsRepository,
+    private val logsRepository: ConnectionLogsRepository,
     private val securityRepository: SecurityRepository
 ) : ViewModel() {
     private val _menuOpenForId = MutableStateFlow<String?>(null)
 
     val state: StateFlow<LogsState> = combine(
         serviceRepository.runtimeState,
-        logsRepository.logs,
+        logsRepository.connections,
         _menuOpenForId
     ) { runtimeState, logs, menuOpenForId ->
         LogsState(

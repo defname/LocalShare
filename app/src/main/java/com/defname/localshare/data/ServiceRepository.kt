@@ -18,7 +18,6 @@
 package com.defname.localshare.data
 
 import android.net.Uri
-import android.util.Log
 import com.defname.localshare.domain.model.FileInfo
 import com.defname.localshare.domain.repository.FileProvider
 import io.ktor.util.AttributeKey
@@ -31,7 +30,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import java.util.UUID
 
 enum class RuntimeState {
     RUNNING,
@@ -43,15 +41,10 @@ enum class RuntimeState {
 object CallAttributes {
     val connectionId = AttributeKey<String>("connectionId")
 }
-data class Connection(
-    val id: String = UUID.randomUUID().toString(),
-    val clientIp: String,
-    val requestedUri: String,
-)
+
 
 data class RuntimeData(
     val fileList: List<FileInfo> = emptyList(),
-    val activeConnections: Set<Connection> = emptySet(),
     val serviceState: RuntimeState = RuntimeState.STOPPED,
 )
 
@@ -74,29 +67,6 @@ class ServiceRepository(
     fun addFile(file: FileInfo) { _runtimeState.update { it.copy(fileList = it.fileList + file) } }
     fun removeFile(uri: Uri) { _runtimeState.update { it.copy(fileList = it.fileList.filter { it.uri != uri }) } }
     fun clearFiles() { _runtimeState.update { it.copy(fileList = emptyList()) } }
-
-    fun clientConnected(ip: String, requestedUri: String): String {
-        val newConnection = Connection(clientIp = ip, requestedUri = requestedUri)
-        _runtimeState.update {
-            it.copy(activeConnections = it.activeConnections + newConnection)
-        }
-        Log.d("ServiceRepository", "Client connected #${newConnection.id}.")
-        return newConnection.id
-    }
-
-    fun clientDisconnected(connectionId: String) {
-        _runtimeState.update {
-            if (!it.activeConnections.any { it.id == connectionId }) {
-                Log.d("ServiceRepository", "Connection #$connectionId does not exist.")
-            }
-            else {
-                Log.d("ServiceRepository", "Connection $connectionId closed.")
-            }
-            it.copy(activeConnections = it.activeConnections.filter { conn ->
-                conn.id != connectionId
-            }.toSet())
-        }
-    }
 
     fun serverStarting() { _runtimeState.update { it.copy(serviceState = RuntimeState.STARTING) } }
     fun serverStarted() { _runtimeState.update { it.copy(serviceState = RuntimeState.RUNNING) } }

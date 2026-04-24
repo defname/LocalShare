@@ -35,7 +35,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
@@ -304,52 +303,6 @@ fun ServerControlScreen(
 
 
         if (state.isRunning) {
-
-            if (state.activeConnections.isNotEmpty()) {
-                Spacer(Modifier.height(16.dp))
-
-                Text(
-                    stringResource(
-                        R.string.servercontrollscreen_active_clients_caption,
-                        state.activeConnections.size
-                    ),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .padding(top = 16.dp)
-                )
-
-                state.activeConnections.forEach { conn ->
-                    Row(
-                        Modifier
-                            .padding(8.dp)
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.background)
-                            .border(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.outline,
-                                MaterialTheme.shapes.medium
-                            ),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            conn.clientIp, Modifier
-                                .weight(2f)
-                                .padding(start = 8.dp)
-                        )
-                        IconButton(
-                            onClick = { viewModel.addToBlacklist(conn.clientIp) }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Block,
-                                contentDescription = stringResource(R.string.servercontrollscreen_active_clients_ban),
-                                tint = Color.Red
-                            )
-                        }
-                    }
-                }
-            }
 
             if (state.blacklist.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(16.dp))
