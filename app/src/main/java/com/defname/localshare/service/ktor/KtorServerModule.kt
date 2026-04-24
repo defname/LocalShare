@@ -6,6 +6,7 @@ import com.defname.localshare.data.ConnectionLogsRepository
 import com.defname.localshare.data.ServiceRepository
 import com.defname.localshare.domain.model.DisconnectReason
 import com.defname.localshare.service.ServerSecurityHandler
+import com.defname.localshare.service.ktor.routes.getAssets
 import com.defname.localshare.service.ktor.routes.getEvents
 import com.defname.localshare.service.ktor.routes.getFavIcon
 import com.defname.localshare.service.ktor.routes.getFile
@@ -71,6 +72,8 @@ fun Application.configureServerModule(
         getThumbnail(securityHandler, serviceRepository, context)
 
         getFileIcon(securityHandler, context)
+
+        getAssets(securityHandler, context)
 
         getEvents(securityHandler, serviceRepository, connectionLogsRepository, context)
 
