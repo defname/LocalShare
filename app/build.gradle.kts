@@ -59,6 +59,7 @@ android {
         getByName("main") {
             kotlin.srcDir(layout.buildDirectory.dir("generated/source/iconmap/main/kotlin"))
             assets.srcDir(layout.buildDirectory.dir("generated/assets/iconmap/main"))
+            assets.srcDir(layout.buildDirectory.dir("generated/assets/main"))
         }
     }
 }
@@ -128,6 +129,29 @@ val generateIconMapping = tasks.register<Exec>("generateIconMapping") {
     }
 }
 
+
+val webBuild = tasks.register<Exec>("web-build") {
+    group = "web-build"
+    description = "Generate tailwind css classes."
+
+    val assetsDir = layout.buildDirectory.dir("generated/assets/main/web/css").get().asFile
+
+    workingDir = rootProject.file("web-build")
+
+    commandLine(
+        "npm",
+        "run",
+        "build"
+    )
+
+    outputs.dir(assetsDir)
+
+    doFirst {
+        println("Generating tailwindcss to: $assetsDir")
+        assetsDir.mkdirs()
+    }
+}
+
 // add task to Android build process
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     dependsOn(generateIconMapping)
@@ -136,5 +160,8 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 tasks.configureEach {
     if (name.startsWith("merge") && name.endsWith("Assets")) {
         dependsOn(generateIconMapping)
+        dependsOn(webBuild)
     }
 }
+
+

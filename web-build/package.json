@@ -1,0 +1,19 @@
+{
+  "scripts": {
+    "build": "tailwindcss -i ./input.css -o ../app/build/generated/assets/main/web/css/tailwind.css --minify",
+    "watch": "tailwindcss -i ./input.css -o ../app/build/generated/assets/main/web/css/tailwind.css --watch"
+  },
+  "name": "web-build",
+  "version": "1.0.0",
+  "description": "",
+  "main": "tailwind.config.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.10",
+    "tailwindcss": "^3.4.19"
+  }
+}
