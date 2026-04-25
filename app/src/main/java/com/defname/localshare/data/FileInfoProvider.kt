@@ -68,4 +68,17 @@ class FileInfoProvider(private val contentResolver: ContentResolver) {
         )
     }
 
+    fun isDuplicate(file1: FileInfo, file2: FileInfo): Boolean {
+        return file1.uri == file2.uri ||
+                (file1.name == file2.name && file1.size == file2.size)
+    }
+
+    fun hasAccess(uri: Uri): Boolean {
+        return try {
+            contentResolver.openFileDescriptor(uri, "r")?.close()
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
 }

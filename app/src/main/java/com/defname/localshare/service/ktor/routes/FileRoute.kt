@@ -51,6 +51,7 @@ fun Route.getFile(
                 fileInfo = fileInfo,
                 isStream = action == "stream",
                 securityHandler = securityHandler,
+                onFileNotAvailable = { fileInfo -> serviceRepository.removeFile(fileInfo.uri) },
                 context = context
             )
         }

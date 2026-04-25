@@ -64,7 +64,15 @@ class ServiceRepository(
             initialValue = emptyList()
         )
 
-    fun addFile(file: FileInfo) { _runtimeState.update { it.copy(fileList = it.fileList + file) } }
+    fun addFile(file: FileInfo) {
+        _runtimeState.update { state ->
+            if (state.fileList.any { it.uri == file.uri }) {
+                state
+            } else {
+                state.copy(fileList = state.fileList + file)
+            }
+        }
+    }
     fun removeFile(uri: Uri) { _runtimeState.update { it.copy(fileList = it.fileList.filter { it.uri != uri }) } }
     fun clearFiles() { _runtimeState.update { it.copy(fileList = emptyList()) } }
 

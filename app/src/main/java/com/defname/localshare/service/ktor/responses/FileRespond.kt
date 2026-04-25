@@ -22,6 +22,7 @@ suspend fun ApplicationCall.sendFile(
     fileInfo: FileInfo,
     isStream: Boolean,
     securityHandler: ServerSecurityHandler,
+    onFileNotAvailable: (FileInfo) -> Unit,
     context: Context
 ) {
     val fileUri = fileInfo.uri
@@ -34,7 +35,17 @@ suspend fun ApplicationCall.sendFile(
     val fileSize = fileInfo.size
 
     // 4. send file
-    val inputStream = context.contentResolver.openInputStream(fileUri) ?: return respond(HttpStatusCode.InternalServerError)
+    val inputStream = try {
+        context.contentResolver.openInputStream(fileUri)
+    } catch (e: Exception) {
+        null
+    }
+
+    if (inputStream == null) {
+        Log.d("FileServerService", "File not accessible anymore: $fileUri")
+        onFileNotAvailable(fileInfo)
+        return respond(HttpStatusCode.Gone, "File no longer available")
+    }
 
     try {
         response.header( HttpHeaders.ContentDisposition, "${if (isStream) "inline" else "attachment"}; filename=${fileName}" )
@@ -45,7 +56,7 @@ suspend fun ApplicationCall.sendFile(
             override fun readFrom(): ByteReadChannel {
                 return writer(Dispatchers.IO) {
                     // Wir öffnen den InputStream innerhalb des Writers
-                    context.contentResolver.openInputStream(fileUri)?.use { input ->
+                    inputStream.use { input ->
                         try {
                             val buffer = ByteArray(8192) // 8KB Buffer
                             var bytesRead: Int
