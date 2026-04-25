@@ -164,4 +164,11 @@ tasks.configureEach {
     }
 }
 
+android.applicationVariants.all {
+    val variantName = name.replaceFirstChar { it.uppercase() }
+
+    tasks.named("process${variantName}Resources") {
+        dependsOn(webBuild)
+    }
+}
 
