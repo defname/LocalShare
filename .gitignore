@@ -21,3 +21,4 @@ app/src/main/assets/listing_tmp2.html
 app/src/main/java/com/defname/localshare/IconMap.kt
 raw_assets/logo.png
 /app/src/main/assets/web/template_test.html
+/web-build/node_modules/
