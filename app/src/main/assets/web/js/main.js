@@ -11,6 +11,19 @@ document.addEventListener('alpine:init', () => {
         sortKey: 'filename',
         sortAsc: true,
         copiedId: null,
+        currentIndex: 0,
+
+        get currentFile() {
+            return this.sortedFiles[this.currentIndex];
+        },
+
+        nextSlide() {
+            this.currentIndex = (this.currentIndex + 1) % this.sortedFiles.length;
+        },
+
+        prevSlide() {
+            this.currentIndex = (this.currentIndex - 1 + this.sortedFiles.length) % this.sortedFiles.length;
+        },
 
         get sortedFiles() {
             return [...this.files].sort((a, b) => {
