@@ -79,17 +79,15 @@ Avoid using it on public or untrusted networks, especially for sensitive data.
 
 -   Android SDK / Android Studio
 -   Python 3 (used by a small build script)
+-   npm (needed for Tailwind CSS)
 
 ### Steps
 
-1.  Clone the repository
-2.  Open it in Android Studio
-3.  Make sure Python 3 is available in your system PATH
-4.  Build and run
-
-> [!NOTE]
-> The Papirus icon set is not included in the repo.
-> It will be downloaded and processed automatically during the build.
+1.  Clone the repository (recursively to include the icon theme!)
+2.  run `cd web-build && npm install`
+3.  Open it in Android Studio
+4.  Make sure Python 3 is available in your system PATH
+5.  Build and run
 
 ## License & Credits
 

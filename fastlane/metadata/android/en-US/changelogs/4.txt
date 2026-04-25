@@ -1,0 +1,5 @@
+- improved web interface (using Alpine JS and Tailwind CSS)
+  - light/dark mode
+  - added files appear instantly in the web interface
+- improved error handling
+- better tracking of active connections
