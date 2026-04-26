@@ -60,7 +60,7 @@
             <button @click="view = 'slideshow'" :class="view === 'slideshow' ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/40' : 'text-gray-500'" class="p-2 rounded-lg font-medium cursor-pointer">Slide</button>
         </div>
 
-        <a :href="'/' + window.token + '/download'" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-500/20">
+        <a :href="'/' + window.token + '/?download'" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-500/20">
             Download All (ZIP)
         </a>
     </div>
@@ -98,8 +98,8 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                 </svg>
                             </button>
-                            <a :href="'/' + window.token + '/download/' + file.fileId" class="text-[10px] uppercase tracking-wider bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-lg font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition">Get</a>
-                            <a :href="'/' + window.token + '/stream/' + file.fileId" class="text-[10px] uppercase tracking-wider bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-md shadow-blue-500/10">Open</a>
+                            <a :href="'/' + window.token + '/file/' + file.fileId + '?download'" class="text-[10px] uppercase tracking-wider bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-lg font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition">Get</a>
+                            <a :href="'/' + window.token + '/file/' + file.fileId" class="text-[10px] uppercase tracking-wider bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-md shadow-blue-500/10">Open</a>
                         </div>
                     </div>
                 </div>
@@ -152,11 +152,12 @@
 
         <!-- Slideshow Footer -->
         <div class="p-6 bg-gray-50 dark:bg-slate-900/50 border-t border-gray-100 dark:border-slate-800 flex flex-wrap justify-center gap-4">
-            <a :href="'/' + window.token + '/download/' + currentFile?.fileId"
+            <a :href="'/' + window.token + '/file/' + currentFile?.fileId + '?download'"
+               target="_blank"
                class="bg-white dark:bg-slate-800 text-gray-700 dark:text-white border border-gray-200 dark:border-slate-700 px-6 py-2 rounded-xl font-bold hover:bg-gray-100 dark:hover:bg-slate-700 transition">
                 Download
             </a>
-            <a :href="'/' + window.token + '/stream/' + currentFile?.fileId"
+            <a :href="'/' + window.token + '/file/' + currentFile?.fileId"
                target="_blank"
                class="bg-blue-600 text-white px-8 py-2 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-500/20">
                 Open Original

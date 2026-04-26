@@ -6,8 +6,10 @@ import com.defname.localshare.domain.model.FileInfo
 import com.defname.localshare.service.ServerSecurityHandler
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.response.header
+import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytesWriter
 import io.ktor.utils.io.CancellationException
 import io.ktor.utils.io.jvm.javaio.toOutputStream
@@ -21,6 +23,11 @@ suspend fun ApplicationCall.sendZip(
     context: Context,
     filename: String = "files.zip"
 ) {
+    if (files.isEmpty()) {
+        respond(HttpStatusCode.NotFound, "No files available for download")
+        return
+    }
+
     response.header(
         HttpHeaders.ContentDisposition,
         "attachment; filename=\"$filename\""

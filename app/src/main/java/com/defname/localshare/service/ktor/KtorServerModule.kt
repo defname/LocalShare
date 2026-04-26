@@ -12,6 +12,7 @@ import com.defname.localshare.service.ktor.routes.getEvents
 import com.defname.localshare.service.ktor.routes.getFavIcon
 import com.defname.localshare.service.ktor.routes.getFile
 import com.defname.localshare.service.ktor.routes.getFileIcon
+import com.defname.localshare.service.ktor.routes.getLanding
 import com.defname.localshare.service.ktor.routes.getThumbnail
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -24,7 +25,6 @@ import io.ktor.server.request.httpMethod
 import io.ktor.server.request.uri
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
@@ -81,10 +81,8 @@ fun Application.configureServerModule(
 
         getFile(securityHandler, serviceRepository, context)
 
-        get("/{token}") {
-            val token = call.parameters["token"] ?: return@get call.respond(HttpStatusCode.BadRequest)
-            call.respondRedirect("/$token/stream")
-        }
+        getLanding(securityHandler, serviceRepository, context)
+
         get("{...}") {
             call.respondText("No Access\n", status = HttpStatusCode.Forbidden)
         }
