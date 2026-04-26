@@ -30,6 +30,8 @@ data class ServerControlState(
     val ipAddressSelectorExpanded: Boolean = false,
     val ipAddressSelectorEnabled: Boolean = false,
 
-    val showExpandLogsButton: Boolean = false
+    val showExpandLogsButton: Boolean = false,
+
+    val hasNotificationPermission: Boolean = false
 
     )

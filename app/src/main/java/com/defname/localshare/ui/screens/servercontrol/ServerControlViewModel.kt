@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.defname.localshare.data.ConnectionLogsRepository
 import com.defname.localshare.data.NetworkInfoProvider
+import com.defname.localshare.data.PermissionRepository
 import com.defname.localshare.data.RuntimeData
 import com.defname.localshare.data.RuntimeState
 import com.defname.localshare.data.SecurityRepository
@@ -37,7 +38,8 @@ class ServerControlViewModel(
     private val connectionLogsRepository: ConnectionLogsRepository,
     private val settingsRepository: SettingsRepository,
     private val securityRepository: SecurityRepository,
-    private val networkInfoProvider: NetworkInfoProvider
+    private val networkInfoProvider: NetworkInfoProvider,
+    private val permissionRepository: PermissionRepository
 ) : ViewModel() {
     /**
      * StateFlow for the log entry for which the context menu should be shown.
@@ -58,7 +60,8 @@ class ServerControlViewModel(
         settingsState,
         securityRepository.blacklist,
         securityRepository.whitelist,
-        _uiState
+        _uiState,
+        permissionRepository.hasNotificationPermission
 
     ) { states ->
 
@@ -68,6 +71,8 @@ class ServerControlViewModel(
         val blacklist = states[3] as Set<String>
         val whitelist = states[4] as List<WhiteListEntry>
         val uiState = states[5] as InternalUiState
+        val hasNotificationPermission = states[6] as Boolean
+
 
         val localAddresses = networkInfoProvider.getLocalIpAddresses() + NetworkInfo("0.0.0.0", "any")
 
@@ -87,7 +92,8 @@ class ServerControlViewModel(
             localIpAddresses = uiState.localIpAddresses,
             ipAddressSelectorExpanded = uiState.ipAddressSelectorExpanded,
             ipAddressSelectorEnabled = runtimeState.serviceState == RuntimeState.STOPPED,
-            showExpandLogsButton = logs.size > logCount
+            showExpandLogsButton = logs.size > logCount,
+            hasNotificationPermission = hasNotificationPermission
         )
     }.stateIn(
         scope = viewModelScope,
@@ -179,5 +185,9 @@ class ServerControlViewModel(
 
     fun removeFromWhitelist(it: String) {
         securityRepository.removeFromWhitelist(it)
+    }
+
+    fun updatePermissionStatus() {
+        permissionRepository.updatePermissionStatus()
     }
 }

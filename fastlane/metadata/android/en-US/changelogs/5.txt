@@ -1,2 +1,3 @@
 - Add slideshow to web-interface
 - Prevent duplicate connection request notifications
+- Add filelist screen

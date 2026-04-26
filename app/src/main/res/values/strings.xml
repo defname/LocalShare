@@ -68,4 +68,11 @@
     <string name="settings_webinterface_title">Webinterface</string>
     <string name="settings_webinterface_heartbeat_label">SSE Heartbeat Period</string>
     <string name="settings_webinterface_heartbeat_hint">How many seconds between server-send events</string>
+    <string name="screen_files">Files</string>
+    <string name="screen_logs">Logs</string>
+    <string name="screen_settings">Settings</string>
+    <string name="screen_info">Info</string>
+    <string name="sort_name">Name</string>
+    <string name="sort_size">Size</string>
+    <string name="sort_type">Type</string>
 </resources>

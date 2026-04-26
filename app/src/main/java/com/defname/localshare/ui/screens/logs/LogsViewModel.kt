@@ -39,4 +39,7 @@ class LogsViewModel(
     fun removeFromBlacklist(it: String) { securityRepository.removeFromBlacklist(it) }
     fun removeFromWhitelist(it: String) { securityRepository.removeFromWhitelist(it) }
 
+    fun clearLogs() {
+        logsRepository.clearLogs()
+    }
 }

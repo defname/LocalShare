@@ -17,13 +17,13 @@
  */
 package com.defname.localshare.ui.screens.servercontrol
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.text.format.Formatter
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -33,6 +33,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Cancel
@@ -40,6 +42,8 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Stream
@@ -47,12 +51,16 @@ import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -64,12 +72,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.defname.localshare.R
+import com.defname.localshare.data.RuntimeState
 import com.defname.localshare.ui.components.LogList
 import com.defname.localshare.ui.screens.servercontrol.components.FileCarousel
 import com.defname.localshare.ui.screens.servercontrol.components.IpAddressSelector
+import com.defname.localshare.ui.screens.servercontrol.components.StartServerButton
+import com.defname.localshare.ui.theme.LocalShareTheme
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -83,272 +95,341 @@ fun shareText(context: Context, text: String) {
     context.startActivity(shareIntent)
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServerControlScreen(
     viewModel: ServerControlViewModel = koinViewModel(),
-    onNavigateToLogs: () -> Unit = {}
+    onOpenDrawer: () -> Unit,
+    onNavigateToLogs: () -> Unit,
+    onShowQr: () -> Unit,
+    serverState: RuntimeState,
+    onStartServer: () -> Unit,
+    onStopServer: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
-
     val scope = rememberCoroutineScope()
 
     val filePickerDialog = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
         viewModel.addFiles(uris)
     }
 
-    Column (
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Spacer(modifier = Modifier.height(16.dp))
-        Row (verticalAlignment = Alignment.CenterVertically){
-            Text(
-                stringResource(R.string.servercontrolscreen_shared_files_caption),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .weight(1f)
-            )
-            if (state.fileList.isNotEmpty()) {
-                CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
-                    IconButton(
-                        onClick = { viewModel.clearFiles() },
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Clear,
-                            contentDescription = stringResource(R.string.servercontrollscreen_filelist_icon_descr_clear),
-                            modifier = Modifier.size(18.dp)
-                        )
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { _ ->
+        viewModel.updatePermissionStatus()
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.servercontrolscreen_server_settings_caption)) },
+                navigationIcon = {
+                    IconButton(onClick = onOpenDrawer) {
+                        Icon(Icons.Default.Menu, contentDescription = null)
                     }
-                }
-            }
-        }
-
-        if (state.fileList.isNotEmpty()) {
-            Text(
-                stringResource(
-                    R.string.servercontrolscreen_shared_files_number,
-                    state.fileList.size
-                ), style = MaterialTheme.typography.bodySmall)
-            Text(
-                stringResource(
-                    R.string.servercontrolscreen_shared_files_total_size,
-                    Formatter.formatFileSize(context, state.fileList.sumOf { it.size })
-                ), style = MaterialTheme.typography.bodySmall)
-            FileCarousel(
-                fileList = state.fileList,
-                selectedFiles = state.filesToDelete,
-                onToggleSelection = { viewModel.toggleFileToDelete(it) },
-            )
-        }
-        Row {
-            Spacer(Modifier.weight(1f))
-            if (state.filesToDelete.isNotEmpty()) {
-                Button(
-                    modifier = Modifier
-                        .padding(end = 8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError
-                    ),
-                    onClick = { viewModel.removeFiles() }
-                ) {
-                    Icon(imageVector = Icons.Default.Delete, contentDescription = stringResource(R.string.servercontrolscreen_shared_files_delete_file))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.servercontrolscreen_shared_files_delete_file))
-                }
-                Button(
-                    onClick = { viewModel.clearFilesToDelete() }
-                ) {
-                    Icon(imageVector = Icons.Default.Cancel, contentDescription = stringResource(R.string.servercontrolscreen_shared_files_delete_file_cancel))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.servercontrolscreen_shared_files_delete_file_cancel))
-                }
-            }
-            else {
-                Button(
-                    onClick = { filePickerDialog.launch("*/*") }
-                ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = stringResource(R.string.servercontrolscreen_add_files_icon_description_add))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.servercontrolsscreen_add_files_button_caption))
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            stringResource(R.string.servercontrolscreen_server_settings_caption),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-
-        Row(Modifier.padding(8.dp)) {
-            OutlinedTextField(
-                value = state.token,
-                label = { Text(stringResource(R.string.servercontrolscreen_token_input_caption)) },
-                singleLine = true,
-                onValueChange = { scope.launch { viewModel.onTokenChange(it) } },
-                enabled = true,
-                modifier = Modifier
-                    .weight(2f)
-                    .fillMaxWidth(),
-                trailingIcon = { IconButton(onClick = { scope.launch { viewModel.onRandomTokenClick() } }) {
-                    Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.servercontrolscreen_generate_random_token_icon_description))
-                } }
-            )
-        }
-
-        IpAddressSelector(
-            addresses = state.localIpAddresses,
-            selectedAddress = state.selectedIpAddress,
-            isSelectedAddressValid = state.isSelectedIpAddressValid,
-            expanded = state.ipAddressSelectorExpanded,
-            enabled = state.ipAddressSelectorEnabled,
-            onExpandedChange = { viewModel.ipAddressSelectorExpandedChange() },
-            onAddressSelected = { scope.launch { viewModel.setSeletectedIp(it) } },
-            onDismiss = { viewModel.collapseIpAddressSelector() }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            stringResource(R.string.servercontrollscreen_serverurls_caption),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        val usedAddresses: List<String> = remember(state.selectedIpAddress, state.localIpAddresses) {
-            if (state.selectedIpAddress != "0.0.0.0") {
-                listOf(state.selectedIpAddress)
-            } else {
-                state.localIpAddresses.map { it.ip }
-            }
-        }
-
-        for (ipAddress in usedAddresses) {
-            val baseUrl = "http://$ipAddress:${state.port}/${state.token}"
-            for (action in listOf("stream", "download")) {
-                val url = "$baseUrl/$action"
-                Card(modifier = Modifier
-                    .padding(horizontal = 8.dp)
-                    .padding(bottom = 8.dp)) {
-                    Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = if (action == "stream") Icons.Default.Stream else Icons.Default.Download,
-                            contentDescription = if (action == "stream") stringResource(R.string.servercontrollscreen_server_urls_icon_descr_stream) else stringResource(
-                                R.string.servercontrollscreen_server_urls_icon_descr_download
-                            ),
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            url,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        IconButton(onClick = { shareText(context, url) }) {
-                            Icon(imageVector = Icons.Default.Share, contentDescription = stringResource(
-                                R.string.servercontrollscreen_serverurls_icon_descr_share
-                            ))
+                },
+                actions = {
+                    if (state.isRunning) {
+                        IconButton(onClick = onShowQr) {
+                            Icon(Icons.Default.QrCode2, contentDescription = stringResource(R.string.main_action_button_descr_qr_code))
                         }
                     }
-                }
-            }
-        }
-
-
-
-        Spacer(modifier = Modifier.height(16.dp))
-        Row (verticalAlignment = Alignment.CenterVertically){
-            Text(
-                stringResource(R.string.servercontrollscreen_logs_caption),
-
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .weight(1f)
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             )
-            if (state.showExpandLogsButton) {
-                CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
-                    IconButton(
-                        onClick = onNavigateToLogs,
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.List,
-                            contentDescription = stringResource(R.string.servercontrollscreen_logs_expand),
-                            modifier = Modifier.size(18.dp)
-                        )
+        },
+        bottomBar = {
+            StartServerButton(
+                serverState = serverState,
+                hasNotificationPermission = state.hasNotificationPermission,
+                requestNotificationPermission = {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     }
-                }
-            }
+                },
+                startServer = onStartServer,
+                stopServer = onStopServer
+            )
         }
-        Spacer(modifier = Modifier.height(8.dp))
-
-        LogList(
-            entries = state.logEntries,
-            menuOpenForId = state.logMenuOpenForId,
-            onContextMenuOpen = { viewModel.logMenuOpenForId(it.id) },
-            onContextMenuClose = { viewModel.logMenuClose() },
-            onAddToBlackList = { viewModel.addToBlacklist(it) },
-            onRemoveFromBlackList = { viewModel.removeFromBlacklist(it) },
-            onRemoveFromWhiteList = { viewModel.removeFromWhitelist(it) }
-        )
-
-
-        if (state.isRunning) {
-
-            if (state.blacklist.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(16.dp))
-
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    stringResource(
-                        R.string.servercontrollscreen_banned_ips_caption,
-                        state.blacklist.size
-                    ),
+                    stringResource(R.string.servercontrolscreen_shared_files_caption),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .padding(vertical = 8.dp)
+                        .weight(1f)
                 )
-
-                state.blacklist.distinct().forEach { ip ->
-                    Row(
-                        Modifier
-                            .padding(8.dp)
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.background)
-                            .border(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.outline,
-                                MaterialTheme.shapes.medium
-                            ),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            ip, Modifier
-                                .weight(2f)
-                                .padding(start = 8.dp)
-                        )
+                if (state.fileList.isNotEmpty()) {
+                    @OptIn(ExperimentalMaterial3Api::class)
+                    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
                         IconButton(
-                            onClick = { viewModel.removeFromBlacklist(ip) }
+                            onClick = { viewModel.clearFiles() },
+                            modifier = Modifier.size(24.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Undo,
-                                contentDescription = stringResource(R.string.servercontrollscreen_icon_descr_unban),
-                                tint = Color.Green
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = stringResource(R.string.servercontrollscreen_filelist_icon_descr_clear),
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
                 }
             }
-        }
 
+            if (state.fileList.isNotEmpty()) {
+                Text(
+                    stringResource(
+                        R.string.servercontrolscreen_shared_files_number,
+                        state.fileList.size
+                    ), style = MaterialTheme.typography.bodySmall
+                )
+                Text(
+                    stringResource(
+                        R.string.servercontrolscreen_shared_files_total_size,
+                        Formatter.formatFileSize(context, state.fileList.sumOf { it.size })
+                    ), style = MaterialTheme.typography.bodySmall
+                )
+                FileCarousel(
+                    fileList = state.fileList,
+                    selectedFiles = state.filesToDelete,
+                    onToggleSelection = { viewModel.toggleFileToDelete(it) },
+                )
+            }
+            Row {
+                Spacer(Modifier.weight(1f))
+                if (state.filesToDelete.isNotEmpty()) {
+                    Button(
+                        modifier = Modifier
+                            .padding(end = 8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        ),
+                        onClick = { viewModel.removeFiles() }
+                    ) {
+                        Icon(imageVector = Icons.Default.Delete, contentDescription = stringResource(R.string.servercontrolscreen_shared_files_delete_file))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.servercontrolscreen_shared_files_delete_file))
+                    }
+                    Button(
+                        onClick = { viewModel.clearFilesToDelete() }
+                    ) {
+                        Icon(imageVector = Icons.Default.Cancel, contentDescription = stringResource(R.string.servercontrolscreen_shared_files_delete_file_cancel))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.servercontrolscreen_shared_files_delete_file_cancel))
+                    }
+                } else {
+                    Button(
+                        onClick = { filePickerDialog.launch("*/*") }
+                    ) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = stringResource(R.string.servercontrolscreen_add_files_icon_description_add))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.servercontrolsscreen_add_files_button_caption))
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                stringResource(R.string.servercontrolscreen_server_settings_caption),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+
+            Row(Modifier.padding(vertical = 8.dp)) {
+                OutlinedTextField(
+                    value = state.token,
+                    label = { Text(stringResource(R.string.servercontrolscreen_token_input_caption)) },
+                    singleLine = true,
+                    onValueChange = { scope.launch { viewModel.onTokenChange(it) } },
+                    enabled = true,
+                    modifier = Modifier
+                        .weight(2f)
+                        .fillMaxWidth(),
+                    trailingIcon = {
+                        IconButton(onClick = { scope.launch { viewModel.onRandomTokenClick() } }) {
+                            Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.servercontrolscreen_generate_random_token_icon_description))
+                        }
+                    }
+                )
+            }
+
+            IpAddressSelector(
+                addresses = state.localIpAddresses,
+                selectedAddress = state.selectedIpAddress,
+                isSelectedAddressValid = state.isSelectedIpAddressValid,
+                expanded = state.ipAddressSelectorExpanded,
+                enabled = state.ipAddressSelectorEnabled,
+                onExpandedChange = { viewModel.ipAddressSelectorExpandedChange() },
+                onAddressSelected = { scope.launch { viewModel.setSeletectedIp(it) } },
+                onDismiss = { viewModel.collapseIpAddressSelector() }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                stringResource(R.string.servercontrollscreen_serverurls_caption),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            val usedAddresses: List<String> = remember(state.selectedIpAddress, state.localIpAddresses) {
+                if (state.selectedIpAddress != "0.0.0.0") {
+                    listOf(state.selectedIpAddress)
+                } else {
+                    state.localIpAddresses.map { it.ip }
+                }
+            }
+
+            for (ipAddress in usedAddresses) {
+                val baseUrl = "http://$ipAddress:${state.port}/${state.token}"
+                for (action in listOf("stream", "download")) {
+                    val url = "$baseUrl/$action"
+                    Card(
+                        modifier = Modifier
+                            .padding(bottom = 8.dp)
+                    ) {
+                        Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = if (action == "stream") Icons.Default.Stream else Icons.Default.Download,
+                                contentDescription = if (action == "stream") stringResource(R.string.servercontrollscreen_server_urls_icon_descr_stream) else stringResource(
+                                    R.string.servercontrollscreen_server_urls_icon_descr_download
+                                ),
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                url,
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            IconButton(onClick = { shareText(context, url) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Share, contentDescription = stringResource(
+                                        R.string.servercontrollscreen_serverurls_icon_descr_share
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(R.string.servercontrollscreen_logs_caption),
+
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .weight(1f)
+                )
+                if (state.showExpandLogsButton) {
+                    @OptIn(ExperimentalMaterial3Api::class)
+                    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+                        IconButton(
+                            onClick = onNavigateToLogs,
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.List,
+                                contentDescription = stringResource(R.string.servercontrollscreen_logs_expand),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            LogList(
+                entries = state.logEntries,
+                menuOpenForId = state.logMenuOpenForId,
+                onContextMenuOpen = { viewModel.logMenuOpenForId(it.id) },
+                onContextMenuClose = { viewModel.logMenuClose() },
+                onAddToBlackList = { viewModel.addToBlacklist(it) },
+                onRemoveFromBlackList = { viewModel.removeFromBlacklist(it) },
+                onRemoveFromWhiteList = { viewModel.removeFromWhitelist(it) }
+            )
+
+
+            if (state.isRunning) {
+
+                if (state.blacklist.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        stringResource(
+                            R.string.servercontrollscreen_banned_ips_caption,
+                            state.blacklist.size
+                        ),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .padding(vertical = 8.dp)
+                    )
+
+                    state.blacklist.distinct().forEach { ip ->
+                        Row(
+                            Modifier
+                                .padding(vertical = 4.dp)
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                ip, Modifier
+                                    .weight(2f)
+                            )
+                            IconButton(
+                                onClick = { viewModel.removeFromBlacklist(ip) }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Undo,
+                                    contentDescription = stringResource(R.string.servercontrollscreen_icon_descr_unban),
+                                    tint = Color.Green
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(80.dp)) // Padding for FAB
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ServerControlScreenPreview() {
+    LocalShareTheme {
+        ServerControlScreen(
+            onOpenDrawer = {},
+            onNavigateToLogs = {},
+            onShowQr = {},
+            serverState = RuntimeState.STOPPED,
+            onStartServer = {},
+            onStopServer = {}
+        )
     }
 }

@@ -27,14 +27,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -53,8 +63,9 @@ import com.defname.localshare.BuildConfig
 import com.defname.localshare.R
 import com.defname.localshare.ui.theme.LocalShareTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InfoScreen() {
+fun InfoScreen(onOpenDrawer: () -> Unit) {
     val context = LocalContext.current
 
     val appName = stringResource(id = R.string.app_name)
@@ -68,105 +79,111 @@ fun InfoScreen() {
     val license = stringResource(id = R.string.app_license)
     val srcUrl = stringResource(id = R.string.app_src_url)
 
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Toolbar Bereich
-        Row(
-            Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
-        ) {
-            AsyncImage(
-                model = appIcon,
-                contentDescription = "App Icon",
-                modifier = Modifier
-                    .size(130.dp)
-                    .clip(MaterialTheme.shapes.large)
-            )
-            Text(appName, style = MaterialTheme.typography.headlineMedium)
-
-        }
-
-        Spacer(Modifier.height(32.dp))
-
-        // App Infos
-        Card(
-            Modifier.fillMaxWidth()
-        ) {
-            Column(Modifier.padding(16.dp)) {
-                InfoRow(label = "Version", value = versionName)
-                InfoRow(label = "Build Number", value = versionCode.toString())
-                InfoRow(label = "Package Name", value = context.packageName)
-                InfoRow(label = "License", value = license)
-                InfoRow(label = "Source", value = buildAnnotatedString {
-                    withLink(
-                        LinkAnnotation.Url(
-                            url = srcUrl,
-                            styles = TextLinkStyles(
-                                style = SpanStyle(
-                                    color = MaterialTheme.colorScheme.primary,
-                                    textDecoration = TextDecoration.Underline
-                                )
-                            )
-                        )
-                    ) {
-                        append(srcUrl)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.screen_info)) },
+                navigationIcon = {
+                    IconButton(onClick = onOpenDrawer) {
+                        Icon(Icons.Default.Menu, contentDescription = null)
                     }
-                })
-            }
-        }
-        Spacer(Modifier.height(32.dp))
-
-        // Lizenzen & Credits
-        Text("Credits", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(8.dp))
-
-        val papirusUrl = stringResource(R.string.icon_theme_url)
-        val annotatedDescription = buildAnnotatedString {
-            append("Licensed under ${stringResource(R.string.icon_theme_license)}\n")
-            withLink(
-                LinkAnnotation.Url(
-                    url = papirusUrl,
-                    styles = TextLinkStyles(
-                        style = SpanStyle(
-                            color = MaterialTheme.colorScheme.primary,
-                            textDecoration = TextDecoration.Underline
-                        )
-                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
-            ) {
-                append(papirusUrl)
-            }
+            )
         }
-
-        Card (
-            Modifier
-                .fillMaxWidth()
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
-            Column(Modifier.padding(16.dp)) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (appIcon != null) {
+                    AsyncImage(
+                        model = appIcon,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                }
                 Text(
-                    stringResource(R.string.icon_theme),
-                    style = MaterialTheme.typography.headlineSmall,
+                    text = appName,
+                    style = MaterialTheme.typography.headlineMedium
                 )
-                Spacer(Modifier.height(8.dp))
-                Text(annotatedDescription)
+            }
+
+            Spacer(Modifier.height(32.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(Modifier.padding(16.dp)) {
+                    InfoRow(label = "Version", value = versionName)
+                    InfoRow(label = "Build Number", value = versionCode.toString())
+                    InfoRow(label = "Package Name", value = context.packageName)
+                    InfoRow(label = "License", value = license)
+                    InfoRow(label = "Source", value = buildAnnotatedString {
+                        withLink(
+                            LinkAnnotation.Url(
+                                srcUrl,
+                                styles = TextLinkStyles(style = SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline))
+                            )
+                        ) {
+                            append(srcUrl)
+                        }
+                    })
+                }
+            }
+
+            Spacer(Modifier.height(32.dp))
+
+            Text("Credits", style = MaterialTheme.typography.titleLarge)
+            Spacer(Modifier.height(8.dp))
+
+            val papirusUrl = stringResource(R.string.icon_theme_url)
+            val annotatedDescription = buildAnnotatedString {
+                append("Icons from Papirus Icon Theme\n")
+                append("Licensed under ${stringResource(R.string.icon_theme_license)}\n")
+                withLink(
+                    LinkAnnotation.Url(
+                        papirusUrl,
+                        styles = TextLinkStyles(style = SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline))
+                    )
+                ) {
+                    append(papirusUrl)
+                }
+            }
+
+            Card (
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(Modifier.padding(16.dp)) {
+                    Text(
+                        stringResource(R.string.icon_theme),
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(annotatedDescription)
+                }
             }
         }
     }
 }
 
-
 @Composable
 fun InfoRow(label: String, value: String) {
     InfoRow(label, AnnotatedString(value))
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InfoRow(label: String, value: AnnotatedString) {
     FlowRow(
@@ -196,6 +213,6 @@ fun InfoRowPreview() {
 @Composable
 fun InfoScreenPreview() {
     LocalShareTheme {
-        InfoScreen()
+        InfoScreen(onOpenDrawer = {})
     }
 }

@@ -34,7 +34,7 @@ fun IpAddressSelector(
         onExpandedChange = { onExpandedChange() },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
+            .padding(vertical = 8.dp)
     ) {
         OutlinedTextField(
             value = selectedAddress ?: "0.0.0.0",

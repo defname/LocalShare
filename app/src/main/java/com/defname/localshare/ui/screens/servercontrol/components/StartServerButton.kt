@@ -1,4 +1,4 @@
-package com.defname.localshare.ui.screens.main.components
+package com.defname.localshare.ui.screens.servercontrol.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer

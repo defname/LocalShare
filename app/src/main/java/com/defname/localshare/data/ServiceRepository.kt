@@ -74,6 +74,7 @@ class ServiceRepository(
         }
     }
     fun removeFile(uri: Uri) { _runtimeState.update { it.copy(fileList = it.fileList.filter { it.uri != uri }) } }
+    fun removeFiles(uris: Set<Uri>) { _runtimeState.update { it.copy(fileList = it.fileList.filter { !uris.contains(it.uri) }) } }
     fun clearFiles() { _runtimeState.update { it.copy(fileList = emptyList()) } }
 
     fun serverStarting() { _runtimeState.update { it.copy(serviceState = RuntimeState.STARTING) } }

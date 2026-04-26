@@ -53,8 +53,8 @@ val appModule = module {
     factory { ServerSecurityHandler(get(), get()) }
 
     viewModel { MainViewModel(get(), get(), get(), get(), get(), get()) }
-    viewModel { FilesViewModel(get()) }
-    viewModel { ServerControlViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { FilesViewModel(get(), get()) }
+    viewModel { ServerControlViewModel(get(), get(), get(), get(), get(), get(), get()) }
     viewModel { LogsViewModel(get(), get(), get()) }
     viewModel { SettingsViewModel(get(), get()) }
 }
