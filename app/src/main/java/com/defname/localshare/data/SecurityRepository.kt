@@ -1,6 +1,5 @@
 package com.defname.localshare.data
 
-import com.defname.localshare.domain.model.ConnectionRequest
 import com.defname.localshare.domain.model.Settings
 import com.defname.localshare.domain.model.WhiteListEntry
 import com.defname.localshare.domain.model.isStillValid
@@ -29,10 +28,6 @@ class SecurityRepository(
 
     private val _whitelist = MutableStateFlow(listOf<WhiteListEntry>())
     val whitelist = _whitelist.asStateFlow()
-
-    private val _pendingRequests = MutableStateFlow<List<ConnectionRequest>>(emptyList())
-    val pendingRequests = _pendingRequests.asStateFlow()
-
 
     init {
         startCleaningJob()

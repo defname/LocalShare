@@ -4,6 +4,7 @@ import com.defname.localshare.data.SecurityRepository
 import com.defname.localshare.service.notification.NotificationHelper
 import io.ktor.server.request.ApplicationRequest
 import io.ktor.server.routing.RoutingCall
+import io.ktor.util.collections.ConcurrentSet
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeout
@@ -12,6 +13,8 @@ class ServerSecurityHandler(
     private val securityRepository: SecurityRepository,
     private val notificationHelper: NotificationHelper
 ) {
+    private val pendingVerificationRequests = ConcurrentSet<String>()
+
     suspend fun verifyAccess(call: RoutingCall): Boolean {
         val token = call.parameters["token"] ?: return false
         val ip = call.request.local.remoteHost
@@ -28,17 +31,25 @@ class ServerSecurityHandler(
             return true
         }
 
-        notificationHelper.showApprovalNotification(ip)
+        var ipAddedByThisCall = false
+        if (pendingVerificationRequests.add(ip)) {
+            notificationHelper.showApprovalNotification(ip)
+            ipAddedByThisCall = true
+        }
 
         return try {
             withTimeout(30_000L) {
-                securityRepository.whitelist.first() { list ->
+                securityRepository.whitelist.first { list ->
                     list.any { it.ip == ip }
                 }
                 true
             }
         } catch (e: TimeoutCancellationException) {
             false
+        } finally {
+            if (ipAddedByThisCall) {
+                pendingVerificationRequests.remove(ip)
+            }
         }
     }
 
