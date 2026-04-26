@@ -298,16 +298,16 @@ fun ServerControlScreen(
 
             for (ipAddress in usedAddresses) {
                 val baseUrl = "http://$ipAddress:${state.port}/${state.token}"
-                for (action in listOf("stream", "download")) {
-                    val url = "$baseUrl/$action"
+                for (download in listOf(false, true)) {
+                    val url = "$baseUrl" + if (download) "?download" else ""
                     Card(
                         modifier = Modifier
                             .padding(bottom = 8.dp)
                     ) {
                         Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                imageVector = if (action == "stream") Icons.Default.Stream else Icons.Default.Download,
-                                contentDescription = if (action == "stream") stringResource(R.string.servercontrollscreen_server_urls_icon_descr_stream) else stringResource(
+                                imageVector = if (!download) Icons.Default.Stream else Icons.Default.Download,
+                                contentDescription = if (!download) stringResource(R.string.servercontrollscreen_server_urls_icon_descr_stream) else stringResource(
                                     R.string.servercontrollscreen_server_urls_icon_descr_download
                                 ),
                                 modifier = Modifier.size(24.dp)
