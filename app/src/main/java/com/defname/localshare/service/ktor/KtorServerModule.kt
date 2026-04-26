@@ -26,6 +26,7 @@ import io.ktor.server.request.uri
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
+import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 
@@ -37,6 +38,7 @@ fun Application.configureServerModule(
     context: Context
 ) {
     install(PartialContent)
+    install(IgnoreTrailingSlash)
 
     intercept(ApplicationCallPipeline.Monitoring) {
         val connectionId = connectionLogsRepository.clientConnected(
