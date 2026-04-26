@@ -22,3 +22,6 @@ app/src/main/java/com/defname/localshare/IconMap.kt
 raw_assets/logo.png
 /app/src/main/assets/web/template_test.html
 /web-build/node_modules/
+/raw_assets/logo_new_version.svg
+/raw_assets/logo_black.svg
+/raw_assets/monochrome_logo.png
