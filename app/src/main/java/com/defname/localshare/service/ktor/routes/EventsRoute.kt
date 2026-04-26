@@ -80,9 +80,12 @@ fun Route.getEvents(
 
                     // 🔄 Event-Collector (reagiert auf Datei-Änderungen)
                     launch {
+                        writer.write("event: init\ndata: connected\n\n")
+                        writer.flush()
+
                         serviceRepository.fileList
                             .asDeltaEvents()
-                            .drop(1)
+                            .drop(0)
                             .collect { delta ->
                                 // Sofort-Check bei Datei-Event (falls IP gerade gebannt wurde)
                                 if (!securityHandler.verifyAccess(call)) {

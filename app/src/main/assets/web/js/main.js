@@ -40,7 +40,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         copyLink(fileId) {
-            const link = window.location.origin + '/' + token + '/stream/' + fileId;
+            const link = window.location.origin + '/' + token + '/file/' + fileId;
 
             const handleSuccess = () => {
                 this.copiedId = fileId;
@@ -82,6 +82,11 @@ document.addEventListener('alpine:init', () => {
                 const fileIdToRemove = event.data;
                 this.files = this.files.filter(f => f.fileId !== fileIdToRemove);
             });
+
+            eventSource.addEventListener('init', (event) => {
+                this.files = [];
+                console.log("Filelist cleared");
+            })
 
             eventSource.onerror = (err) => {
                 console.error('SSE failed, reconnecting...', err);
