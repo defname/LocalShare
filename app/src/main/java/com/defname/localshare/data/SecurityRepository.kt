@@ -61,5 +61,10 @@ class SecurityRepository(
     fun addToWhitelist(ip: String) { _whitelist.update { it + WhiteListEntry(ip, System.currentTimeMillis()) } }
     fun removeFromWhitelist(ip: String) { _whitelist.update { it.filter { entry -> entry.ip != ip } } }
     fun isWhitelisted(ip: String): Boolean { return _whitelist.value.any { it.ip == ip && it.isStillValid(settings.value.whitelistEntryTTLSeconds)  } }
-    fun generateRandomToken(): String { return UUID.randomUUID().toString() }
+    
+    companion object {
+        fun generateRandomToken(): String {
+            return UUID.randomUUID().toString().take(6)
+        }
+    }
 }

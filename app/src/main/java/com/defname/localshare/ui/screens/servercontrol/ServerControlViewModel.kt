@@ -166,7 +166,7 @@ class ServerControlViewModel(
     }
 
     suspend fun onRandomTokenClick() {
-        settingsRepository.setToken(securityRepository.generateRandomToken())
+        settingsRepository.setToken(SecurityRepository.generateRandomToken())
     }
 
     fun addToBlacklist(it: String) {

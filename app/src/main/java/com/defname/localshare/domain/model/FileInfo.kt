@@ -12,3 +12,14 @@ data class FileInfo(
     val iconFile: String,
     val filePreview: Bitmap? = null
 )
+
+fun FileInfo.sizeAsString(): String {
+    var sizeDouble = this.size.toDouble()
+    val units = listOf("Byte", "KB", "MB", "GB", "TB")
+    var unitIndex = 0
+    while (sizeDouble >= 1024 && unitIndex < units.size - 1) {
+        sizeDouble /= 1024
+        unitIndex++
+    }
+    return "%.2f %s".format(sizeDouble, units[unitIndex])
+}

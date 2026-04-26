@@ -26,6 +26,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.defname.localshare.data.RuntimeState
 import com.defname.localshare.ui.components.QRDialog
+import com.defname.localshare.ui.screens.files.FilesScreen
 import com.defname.localshare.ui.screens.info.InfoScreen
 import com.defname.localshare.ui.screens.logs.LogsScreen
 import com.defname.localshare.ui.screens.main.components.MainMenu
@@ -122,6 +123,9 @@ fun MainScreen(
                         ServerControlScreen(
                             onNavigateToLogs = { scope.launch { navController.navigate(Screen.Logs.route) } }
                         )
+                    }
+                    composable(Screen.Files.route) {
+                        FilesScreen()
                     }
                     composable(Screen.Settings.route) {
                         SettingsScreen()

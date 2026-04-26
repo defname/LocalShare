@@ -10,7 +10,6 @@ import com.defname.localshare.domain.model.Settings
 import com.defname.localshare.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import java.util.UUID
 
 class DataStoreSettingsRepository(
     private val store: DataStore<Preferences>
@@ -30,7 +29,7 @@ class DataStoreSettingsRepository(
     override val settingsFlow: Flow<Settings> = store.data
         .map {
             Settings(
-                token = it[Keys.TOKEN] ?: UUID.randomUUID().toString(),
+                token = it[Keys.TOKEN] ?: SecurityRepository.generateRandomToken(),
                 serverPort = it[Keys.PORT] ?: 8080,
                 serverIp = it[Keys.SERVER_IP] ?: "0.0.0.0",
                 serverIdleTimeoutSeconds = it[Keys.SERVER_IDLE_TIMEOUT_SECONDS] ?: 30,

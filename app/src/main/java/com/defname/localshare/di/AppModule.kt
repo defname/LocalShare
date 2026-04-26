@@ -2,9 +2,9 @@ package com.defname.localshare.di
 
 import android.content.Context
 import androidx.datastore.preferences.preferencesDataStore
+import com.defname.localshare.data.ConnectionLogsRepository
 import com.defname.localshare.data.DataStoreSettingsRepository
 import com.defname.localshare.data.FileInfoProvider
-import com.defname.localshare.data.ConnectionLogsRepository
 import com.defname.localshare.data.NetworkInfoProvider
 import com.defname.localshare.data.PermissionRepository
 import com.defname.localshare.data.SecurityRepository
@@ -15,6 +15,7 @@ import com.defname.localshare.domain.usecase.ManageServiceUseCase
 import com.defname.localshare.service.ServerIdleManager
 import com.defname.localshare.service.ServerSecurityHandler
 import com.defname.localshare.service.notification.NotificationHelper
+import com.defname.localshare.ui.screens.files.FilesViewModel
 import com.defname.localshare.ui.screens.logs.LogsViewModel
 import com.defname.localshare.ui.screens.main.MainViewModel
 import com.defname.localshare.ui.screens.servercontrol.ServerControlViewModel
@@ -52,6 +53,7 @@ val appModule = module {
     factory { ServerSecurityHandler(get(), get()) }
 
     viewModel { MainViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { FilesViewModel(get()) }
     viewModel { ServerControlViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { LogsViewModel(get(), get(), get()) }
     viewModel { SettingsViewModel(get(), get()) }
