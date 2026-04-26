@@ -59,9 +59,9 @@ class MainViewModel(
 
     private fun getQrLink(qrForStream: Boolean, token: String, ip: String, port: Int): String {
         return if (qrForStream) {
-            "http://$ip:$port/stream/$token"
+            "http://$ip:$port/$token"
         } else {
-            "http://$ip:$port/download/$token"
+            "http://$ip:$port/$token?download"
         }
     }
 
