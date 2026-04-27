@@ -175,3 +175,14 @@ android.applicationVariants.all {
     }
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    dependsOn(generateIconMapping)
+}
+
+android.applicationVariants.all {
+    val variantName = name.replaceFirstChar { it.uppercase() }
+    tasks.named("generate${variantName}Sources") {
+        dependsOn(generateIconMapping)
+    }
+}
+
