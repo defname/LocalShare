@@ -20,7 +20,8 @@ fun SharedContent.Text.toJsonString() = """
 fun SharedContent.VCard.toJsonString() = """
     {
         "id": "${this.id}",
-        "mimeType": "${this.mimeType.escapeJson()}"
+        "mimeType": "${this.mimeType.escapeJson()}",
+        "vCard": "${this.vCard.escapeJson()}"
     }    
     """.toOneLine()
 fun SharedContent.Other.toJsonString() =
