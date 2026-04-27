@@ -25,7 +25,7 @@ jobs:
           echo "Version Code: $VERSION_CODE"
 
           # Check if changelog file exists in fastlane
-          CHANGELOG_FILE="fastlane/metadata/android/en-US/changelogs/${VERSION_CODOE}.txt"
+          CHANGELOG_FILE="fastlane/metadata/android/en-US/changelogs/${VERSION_CODE}.txt"
 
           if [ ! -f "$CHANGELOG_FILE" ]; then
             echo "Changelog file not found: $CHANGELOG_FILE"
