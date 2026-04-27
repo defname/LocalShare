@@ -3,11 +3,11 @@
 ### Webinterface
 
 - Sort by MIME type
-- better handling of deleted files in slideshow mode
-
+- Better handling of deleted files in slideshow mode
+- Hide "Download All"-button if no files are available
 
 ## Fixes
 
 ### Webinterface
 
-- fix `/icon/unknown` request
+- Fix `/icon/unknown` request

@@ -61,7 +61,7 @@
             <button @click="toggleSlideshow()" :class="isSlideshow ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/40' : 'text-gray-500'" class="p-2 rounded-lg font-medium cursor-pointer">Slide</button>
         </div>
 
-        <a :href="'/' + window.token + '/?download'" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-500/20">
+        <a x-show="files.length > 0" :href="'/' + window.token + '/?download'" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-500/20">
             Download All (ZIP)
         </a>
     </div>
