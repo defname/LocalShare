@@ -1,6 +1,7 @@
 package com.defname.localshare.ui.screens.main
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.ListAlt
@@ -14,6 +15,7 @@ data class MainState(
     val navigationItems: List<NavigationItem> = listOf(
         Screen.Main,
         Screen.Files,
+        Screen.SharedContent,
         Screen.Logs,
         Screen.Settings,
         Screen.Info
@@ -38,6 +40,7 @@ class NavigationItem(
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
     object Main : Screen("main", "Server", Icons.Default.Send)
     object Files : Screen("files", "Files", Icons.Default.ListAlt)
+    object SharedContent : Screen("sharedcontent", "Shared Content", Icons.Default.ContentPaste)
     object Logs : Screen("logs", "Logs", Icons.Default.List)
     object Settings : Screen("settings", "Settings", Icons.Default.Settings)
     object Info : Screen("info", "Info", Icons.Default.Info)
@@ -47,6 +50,7 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
             return when (route?.substringBefore("/")) {
                 Main.route -> Main
                 Files.route -> Files
+                SharedContent.route -> SharedContent
                 Settings.route -> Settings
                 Logs.route -> Logs
                 Info.route -> Info

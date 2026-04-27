@@ -21,6 +21,7 @@ import com.defname.localshare.ui.screens.logs.LogsViewModel
 import com.defname.localshare.ui.screens.main.MainViewModel
 import com.defname.localshare.ui.screens.servercontrol.ServerControlViewModel
 import com.defname.localshare.ui.screens.settings.SettingsViewModel
+import com.defname.localshare.ui.screens.sharedcontent.SharedContentViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -59,4 +60,5 @@ val appModule = module {
     viewModel { ServerControlViewModel(get(), get(), get(), get(), get(), get(), get()) }
     viewModel { LogsViewModel(get(), get(), get()) }
     viewModel { SettingsViewModel(get(), get()) }
+    viewModel { SharedContentViewModel(get()) }
 }

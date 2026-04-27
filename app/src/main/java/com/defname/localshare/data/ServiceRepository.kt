@@ -83,6 +83,14 @@ class ServiceRepository(
         _runtimeState.update { it.copy(sharedContentList = it.sharedContentList + content) }
     }
 
+    fun removeContent(id: Int) {
+        _runtimeState.update { it.copy(sharedContentList = it.sharedContentList.filter { it.id != id }) }
+    }
+
+    fun removeContent(ids: Set<Int>) {
+        _runtimeState.update { it.copy(sharedContentList = it.sharedContentList.filter { !ids.contains(it.id) }) }
+    }
+
     fun serverStarting() { _runtimeState.update { it.copy(serviceState = RuntimeState.STARTING) } }
     fun serverStarted() { _runtimeState.update { it.copy(serviceState = RuntimeState.RUNNING) } }
     fun serverStopping() { _runtimeState.update { it.copy(serviceState = RuntimeState.STOPPING) } }
