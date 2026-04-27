@@ -2,7 +2,7 @@
 
 ### Webinterface
 
-- Sort by MIME type
+- Option to sort by MIME type
 - Better handling of deleted files in slideshow mode
 - Hide "Download All"-button if no files are available
 
