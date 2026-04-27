@@ -7,6 +7,7 @@ import com.defname.localshare.data.ConnectionLogsRepository
 import com.defname.localshare.data.ServiceRepository
 import com.defname.localshare.domain.model.DisconnectReason
 import com.defname.localshare.domain.model.FileInfo
+import com.defname.localshare.domain.model.SharedContent
 import com.defname.localshare.domain.repository.SettingsRepository
 import com.defname.localshare.service.ServerSecurityHandler
 import com.defname.localshare.service.ktor.json.toJsonString
@@ -24,30 +25,48 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.BufferedWriter
 
-sealed class FileDelta {
-    data class Added(val file: FileInfo) : FileDelta()
-    data class Removed(val fileId: String) : FileDelta()
+sealed class FlowDelta<T>(val obj: T) {
+    class Added<T>(obj: T) : FlowDelta<T>(obj)
+    class Removed<T>(obj: T) : FlowDelta<T>(obj)
 }
 
-// Dieses Modul beobachtet dein bestehendes StateFlow
-fun Flow<List<FileInfo>>.asDeltaEvents(): Flow<FileDelta> = flow {
-    var oldList = emptyList<FileInfo>()
+fun <T, K>Flow<List<T>>.asDeltaEvents(key: (T) -> K): Flow<FlowDelta<T>> = flow {
+    var oldList = emptyList<T>()
     this@asDeltaEvents.collect { newList ->
         // 1. Was ist neu? (In newList, aber nicht in oldList)
-        val added = newList.filter { newItem -> oldList.none { it.id == newItem.id } }
-        added.forEach { emit(FileDelta.Added(it)) }
+        val added = newList.filter { newItem -> oldList.none { key(it) == key(newItem) } }
+        added.forEach { emit(FlowDelta.Added(it)) }
 
         // 2. Was wurde gelöscht? (In oldList, aber nicht in newList)
-        val removed = oldList.filter { oldItem -> newList.none { it.id == oldItem.id } }
-        removed.forEach { emit(FileDelta.Removed(it.id)) }
+        val removed = oldList.filter { oldItem -> newList.none { key(it) == key(oldItem) } }
+        removed.forEach { emit(FlowDelta.Removed(it)) }
 
-        oldList = newList // Der neue Zustand wird zum 'oldList' für den nächsten Schritt
+        oldList = newList
     }
+}
+
+@JvmName("asFileInfoDeltaEvents")
+fun Flow<List<FileInfo>>.asDeltaEvents() = asDeltaEvents { it.id }
+@JvmName("asSharedContentDeltaEvents")
+fun Flow<List<SharedContent>>.asDeltaEvents() = asDeltaEvents { it.id }
+
+
+fun BufferedWriter.writeEvent(eventName: String, data: String) {
+    write("event: $eventName\n")
+    write("data: $data\n\n")
+    flush()
+}
+
+fun BufferedWriter.writeHeartbeat() {
+    write(": heartbeat\n\n")
+    flush()
 }
 
 fun Route.getEvents(
@@ -77,15 +96,19 @@ fun Route.getEvents(
 
             try {
                 coroutineScope {
+                    writer.writeEvent("init", "connected")
+
+                    val sharedContentList = serviceRepository.runtimeState.map { it.sharedContentList }
+                        .stateIn(
+                            this@coroutineScope,
+                            started = kotlinx.coroutines.flow.SharingStarted.Eagerly,
+                            initialValue = emptyList()
+                        )
 
                     // 🔄 Event-Collector (reagiert auf Datei-Änderungen)
                     launch {
-                        writer.write("event: init\ndata: connected\n\n")
-                        writer.flush()
-
                         serviceRepository.fileList
                             .asDeltaEvents()
-                            .drop(0)
                             .collect { delta ->
                                 // Sofort-Check bei Datei-Event (falls IP gerade gebannt wurde)
                                 if (!securityHandler.verifyAccess(call)) {
@@ -95,21 +118,42 @@ fun Route.getEvents(
                                 }
 
                                 val eventName = when (delta) {
-                                    is FileDelta.Added -> "add"
-                                    is FileDelta.Removed -> "remove"
+                                    is FlowDelta.Added -> "add"
+                                    is FlowDelta.Removed -> "remove"
                                 }
 
                                 val data = when (delta) {
-                                    is FileDelta.Added -> delta.file.toJsonString()
-                                        .replace("\n", "")
-                                        .replace("\r", "")
+                                    is FlowDelta.Added -> delta.obj.toJsonString()
 
-                                    is FileDelta.Removed -> delta.fileId
+                                    is FlowDelta.Removed -> delta.obj.id
                                 }
 
-                                writer.write("event: $eventName\n")
-                                writer.write("data: $data\n\n")
-                                writer.flush()
+                                writer.writeEvent(eventName, data)
+                            }
+                    }
+
+                    launch {
+                        sharedContentList
+                            .asDeltaEvents()
+                            .collect { delta ->
+                                // Sofort-Check bei Datei-Event (falls IP gerade gebannt wurde)
+                                if (!securityHandler.verifyAccess(call)) {
+                                    disconnectReason = DisconnectReason.Unexpected.AuthInvalid
+                                    this@coroutineScope.cancel("Access denied")
+                                    return@collect
+                                }
+
+                                val eventName = when (delta) {
+                                    is FlowDelta.Added -> "addSharedContent"
+                                    is FlowDelta.Removed -> "removeSharedContent"
+                                }
+
+                                val data = when (delta) {
+                                    is FlowDelta.Added -> delta.obj.toJsonString()
+                                    is FlowDelta.Removed -> delta.obj.id.toString()
+                                }
+
+                                writer.writeEvent(eventName, data)
                             }
                     }
 
@@ -121,8 +165,7 @@ fun Route.getEvents(
                                 disconnectReason = DisconnectReason.Unexpected.AuthInvalid
                                 this@coroutineScope.cancel("Access denied")
                             }
-                            writer.write(": heartbeat\n\n")
-                            writer.flush()
+                            writer.writeHeartbeat()
                         }
                     }
                 }

@@ -11,6 +11,7 @@ import com.defname.localshare.data.SecurityRepository
 import com.defname.localshare.data.ServiceRepository
 import com.defname.localshare.domain.repository.SettingsRepository
 import com.defname.localshare.domain.usecase.AddFilesUseCase
+import com.defname.localshare.domain.usecase.AddSharedContentUseCase
 import com.defname.localshare.domain.usecase.ManageServiceUseCase
 import com.defname.localshare.service.ServerIdleManager
 import com.defname.localshare.service.ServerSecurityHandler
@@ -49,6 +50,7 @@ val appModule = module {
     single { ServerIdleManager(get(), get(), CoroutineScope(Dispatchers.Default + SupervisorJob())) }
 
     factory { AddFilesUseCase(get(), get()) }
+    factory { AddSharedContentUseCase(get()) }
     factory { ManageServiceUseCase(get(), get()) }
     factory { ServerSecurityHandler(get(), get()) }
 

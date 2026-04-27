@@ -35,6 +35,7 @@ import com.defname.localshare.data.PermissionRepository
 import com.defname.localshare.data.ServiceRepository
 import com.defname.localshare.domain.repository.SettingsRepository
 import com.defname.localshare.domain.usecase.AddFilesUseCase
+import com.defname.localshare.domain.usecase.AddSharedContentUseCase
 import com.defname.localshare.ui.screens.main.MainScreen
 import com.defname.localshare.ui.theme.LocalShareTheme
 import kotlinx.coroutines.CoroutineScope
@@ -49,6 +50,7 @@ class MainActivity : ComponentActivity() {
     private val settingsRepository: SettingsRepository by inject()
     private val serviceRepository: ServiceRepository by inject()
     private val addFilesUseCase: AddFilesUseCase by inject()
+    private val addSharedContentUseCase: AddSharedContentUseCase by inject()
     private val permissionRepository: PermissionRepository by inject()
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
@@ -114,9 +116,16 @@ class MainActivity : ComponentActivity() {
             val urisToGrant = mutableListOf<Uri>()
             when (action) {
                 Intent.ACTION_SEND -> {
-                    IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)?.let { uri ->
+                    val uri = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
+                    if (uri != null)  {
                         urisToGrant.add(uri)
                         addFilesUseCase(uri)
+                    }
+                    else {
+                        val mime = intent.type
+                        val extraText = intent.getStringExtra(Intent.EXTRA_TEXT)
+                        val extraSubject = intent.getStringExtra(Intent.EXTRA_SUBJECT)
+                        addSharedContentUseCase(mime, extraText, extraSubject)
                     }
                 }
                 Intent.ACTION_SEND_MULTIPLE -> {

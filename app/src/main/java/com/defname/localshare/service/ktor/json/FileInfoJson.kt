@@ -1,8 +1,7 @@
+@file:Suppress("HardCodedStringLiteral")
 package com.defname.localshare.service.ktor.json
 
 import com.defname.localshare.domain.model.FileInfo
-
-fun String.escapeJson(): String = this.replace("\"", "\\\"")
 
 fun FileInfo.toJsonString() = """
     {
@@ -13,4 +12,4 @@ fun FileInfo.toJsonString() = """
         "size": ${this.size},
         "mimeType": "${this.mimeType}"
     }    
-    """.trimIndent()
+    """.toOneLine()

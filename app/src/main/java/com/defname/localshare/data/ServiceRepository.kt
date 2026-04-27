@@ -19,6 +19,7 @@ package com.defname.localshare.data
 
 import android.net.Uri
 import com.defname.localshare.domain.model.FileInfo
+import com.defname.localshare.domain.model.SharedContent
 import com.defname.localshare.domain.repository.FileProvider
 import io.ktor.util.AttributeKey
 import kotlinx.coroutines.CoroutineScope
@@ -45,6 +46,7 @@ object CallAttributes {
 
 data class RuntimeData(
     val fileList: List<FileInfo> = emptyList(),
+    val sharedContentList: List<SharedContent> = emptyList(),
     val serviceState: RuntimeState = RuntimeState.STOPPED,
 )
 
@@ -76,6 +78,10 @@ class ServiceRepository(
     fun removeFile(uri: Uri) { _runtimeState.update { it.copy(fileList = it.fileList.filter { it.uri != uri }) } }
     fun removeFiles(uris: Set<Uri>) { _runtimeState.update { it.copy(fileList = it.fileList.filter { !uris.contains(it.uri) }) } }
     fun clearFiles() { _runtimeState.update { it.copy(fileList = emptyList()) } }
+
+    fun addContent(content: SharedContent) {
+        _runtimeState.update { it.copy(sharedContentList = it.sharedContentList + content) }
+    }
 
     fun serverStarting() { _runtimeState.update { it.copy(serviceState = RuntimeState.STARTING) } }
     fun serverStarted() { _runtimeState.update { it.copy(serviceState = RuntimeState.RUNNING) } }
