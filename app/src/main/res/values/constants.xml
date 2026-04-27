@@ -1,9 +1,13 @@
 <resources>
     <string name="app_name">LocalShare</string>
-    <string name="app_license">GPL-3.0</string>
+    <string name="app_url">http://github.org/defname/LocalShare</string>
     <string name="app_src_url">https://github.com/defname/LocalShare</string>
+    <string name="app_issues_url">https://github.com/defname/LocalShare/issues</string>
+
+    <string name="app_license">GPL-3.0-or-later</string>
+    <string name="app_license_url">https://www.gnu.org/licenses/gpl-3.0.html</string>
+
     <string name="icon_theme">Papirus Icon Theme</string>
     <string name="icon_theme_license">GPL-3.0</string>
     <string name="icon_theme_url">https://git.io/papirus-icon-theme</string>
-    <string name="app_url">http://github.org/defname/LocalShare</string>
 </resources>

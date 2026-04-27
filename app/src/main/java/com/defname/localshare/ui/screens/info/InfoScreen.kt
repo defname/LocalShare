@@ -63,6 +63,18 @@ import com.defname.localshare.BuildConfig
 import com.defname.localshare.R
 import com.defname.localshare.ui.theme.LocalShareTheme
 
+@Composable
+fun hyperlink(url: String, text: String = url, style: SpanStyle = SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline)) = buildAnnotatedString {
+    withLink(
+        LinkAnnotation.Url(
+            url,
+            styles = TextLinkStyles(style = style)
+        )
+    ) {
+        append(text)
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InfoScreen(onOpenDrawer: () -> Unit) {
@@ -72,12 +84,14 @@ fun InfoScreen(onOpenDrawer: () -> Unit) {
     val appIcon = remember {
         ContextCompat.getDrawable(context, R.drawable.ic_launcher_foreground)
     }
-    
-    // Zugriff auf das von Gradle generierte BuildConfig
+
     val versionName = BuildConfig.VERSION_NAME
     val versionCode = BuildConfig.VERSION_CODE
     val license = stringResource(id = R.string.app_license)
-    val srcUrl = stringResource(id = R.string.app_src_url)
+    val licenseUrl = stringResource(id = R.string.app_license_url)
+    val appUrl = stringResource(id = R.string.app_url)
+    val appIssuesUrl = stringResource(R.string.app_issues_url)
+    val appSrcUrl = stringResource(id = R.string.app_src_url)
 
     Scaffold(
         topBar = {
@@ -129,17 +143,26 @@ fun InfoScreen(onOpenDrawer: () -> Unit) {
                     InfoRow(label = "Version", value = versionName)
                     InfoRow(label = "Build Number", value = versionCode.toString())
                     InfoRow(label = "Package Name", value = context.packageName)
-                    InfoRow(label = "License", value = license)
-                    InfoRow(label = "Source", value = buildAnnotatedString {
-                        withLink(
-                            LinkAnnotation.Url(
-                                srcUrl,
-                                styles = TextLinkStyles(style = SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline))
+                    InfoRow(label = "License", value = hyperlink(licenseUrl, license))
+                    InfoRow(label = "Source", value = hyperlink(appSrcUrl))
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp).padding(top = 12.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            hyperlink(
+                                appIssuesUrl,
+                                stringResource(R.string.info_report_an_issue),
+                                SpanStyle(
+                                    color = MaterialTheme.colorScheme.error,
+                                    fontSize = MaterialTheme.typography.labelLarge.fontSize
+                                )
                             )
-                        ) {
-                            append(srcUrl)
-                        }
-                    })
+                        )
+                    }
                 }
             }
 
@@ -150,28 +173,22 @@ fun InfoScreen(onOpenDrawer: () -> Unit) {
 
             val papirusUrl = stringResource(R.string.icon_theme_url)
             val annotatedDescription = buildAnnotatedString {
-                append("Icons from Papirus Icon Theme\n")
-                append("Licensed under ${stringResource(R.string.icon_theme_license)}\n")
-                withLink(
-                    LinkAnnotation.Url(
-                        papirusUrl,
-                        styles = TextLinkStyles(style = SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline))
-                    )
-                ) {
-                    append(papirusUrl)
-                }
+                append("Icons from Papirus Development Team\n")
+                append("Licensed under ${stringResource(R.string.icon_theme_license)}")
             }
 
             Card (
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(Modifier.padding(16.dp)) {
+                Column(Modifier
+                    .padding(16.dp)
+                    .padding(bottom = 8.dp)) {
                     Text(
-                        stringResource(R.string.icon_theme),
+                        hyperlink(papirusUrl, stringResource(R.string.icon_theme)),
                         style = MaterialTheme.typography.headlineSmall,
                     )
                     Spacer(Modifier.height(8.dp))
-                    Text(annotatedDescription)
+                    Text(annotatedDescription, modifier = Modifier.padding(bottom = 0.dp))
                 }
             }
         }
