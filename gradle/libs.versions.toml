@@ -15,6 +15,7 @@ navigationCompose = "2.8.8"
 splashscreen = "1.0.1"
 datastore = "1.2.1"
 koin-bom = "4.1.1"
+node-plugin = "7.0.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -59,3 +60,4 @@ koin-test = { module = "io.insert-koin:koin-test" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+gradle-node = { id = "com.github.node-gradle.node", version.ref = "node-plugin" }

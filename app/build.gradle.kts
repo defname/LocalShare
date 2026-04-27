@@ -2,6 +2,13 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.gradle.node)
+}
+
+node {
+    version.set("20.11.0")
+    download.set(true)
+    nodeProjectDir.set(rootProject.file("web-build"))
 }
 
 android {
@@ -130,25 +137,21 @@ val generateIconMapping = tasks.register<Exec>("generateIconMapping") {
 }
 
 
-val webBuild = tasks.register<Exec>("web-build") {
+val webBuild = tasks.register<com.github.gradle.node.npm.task.NpmTask>("web-build") {
     group = "web-build"
     description = "Generate tailwind css classes."
 
-    val assetsDir = layout.buildDirectory.dir("generated/assets/main/web/css").get().asFile
+    args.set(listOf("run", "build"))
 
-    workingDir = rootProject.file("web-build")
-
-    commandLine(
-        "npm",
-        "run",
-        "build"
-    )
-
+    val assetsDir = layout.buildDirectory.dir("generated/assets/main/web/css")
     outputs.dir(assetsDir)
 
+    dependsOn("npmInstall")
+
     doFirst {
-        println("Generating tailwindcss to: $assetsDir")
-        assetsDir.mkdirs()
+        val dir = assetsDir.get().asFile
+        println("Generating tailwindcss to: $dir")
+        dir.mkdirs()
     }
 }
 

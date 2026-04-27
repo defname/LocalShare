@@ -29,11 +29,6 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Web Dependencies
-        run: |
-          cd web-build
-          npm install
-
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
