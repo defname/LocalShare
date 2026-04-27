@@ -7,6 +7,7 @@ function humanFileSize(size) {
 document.addEventListener('alpine:init', () => {
     Alpine.data('fileManager', (initialFiles, token) => ({
         view: 'grid',
+        slideshow: false,
         files: initialFiles,
         sortKey: 'filename',
         sortAsc: true,
@@ -15,6 +16,32 @@ document.addEventListener('alpine:init', () => {
 
         get currentFile() {
             return this.sortedFiles[this.currentIndex];
+        },
+
+        get isGrid() {
+            return !this.slideshow && this.view === 'grid';
+        },
+
+        get isList() {
+            return !this.slideshow && this.view === 'list';
+        },
+
+        get isSlideshow() {
+            return this.slideshow;
+        },
+
+        toggleSlideshow() {
+            this.slideshow = !this.slideshow;
+        },
+
+        showList() {
+            this.slideshow = false;
+            this.view = 'list';
+        },
+
+        showGrid() {
+            this.slideshow = false;
+            this.view = 'grid';
         },
 
         nextSlide() {
@@ -81,6 +108,13 @@ document.addEventListener('alpine:init', () => {
             eventSource.addEventListener('remove', (event) => {
                 const fileIdToRemove = event.data;
                 this.files = this.files.filter(f => f.fileId !== fileIdToRemove);
+                if (this.currentIndex >= this.files.length) {
+                    this.currentIndex = this.files.length > 0 ? this.files.length - 1 : 0;
+                }
+                if (this.files.length === 0) {
+                    this.currentIndex = 0;
+                    this.slideshow = false;
+                }
             });
 
             eventSource.addEventListener('init', (event) => {

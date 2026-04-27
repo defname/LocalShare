@@ -1,0 +1,13 @@
+## Improvements
+
+### Webinterface
+
+- Sort by MIME type
+- better handling of deleted files in slideshow mode
+
+
+## Fixes
+
+### Webinterface
+
+- fix `/icon/unknown` request
