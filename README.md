@@ -83,11 +83,10 @@ Avoid using it on public or untrusted networks, especially for sensitive data.
 
 ### Steps
 
-1.  Clone the repository (recursively to include the icon theme!)
-2.  run `cd web-build && npm install`
-3.  Open it in Android Studio
-4.  Make sure Python 3 is available in your system PATH
-5.  Build and run
+1. Clone the repository (recursively to include the icon theme!)
+3. Make sure JAVA_HOME and ANDROID_SDK_ROOT (or ANDROID_HOME) is set correctly
+3. Run `./gradlew assembleDebug`
+4. Find the APK in `app/build/outputs/apk/debug/`
 
 ## License & Credits
 
