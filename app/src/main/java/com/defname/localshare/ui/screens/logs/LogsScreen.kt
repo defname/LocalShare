@@ -1,6 +1,6 @@
 /*
  * LocalShare - Share files locally
- * Copyright (C) 2024 defname
+ * Copyright (C) 2026 defname
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package com.defname.localshare.ui.screens.logs
 
 import androidx.compose.foundation.layout.Column
@@ -40,9 +41,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.defname.localshare.R
-import org.koin.androidx.compose.koinViewModel
 import com.defname.localshare.ui.components.LogList
 import com.defname.localshare.ui.theme.LocalShareTheme
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
