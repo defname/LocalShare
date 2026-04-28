@@ -31,10 +31,12 @@ fun StartServerButton(
     hasNotificationPermission: Boolean,
     requestNotificationPermission: () -> Unit,
     startServer: () -> Unit,
-    stopServer: () -> Unit
+    stopServer: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Surface(modifier = Modifier
-        .fillMaxWidth(),
+        .fillMaxWidth()
+        .then(modifier),
         color = Color.Transparent // MaterialTheme.colorScheme.surface
     ) {
 

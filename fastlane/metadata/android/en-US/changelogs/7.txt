@@ -11,6 +11,7 @@
 ### App
 
 - Open/close navigation bar via gestures on all screens
+- Fix UI being partially covered by the system navigation bar
 
 ### Webinterface
 
