@@ -145,6 +145,7 @@ val webBuild = tasks.register<com.github.gradle.node.npm.task.NpmTask>("web-buil
 
     val assetsDir = layout.buildDirectory.dir("generated/assets/main/web/css")
     outputs.dir(assetsDir)
+    outputs.upToDateWhen { false }
 
     dependsOn("npmInstall")
 

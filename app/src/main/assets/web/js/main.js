@@ -9,6 +9,9 @@ document.addEventListener('alpine:init', () => {
         view: 'grid',
         slideshow: false,
         files: initialFiles,
+        sharedContent: [],
+        sidebarOpen: false,
+        hasNewSharedContent: false,
         sortKey: 'filename',
         sortAsc: true,
         copiedId: null,
@@ -42,6 +45,13 @@ document.addEventListener('alpine:init', () => {
         showGrid() {
             this.slideshow = false;
             this.view = 'grid';
+        },
+
+        toggleSidebar() {
+            this.sidebarOpen = !this.sidebarOpen;
+            if (this.sidebarOpen) {
+                this.hasNewSharedContent = false;
+            }
         },
 
         nextSlide() {
@@ -95,6 +105,27 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        copyToClipboard(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text);
+            } else {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                } catch (err) {
+                    console.error('Fallback copy failed', err);
+                }
+                document.body.removeChild(textArea);
+            }
+        },
+
         initSSE() {
             const eventSource = new EventSource('/' + token + '/events');
 
@@ -115,6 +146,20 @@ document.addEventListener('alpine:init', () => {
                     this.currentIndex = 0;
                     this.slideshow = false;
                 }
+            });
+
+            eventSource.addEventListener('addSharedContent', (event) => {
+                const newContent = JSON.parse(event.data);
+                this.sharedContent.push(newContent);
+                console.log(this.sharedContent)
+                if (!this.sidebarOpen) {
+                    this.hasNewSharedContent = true;
+                }
+            });
+
+            eventSource.addEventListener('removeSharedContent', (event) => {
+                const contentIdToRemove = event.data;
+                this.sharedContent = this.sharedContent.filter(f => f.id !== contentIdToRemove);
             });
 
             eventSource.addEventListener('init', (event) => {

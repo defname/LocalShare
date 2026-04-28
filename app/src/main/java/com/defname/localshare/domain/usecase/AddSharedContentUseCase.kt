@@ -13,7 +13,6 @@ class AddSharedContentUseCase(
     ) {
         val content = when (mimeType) {
             "text/plain" -> SharedContent.Text(text ?: "")
-            "text/x-vcard" -> SharedContent.VCard(text ?: "")
             else -> SharedContent.Other(
                 data = text ?: "",
                 mimeType = mimeType ?: "",

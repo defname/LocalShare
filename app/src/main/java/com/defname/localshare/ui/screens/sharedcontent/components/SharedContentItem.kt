@@ -43,7 +43,6 @@ fun SharedContentItem(
         ) {
             when (item) {
                 is SharedContent.Text -> SharedContentTextContent(item, isExpanded, modifier = Modifier.weight(1f))
-                is SharedContent.VCard -> SharedContentVCardContent(item, isExpanded, modifier = Modifier.weight(1f))
                 is SharedContent.Other -> SharedContentOtherContent(item, isExpanded, modifier = Modifier.weight(1f))
             }
 
@@ -72,17 +71,6 @@ fun SharedContentTextContent(
             maxLines = if (isExpanded) Int.MAX_VALUE else 3,
             overflow = TextOverflow.Ellipsis
         )
-    }
-}
-
-@Composable
-fun SharedContentVCardContent(
-    item: SharedContent.VCard,
-    isExpanded: Boolean,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier) {
-        Text("DUMMY")
     }
 }
 

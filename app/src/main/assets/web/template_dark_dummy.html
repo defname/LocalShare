@@ -22,7 +22,32 @@
     </script>
 </head>
 <body class="bg-gray-50 text-gray-900 dark:bg-slate-950 dark:text-gray-100 font-sans transition-colors duration-300">
+<!-- Sidebar classes for Tailwind -->
+<div class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm">
+    <div class="fixed inset-y-0 left-0 w-3/4 min-w-[320px] bg-slate-900 border-r border-slate-800 flex flex-col shadow-2xl transform translate-x-0 -translate-x-full transition-transform duration-300">
+        <div class="p-6 border-b border-slate-800 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-white">Sidebar</h2>
+            <div class="text-gray-400 hover:text-white"></div>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4">
+            <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 relative group">
+                <div class="flex items-start justify-between mb-2">
+                    <div class="flex flex-col gap-0.5">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] uppercase font-bold tracking-wider text-blue-500">text/plain</span>
+                            <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400">Label</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-800 dark:text-gray-200 break-words whitespace-pre-wrap">Content</p>
+                <pre class="text-xs text-gray-700 dark:text-gray-300 bg-white/50 dark:bg-slate-900/50 p-2 rounded border border-gray-100 dark:border-slate-800 overflow-x-auto font-mono whitespace-pre-wrap">Fallback</pre>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="min-h-[60vh] rounded-3xl min-h-[400px] md:p-12 p-12 shadow-xl bg-slate-900/50 rounded-lg dark:bg-slate-900 dark:border-slate-800 dark:text-white dark:hover:text-white dark:bg-slate-900/50 dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-700 shadow-blue-500/20"></div>
+
 <header class="p-6 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 flex items-center justify-between">
     <div class="flex items-center gap-4">
         <img src="/{{token}}/favicon/medium" alt="Logo" class="w-10 h-10" />
@@ -39,75 +64,6 @@
         </svg>
     </button>
 </header>
-
-<div x-data="fileManager(window.initialFiles, window.token)"
-     x-init="initSSE()"
-     class="max-w-6xl mx-auto p-4">
-
-    <div class="flex flex-wrap justify-between items-center mb-8 gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
-        <div class="flex items-center gap-2">
-            <select x-model="sortKey" class="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm rounded-lg p-2 focus:ring-blue-500 dark:text-white">
-                <option value="filename">Filename</option>
-                <option value="size">Size</option>
-            </select>
-            <button @click="sortAsc = !sortAsc" class="p-2 bg-gray-100 dark:bg-slate-800 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 transition">
-                <span x-text="sortAsc ? '↓' : '↑'" class="dark:text-white"></span>
-            </button>
-            <div class="h-6 w-px bg-gray-200 dark:bg-slate-700 mx-2"></div>
-            <button @click="view = 'grid'" :class="view === 'grid' ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/40' : 'text-gray-500'" class="p-2 rounded-lg font-medium cursor-pointer">Grid</button>
-            <button @click="view = 'list'" :class="view === 'list' ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/40' : 'text-gray-500'" class="p-2 rounded-lg font-medium cursor-pointer">List</button>
-        </div>
-
-        <a :href="'/' + window.token + '/download'" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-500/20">
-            Download All (ZIP)
-        </a>
-    </div>
-
-    <ul :class="view === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6' : 'flex flex-col space-y-3'" class="list-none p-0">
-        <template x-for="file in sortedFiles" :key="file.fileId">
-            <li :class="view === 'grid' ? 'bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden flex flex-col' : 'bg-white dark:bg-slate-900 p-3 rounded-xl border border-gray-100 dark:border-slate-800 flex items-center justify-between shadow-sm'">
-
-                <div :class="view === 'grid' ? 'contents' : 'flex items-center gap-4 w-full'">
-                    <div :class="view === 'grid' ? 'h-40 bg-gray-100 dark:bg-slate-800 flex items-center justify-center' : 'w-12 h-12 bg-gray-100 dark:bg-slate-800 rounded-lg flex-shrink-0 flex items-center justify-center'">
-                        <template x-if="file.hasThumbnail">
-                            <img :src="'/' + window.token + '/thumbnail/' + file.fileId" class="object-cover w-full h-full" />
-                        </template>
-                        <template x-if="!file.hasThumbnail">
-                            <img :src="'/' + window.token + '/icon/' + file.icon"
-                                 :class="view === 'grid' ? 'w-20 h-20 p-2' : 'w-8 h-8'"
-                                 class="object-contain" />
-                        </template>
-                    </div>
-
-                    <div :class="view === 'grid' ? 'p-4 flex flex-col flex-grow items-center text-center' : 'flex-grow grid grid-cols-2 md:grid-cols-4 items-center px-2'">
-                        <span x-text="file.filename" class="font-bold text-gray-900 dark:text-white truncate block w-full"></span>
-                        <span x-text="humanFileSize(file.size)" class="text-xs text-gray-500 dark:text-slate-400 font-mono"></span>
-
-                        <div class="mt-3 flex gap-2" :class="view === 'grid' ? 'mt-auto justify-center' : 'justify-end col-span-2 mt-0'">
-                            <button @click="copyLink(file.fileId)"
-                                    class="bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 transition cursor-pointer"
-                                    title="Copy Link">
-                                <svg x-show="copiedId !== file.fileId" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
-                                </svg>
-                                <svg x-show="copiedId === file.fileId" class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                            </button>
-                            <a :href="'/' + window.token + '/download/' + file.fileId" class="text-[10px] uppercase tracking-wider bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-lg font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition">Get</a>
-                            <a :href="'/' + window.token + '/stream/' + file.fileId" class="text-[10px] uppercase tracking-wider bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-md shadow-blue-500/10">Open</a>
-                        </div>
-                    </div>
-                </div>
-            </li>
-        </template>
-    </ul>
-</div>
-
-<footer class="mt-20 p-8 text-center text-gray-400 dark:text-slate-500 text-sm border-t border-gray-100 dark:border-slate-800">
-    <p>Generated by <a href="{{appurl}}" class="text-blue-500 hover:underline">{{appname}}</a>.</p>
-    <p class="mt-1">Icons provided by <a href="https://github.com/PapirusDevelopmentTeam/papirus-icon-theme" target="_blank" class="text-blue-500 hover:underline">Papirus Development Team</a>.</p>
-</footer>
 
 </body>
 </html>

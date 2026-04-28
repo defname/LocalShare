@@ -14,10 +14,6 @@ sealed class SharedContent {
         override val mimeType = "text/plain"
     }
 
-    data class VCard(val vCard: String) : SharedContent() {
-        override val mimeType = "text/x-vcard"
-    }
-
     data class Other(
         val data: String, // content from EXTRA_TEXT
         override val mimeType: String,  // intent.type

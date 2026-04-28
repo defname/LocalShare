@@ -20,7 +20,11 @@
         window.token = '{{token}}';
     </script>
 </head>
-<body class="bg-gray-50 text-gray-900 dark:bg-slate-950 dark:text-gray-100 font-sans transition-colors duration-300">
+<body x-data="fileManager(window.initialFiles, window.token)"
+      x-init="initSSE()"
+      @keydown.window.left="isSlideshow && prevSlide()"
+      @keydown.window.right="isSlideshow && nextSlide()"
+      class="bg-gray-50 text-gray-900 dark:bg-slate-950 dark:text-gray-100 font-sans transition-colors duration-300">
 
 <header class="p-6 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 flex items-center justify-between">
     <div class="flex items-center gap-4">
@@ -28,23 +32,32 @@
         <h1 class="text-xl font-bold text-gray-800 dark:text-white">{{appname}}</h1>
     </div>
 
-    <button @click="darkMode = !darkMode; localStorage.setItem('dark', darkMode)"
-            class="p-2 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors focus:outline-none cursor-pointer">
-        <svg x-show="darkMode" class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path>
-        </svg>
-        <svg x-show="!darkMode" class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
-        </svg>
-    </button>
+    <div class="flex items-center gap-2">
+        <button @click="toggleSidebar()"
+                class="relative p-2 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors focus:outline-none cursor-pointer">
+            <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+            </svg>
+            <span x-show="hasNewSharedContent"
+                  class="absolute top-1 right-1 flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+            </span>
+        </button>
+
+        <button @click="darkMode = !darkMode; localStorage.setItem('dark', darkMode)"
+                class="p-2 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors focus:outline-none cursor-pointer">
+            <svg x-show="darkMode" class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path>
+            </svg>
+            <svg x-show="!darkMode" class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+            </svg>
+        </button>
+    </div>
 </header>
 
-<div x-data="fileManager(window.initialFiles, window.token)"
-     x-init="initSSE()"
-     @keydown.window.left="isSlideshow && prevSlide()"
-     @keydown.window.right="isSlideshow && nextSlide()"
-     class="max-w-6xl mx-auto p-4">
-
+<div class="max-w-6xl mx-auto p-4">
     <div class="flex flex-wrap justify-between items-center mb-8 gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
         <div class="flex items-center gap-2">
             <select x-model="sortKey" class="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm rounded-lg p-2 focus:ring-blue-500 dark:text-white">
@@ -174,12 +187,95 @@
 
 <footer class="mt-20 p-8 text-center text-gray-400 dark:text-slate-500 text-sm border-t border-gray-100 dark:border-slate-800">
     <p>Shared via <a href="{{appurl}}" class="text-blue-500 hover:underline font-medium">{{appname}}</a></p>
-    <div class="mt-4 flex flex-wrap justify-center items-center gap-x-12 gap-y-3 opacity-75">
+    <div class="mt-4 flex flex-wrap justify-center items-center gap-y-3 opacity-75">
         <span>Icons by <a href="https://github.com/PapirusDevelopmentTeam/papirus-icon-theme" target="_blank" class="hover:text-blue-500 underline decoration-gray-300">Papirus Team</a></span>
         <span class="text-gray-300 dark:text-slate-700 mx-2">•</span>
         <span>Built with <a href="https://alpinejs.dev/" target="_blank" class="hover:text-blue-500 underline decoration-gray-300">Alpine.js</a> & <a href="https://tailwindcss.com/" target="_blank" class="hover:text-blue-500 underline decoration-gray-300">Tailwind CSS</a></span>
     </div>
 </footer>
+
+<!-- Sidebar Overlay -->
+<div x-show="sidebarOpen"
+     class="fixed inset-0 z-50 overflow-hidden"
+     style="display: none;">
+
+    <!-- Backdrop -->
+    <div x-show="sidebarOpen"
+         x-transition:enter="ease-in-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="ease-in-out duration-300"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="sidebarOpen = false"
+         class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity">
+    </div>
+
+    <!-- Sidebar Panel -->
+    <div x-show="sidebarOpen"
+         x-transition:enter="transform transition ease-in-out duration-300"
+         x-transition:enter-start="-translate-x-full"
+         x-transition:enter-end="translate-x-0"
+         x-transition:leave="transform transition ease-in-out duration-300"
+         x-transition:leave-start="translate-x-0"
+         x-transition:leave-end="-translate-x-full"
+         class="fixed inset-y-0 left-0 w-3/4 min-w-[320px] bg-white dark:bg-slate-900 shadow-2xl border-r border-gray-200 dark:border-slate-800 flex flex-col">
+
+        <!-- Header -->
+        <div class="p-6 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white">Shared Content</h2>
+            <button @click="sidebarOpen = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-white transition p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Content List -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-4">
+            <template x-for="item in sharedContent" :key="item.id">
+                <div class="bg-gray-50 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-700">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-1 min-w-0">
+                            <!-- Show MimeType/Label only if it's not standard text -->
+                            <template x-if="item.mimeType !== 'text/plain'">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-[10px] uppercase font-bold tracking-wider text-blue-500" x-text="item.mimeType"></span>
+                                    <template x-if="item.label">
+                                        <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400" x-text="item.label"></span>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- Plain text view -->
+                            <template x-if="item.mimeType === 'text/plain'">
+                                <p class="text-sm text-gray-800 dark:text-gray-200 break-words whitespace-pre-wrap" x-text="item.text"></p>
+                            </template>
+
+                            <!-- Fallback for other types -->
+                            <template x-if="item.mimeType !== 'text/plain'">
+                                <pre class="text-xs text-gray-700 dark:text-gray-300 bg-white/50 dark:bg-slate-900/50 p-2 rounded border border-gray-100 dark:border-slate-800 overflow-x-auto font-mono whitespace-pre-wrap" x-text="item.data"></pre>
+                            </template>
+                        </div>
+
+                        <button @click="copyToClipboard(item.text || item.data)" class="flex-shrink-0 p-2 bg-white dark:bg-slate-700 shadow-sm border border-gray-100 dark:border-slate-600 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </template>
+
+            <div x-show="sharedContent.length === 0" class="flex flex-col items-center justify-center py-20 text-gray-400">
+                <svg class="w-12 h-12 mb-2 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+                </svg>
+                <p>Keine geteilten Inhalte.</p>
+            </div>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

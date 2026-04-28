@@ -5,7 +5,6 @@ import com.defname.localshare.domain.model.SharedContent
 
 fun SharedContent.toJsonString() = when (this) {
     is SharedContent.Text -> this.toJsonString()
-    is SharedContent.VCard -> this.toJsonString()
     is SharedContent.Other -> this.toJsonString()
 }
 
@@ -17,19 +16,12 @@ fun SharedContent.Text.toJsonString() = """
     }    
     """.toOneLine()
 
-fun SharedContent.VCard.toJsonString() = """
-    {
-        "id": "${this.id}",
-        "mimeType": "${this.mimeType.escapeJson()}",
-        "vCard": "${this.vCard.escapeJson()}"
-    }    
-    """.toOneLine()
 fun SharedContent.Other.toJsonString() =
     """
     {
         "id": "${this.id}",
         "mimeType": "${this.mimeType.escapeJson()}",
-        "text": "${this.data.escapeJson()}",
-        "filename": "${this.label?.escapeJson() ?: ""}"
+        "data": "${this.data.escapeJson()}",
+        "label": "${this.label?.escapeJson() ?: ""}"
     }    
     """.toOneLine()
