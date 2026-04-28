@@ -3,7 +3,7 @@ package com.defname.localshare.domain.model
 import java.util.UUID
 
 data class Settings(
-    val token: String = UUID.randomUUID().toString(),
+    val token: String = "",
     val serverPort: Int = 8080,
     val serverIp: String = "0.0.0.0",
     val serverIdleTimeoutSeconds: Int = 30,

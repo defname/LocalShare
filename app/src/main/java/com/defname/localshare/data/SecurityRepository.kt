@@ -30,7 +30,18 @@ class SecurityRepository(
     val whitelist = _whitelist.asStateFlow()
 
     init {
+        initializeToken()
         startCleaningJob()
+    }
+
+    private fun initializeToken() {
+        repositoryScope.launch {
+            settingsRepository.settingsFlow.collect { currentSettings ->
+                if (currentSettings.token.isEmpty()) {
+                    settingsRepository.setToken(generateRandomToken())
+                }
+            }
+        }
     }
 
     private fun startCleaningJob() {

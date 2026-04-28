@@ -30,7 +30,7 @@ class DataStoreSettingsRepository(
     override val settingsFlow: Flow<Settings> = store.data
         .map {
             Settings(
-                token = it[Keys.TOKEN] ?: SecurityRepository.generateRandomToken(),
+                token = it[Keys.TOKEN] ?: "",
                 serverPort = it[Keys.PORT] ?: 8080,
                 serverIp = it[Keys.SERVER_IP] ?: "0.0.0.0",
                 serverIdleTimeoutSeconds = it[Keys.SERVER_IDLE_TIMEOUT_SECONDS] ?: 30,
