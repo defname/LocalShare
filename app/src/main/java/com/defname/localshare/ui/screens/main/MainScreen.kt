@@ -10,10 +10,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.defname.localshare.data.RuntimeState
 import com.defname.localshare.ui.components.QRDialog
 import com.defname.localshare.ui.screens.files.FilesScreen
 import com.defname.localshare.ui.screens.files.SharedContentScreen
@@ -35,6 +37,7 @@ fun MainScreen(
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val currentRoute = navBackStackEntry?.destination?.route
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -56,6 +59,18 @@ fun MainScreen(
                             launchSingleTop = true
                             restoreState = true
                         }
+                    }
+                },
+                onHelpClick = {
+                    if (state.serverState != RuntimeState.RUNNING) {
+                        android.widget.Toast.makeText(
+                            context,
+                            "Please start the server first",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                    }
+                    else {
+                        viewModel.openInBrowser(context, state.helpLink)
                     }
                 }
             )

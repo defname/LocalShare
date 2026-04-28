@@ -28,6 +28,7 @@ data class MainState(
     val showQrDialog: Boolean = false,
     val qrForStream: Boolean = false,
     val qrFullLink: String = "",
+    val helpLink: String = "",
     val isNotificationPermissionGranted: Boolean = false
 )
 

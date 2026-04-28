@@ -1,5 +1,8 @@
 package com.defname.localshare.ui.screens.main
 
+import android.content.Context
+import android.content.Intent
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.defname.localshare.data.ConnectionLogsRepository
@@ -55,6 +58,12 @@ class MainViewModel(
         _qrState.update { it.copy(qrForStream = !it.qrForStream) }
     }
 
+    fun openInBrowser(context: Context, uri: String) {
+        val intent = Intent(Intent.ACTION_VIEW, uri.toUri())
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(intent)
+    }
+
     private val _qrState = MutableStateFlow(QrState(false, false))
 
     private fun getQrLink(qrForStream: Boolean, token: String, ip: String, port: Int): String {
@@ -78,6 +87,8 @@ class MainViewModel(
             qrCodeIp = networkInfoProvider.getSmartDefaultIp(addresses)
         }
 
+        val helpLink = "http://$qrCodeIp:${settings.serverPort}/${settings.token}/static/docs/index.html"
+
         MainState(
             showQrDialog = qrState.showQrDialog,
             qrForStream = qrState.qrForStream,
@@ -87,6 +98,7 @@ class MainViewModel(
                 qrCodeIp,
                 settings.serverPort
             ),
+            helpLink = helpLink,
             hasLogs = logs.isNotEmpty(),
             serverState = runtimeState.serviceState,
             isNotificationPermissionGranted = hasNotificationPermission
