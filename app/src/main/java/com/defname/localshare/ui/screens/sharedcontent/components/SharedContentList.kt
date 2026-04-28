@@ -14,8 +14,10 @@ import com.defname.localshare.domain.model.SharedContent
 fun SharedContentList(
     items: List<SharedContent>,
     selectedItems: Set<Int>,
+    expandedItem: Int?,
     onToggleSelection: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onExpand: (Int) -> Unit
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -27,7 +29,9 @@ fun SharedContentList(
                 item = item,
                 isSelected = item.id in selectedItems,
                 isSelectionMode = selectedItems.isNotEmpty(),
-                onToggleSelection = { onToggleSelection(item.id) }
+                isExpanded = expandedItem == item.id,
+                onToggleSelection = { onToggleSelection(item.id) },
+                onExpand = { onExpand(item.id) }
             )
         }
     }

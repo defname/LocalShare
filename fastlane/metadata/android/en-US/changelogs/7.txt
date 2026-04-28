@@ -1,5 +1,10 @@
 ## Improvements
 
+### App
+
+- Shared content screen for managing shared text content that is not in a file
+  (like text shared by the share sheet or pasted from the clipboard)
+
 ### Webinterface
 
 - Option to sort by MIME type

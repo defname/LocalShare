@@ -21,16 +21,17 @@ import com.defname.localshare.domain.model.SharedContent
 @Composable
 fun SharedContentItem(
     item: SharedContent,
+    isExpanded: Boolean,
     isSelected: Boolean,
     isSelectionMode: Boolean,
     onToggleSelection: () -> Unit,
-    onClick: () -> Unit = {}
+    onExpand: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(
-                onClick = { if (isSelectionMode) onToggleSelection() else onClick() },
+                onClick = { if (isSelectionMode) onToggleSelection() else onExpand() },
                 onLongClick = { onToggleSelection() }
             ),
     ) {
@@ -40,25 +41,10 @@ fun SharedContentItem(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                val contentPreview = when (item) {
-                    is SharedContent.Text -> item.text
-                    is SharedContent.VCard -> "Contact"
-                    is SharedContent.Other -> item.label ?: item.data
-                }
-
-                Text(
-                    text = contentPreview,
-                    style = MaterialTheme.typography.bodyLarge,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Text(
-                    text = item.mimeType,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            when (item) {
+                is SharedContent.Text -> SharedContentTextContent(item, isExpanded, modifier = Modifier.weight(1f))
+                is SharedContent.VCard -> SharedContentVCardContent(item, isExpanded, modifier = Modifier.weight(1f))
+                is SharedContent.Other -> SharedContentOtherContent(item, isExpanded, modifier = Modifier.weight(1f))
             }
 
             if (isSelectionMode) {
@@ -71,5 +57,60 @@ fun SharedContentItem(
             }
         }
     }
+}
 
+@Composable
+fun SharedContentTextContent(
+    item: SharedContent.Text,
+    isExpanded: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = item.text,
+            style = MaterialTheme.typography.bodyLarge,
+            maxLines = if (isExpanded) Int.MAX_VALUE else 3,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+fun SharedContentVCardContent(
+    item: SharedContent.VCard,
+    isExpanded: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text("DUMMY")
+    }
+}
+
+@Composable
+fun SharedContentOtherContent(
+    item: SharedContent.Other,
+    isExpanded: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        if (item.label != null) {
+            Text(
+                text = item.label,
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = if (isExpanded) Int.MAX_VALUE else 3,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        Text(
+            text = item.data,
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = if (isExpanded) Int.MAX_VALUE else 3,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = item.mimeType,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
 }

@@ -130,7 +130,9 @@ fun SharedContentScreen(
             SharedContentList(
                 items = state.sharedContentList,
                 selectedItems = state.selectedItems,
-                onToggleSelection = { viewModel.onToggleSelection(it) }
+                onToggleSelection = { viewModel.onToggleSelection(it) },
+                expandedItem = state.expandedItem,
+                onExpand = { viewModel.onExpand(it) }
             )
         }
     }

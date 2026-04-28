@@ -16,16 +16,19 @@ class SharedContentViewModel(
 ) : ViewModel() {
     private val _selectedItems = MutableStateFlow<Set<Int>>(emptySet())
     private val _hasClipboardContent = MutableStateFlow(false)
+    private val _expandedItem = MutableStateFlow<Int?>(null)
 
     val state = combine(
         serviceRepository.runtimeState,
         _selectedItems,
-        _hasClipboardContent
-    ) { runtimeState, selectedItems, hasClipboardContent ->
+        _hasClipboardContent,
+        _expandedItem
+    ) { runtimeState, selectedItems, hasClipboardContent, expandedItem ->
         SharedContentState(
             sharedContentList = runtimeState.sharedContentList,
             selectedItems = selectedItems,
-            hasClipboardContent = hasClipboardContent
+            hasClipboardContent = hasClipboardContent,
+            expandedItem = expandedItem
         )
     }.stateIn(
         scope = viewModelScope,
@@ -46,6 +49,7 @@ class SharedContentViewModel(
             if (id in currentSelection) {
                 currentSelection - id
             } else {
+                _expandedItem.update { null }
                 currentSelection + id
             }
         }
@@ -61,6 +65,10 @@ class SharedContentViewModel(
     }
 
     fun addClipboardContent(text: String) {
-        addSharedContentUseCase("plain/text", text, null)
+        addSharedContentUseCase("text/plain", text, null)
+    }
+
+    fun onExpand(id: Int) {
+        _expandedItem.update { if (it == id) null else id }
     }
 }
