@@ -3,6 +3,7 @@ package com.defname.localshare.ui.screens.sharedcontent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.defname.localshare.data.ServiceRepository
+import com.defname.localshare.domain.usecase.AddSharedContentUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -10,7 +11,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
 class SharedContentViewModel(
-    val serviceRepository: ServiceRepository
+    val serviceRepository: ServiceRepository,
+    val addSharedContentUseCase: AddSharedContentUseCase
 ) : ViewModel() {
     private val _selectedItems = MutableStateFlow<Set<Int>>(emptySet())
     private val _hasClipboardContent = MutableStateFlow(false)
@@ -56,5 +58,9 @@ class SharedContentViewModel(
 
     fun updateClipboardStatus(hasContent: Boolean) {
         _hasClipboardContent.update { hasContent }
+    }
+
+    fun addClipboardContent(text: String) {
+        addSharedContentUseCase("plain/text", text, null)
     }
 }

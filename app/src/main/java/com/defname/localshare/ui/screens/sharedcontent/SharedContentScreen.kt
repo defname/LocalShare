@@ -1,6 +1,5 @@
 package com.defname.localshare.ui.screens.files
 
-import android.content.ClipDescription
 import android.content.Context
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -51,7 +50,7 @@ fun SharedContentScreen(
 
     fun checkClipboard() {
         val hasText = clipboardManager.primaryClip?.let { clip ->
-            clip.itemCount > 0 && clip.description.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)
+            clip.itemCount > 0 // && clip.description.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)
         } ?: false
         viewModel.updateClipboardStatus(hasText)
     }
@@ -78,7 +77,7 @@ fun SharedContentScreen(
                     if (state.selectedItems.isNotEmpty()) {
                         Text("${state.selectedItems.size} selected")
                     } else {
-                        Text(stringResource(R.string.screen_files))
+                        Text(stringResource(R.string.sharedcontentscreen_title))
                     }
                 },
                 navigationIcon = {
@@ -93,7 +92,7 @@ fun SharedContentScreen(
                     }
                 },
                 actions = {
-                    if (state.sharedContentList.isNotEmpty()) {
+                    if (state.selectedItems.isNotEmpty()) {
                         IconButton(onClick = { viewModel.onSelectAll() }) {
                             Icon(Icons.Default.LibraryAddCheck, contentDescription = "Select All")
                         }
@@ -111,7 +110,15 @@ fun SharedContentScreen(
         },
         floatingActionButton = {
             if (state.hasClipboardContent) {
-                PasteFab(onClick = {})
+                PasteFab(onClick = {
+                    val clipData = clipboardManager.primaryClip
+                    if (clipData != null && clipData.itemCount > 0) {
+                        val text = clipData.getItemAt(0).text?.toString()
+                        if (!text.isNullOrBlank()) {
+                            viewModel.addClipboardContent(text)
+                        }
+                    }
+                })
             }
         }
     ) { innerPadding ->

@@ -60,5 +60,5 @@ val appModule = module {
     viewModel { ServerControlViewModel(get(), get(), get(), get(), get(), get(), get()) }
     viewModel { LogsViewModel(get(), get(), get()) }
     viewModel { SettingsViewModel(get(), get()) }
-    viewModel { SharedContentViewModel(get()) }
+    viewModel { SharedContentViewModel(get(), get()) }
 }

@@ -26,6 +26,7 @@ fun SharedContentList(
             SharedContentItem(
                 item = item,
                 isSelected = item.id in selectedItems,
+                isSelectionMode = selectedItems.isNotEmpty(),
                 onToggleSelection = { onToggleSelection(item.id) }
             )
         }

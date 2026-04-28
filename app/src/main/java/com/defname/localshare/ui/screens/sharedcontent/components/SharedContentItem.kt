@@ -1,6 +1,6 @@
 package com.defname.localshare.ui.screens.sharedcontent.components
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,12 +22,17 @@ import com.defname.localshare.domain.model.SharedContent
 fun SharedContentItem(
     item: SharedContent,
     isSelected: Boolean,
-    onToggleSelection: () -> Unit
+    isSelectionMode: Boolean,
+    onToggleSelection: () -> Unit,
+    onClick: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onToggleSelection() }
+            .combinedClickable(
+                onClick = { if (isSelectionMode) onToggleSelection() else onClick() },
+                onLongClick = { onToggleSelection() }
+            ),
     ) {
         Row(
             modifier = Modifier
@@ -36,7 +41,6 @@ fun SharedContentItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                // Titel/Vorschau basierend auf dem Inhaltstyp
                 val contentPreview = when (item) {
                     is SharedContent.Text -> item.text
                     is SharedContent.VCard -> "Contact"
@@ -57,12 +61,15 @@ fun SharedContentItem(
                 )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
+            if (isSelectionMode) {
+                Spacer(modifier = Modifier.width(8.dp))
 
-            Checkbox(
-                checked = isSelected,
-                onCheckedChange = { onToggleSelection() }
-            )
+                Checkbox(
+                    checked = isSelected,
+                    onCheckedChange = { onToggleSelection() }
+                )
+            }
         }
     }
+
 }
