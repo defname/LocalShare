@@ -31,7 +31,7 @@ fun IpAddressSelector(
 ) {
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { onExpandedChange() },
+        onExpandedChange = { if (enabled) onExpandedChange() },
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
