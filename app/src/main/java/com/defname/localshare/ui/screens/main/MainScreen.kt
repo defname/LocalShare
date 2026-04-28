@@ -45,8 +45,6 @@ fun MainScreen(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
-        // Sidebar nur auf dem Main Screen per Wischgeste erlauben
-        gesturesEnabled = currentRoute == Screen.Main.route,
         drawerContent = {
             MainMenu(
                 drawerItems = state.navigationItems,

@@ -8,6 +8,10 @@
 
 ## Fixes
 
+### App
+
+- Open/close navigation bar via gestures on all screens
+
 ### Webinterface
 
 - Fix `/icon/unknown` request
