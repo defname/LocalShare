@@ -48,7 +48,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.defname.localshare.R
-import com.defname.localshare.ui.screens.sharedcontent.SharedContentViewModel
 import com.defname.localshare.ui.screens.sharedcontent.components.PasteFab
 import com.defname.localshare.ui.screens.sharedcontent.components.SharedContentList
 import com.defname.localshare.ui.theme.LocalShareTheme
@@ -160,6 +159,6 @@ fun SharedContentScreen(
 @Composable
 fun SharedContentScreen() {
     LocalShareTheme {
-        FilesScreen(onOpenDrawer = {})
+        SharedContentScreen(onOpenDrawer = {})
     }
 }
