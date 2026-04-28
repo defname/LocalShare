@@ -15,4 +15,5 @@ interface SettingsRepository {
     suspend fun setWhitelistEntryTTLSeconds(whitelistEntryTTL: Int)
     suspend fun setClearFileListOnShareIntent(clearFileListOnShareIntent: Boolean)
     suspend fun setHeartbeatPeriodSeconds(heartbeatPeriod: Int)
+    suspend fun setShowWelcomeMessage(showWelcomeMessage: Boolean)
 }

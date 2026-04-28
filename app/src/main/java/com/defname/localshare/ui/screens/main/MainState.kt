@@ -29,7 +29,8 @@ data class MainState(
     val qrForStream: Boolean = false,
     val qrFullLink: String = "",
     val helpLink: String = "",
-    val isNotificationPermissionGranted: Boolean = false
+    val isNotificationPermissionGranted: Boolean = false,
+    val welcomeMessageVisible: Boolean = false
 )
 
 class NavigationItem(

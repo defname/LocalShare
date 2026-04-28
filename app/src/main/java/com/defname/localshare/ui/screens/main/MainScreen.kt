@@ -22,6 +22,7 @@ import com.defname.localshare.ui.screens.files.SharedContentScreen
 import com.defname.localshare.ui.screens.info.InfoScreen
 import com.defname.localshare.ui.screens.logs.LogsScreen
 import com.defname.localshare.ui.screens.main.components.MainMenu
+import com.defname.localshare.ui.screens.main.components.WelcomeOnboarding
 import com.defname.localshare.ui.screens.servercontrol.ServerControlScreen
 import com.defname.localshare.ui.screens.settings.SettingsScreen
 import kotlinx.coroutines.launch
@@ -44,6 +45,13 @@ fun MainScreen(
 
     if (state.showQrDialog) {
         QRDialog(state.qrFullLink, state.qrForStream, { viewModel.toggleQrForStream() }, { viewModel.hideQrDialog() })
+    }
+
+    if (state.welcomeMessageVisible) {
+        WelcomeOnboarding(
+            onDismiss = { scope.launch { viewModel.onDismissWelcomeMessage(true) } },
+            onDontShowAgain = { scope.launch { viewModel.onDismissWelcomeMessage() } }
+        )
     }
 
     ModalNavigationDrawer(

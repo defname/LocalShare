@@ -8,14 +8,19 @@ import androidx.lifecycle.viewModelScope
 import com.defname.localshare.data.ConnectionLogsRepository
 import com.defname.localshare.data.NetworkInfoProvider
 import com.defname.localshare.data.PermissionRepository
+import com.defname.localshare.data.RuntimeData
 import com.defname.localshare.data.ServiceRepository
+import com.defname.localshare.domain.model.ConnectionLogEntry
+import com.defname.localshare.domain.model.Settings
 import com.defname.localshare.domain.repository.SettingsRepository
 import com.defname.localshare.domain.usecase.ManageServiceUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 private data class QrState(
     val showQrDialog: Boolean,
@@ -30,6 +35,14 @@ class MainViewModel(
     private val manageServiceUseCase: ManageServiceUseCase,
     private val networkInfoProvider: NetworkInfoProvider
 ) : ViewModel() {
+
+    init {
+        viewModelScope.launch {
+            val showWelcomeMessage = settingsRepository.settingsFlow.first().showWelcomeMessage
+            _welcomeMessageVisible.update { showWelcomeMessage }
+        }
+    }
+
     fun showQrDialog() {
         _qrState.update { it.copy(showQrDialog = true) }
     }
@@ -64,7 +77,13 @@ class MainViewModel(
         context.startActivity(intent)
     }
 
+    suspend fun onDismissWelcomeMessage(showNextTime: Boolean = false) {
+        _welcomeMessageVisible.update { false }
+        settingsRepository.setShowWelcomeMessage(showNextTime)
+    }
+
     private val _qrState = MutableStateFlow(QrState(false, false))
+    private val _welcomeMessageVisible = MutableStateFlow(true)
 
     private fun getQrLink(qrForStream: Boolean, token: String, ip: String, port: Int): String {
         return if (qrForStream) {
@@ -79,8 +98,16 @@ class MainViewModel(
         settingsRepository.settingsFlow,
         logsRepository.connections,
         serviceRepository.runtimeState,
-        permissionRepository.hasNotificationPermission
-    ) { qrState, settings, logs, runtimeState, hasNotificationPermission ->
+        permissionRepository.hasNotificationPermission,
+        _welcomeMessageVisible
+    ) { arr ->
+        var qrState = arr[0] as QrState
+        var settings = arr[1] as Settings
+        var logs = arr[2] as List<ConnectionLogEntry>
+        var runtimeState = arr[3] as RuntimeData
+        var hasNotificationPermission = arr[4] as Boolean
+        var welcomeMessageVisible = arr[5] as Boolean
+
         var qrCodeIp = settings.serverIp
         if (qrCodeIp == "0.0.0.0") {
             val addresses = networkInfoProvider.getLocalIpAddresses()
@@ -101,7 +128,8 @@ class MainViewModel(
             helpLink = helpLink,
             hasLogs = logs.isNotEmpty(),
             serverState = runtimeState.serviceState,
-            isNotificationPermissionGranted = hasNotificationPermission
+            isNotificationPermissionGranted = hasNotificationPermission,
+            welcomeMessageVisible = welcomeMessageVisible
         )
     }.stateIn(
         scope = viewModelScope,
