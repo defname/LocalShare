@@ -2,28 +2,23 @@
 
 ### App
 
-- Shared content screen for managing shared text content that is not in a file
-  (like text shared by the share sheet or pasted from the clipboard)
-- Connections requests from the same device (localhost) do not need to be approved
-- Integrated documentation
-- New onboarding tour to help you get started
+- New shared content screen for text
+- Localhost connections auto-approved
+- Integrated docs & onboarding tour
 
 ### Webinterface
 
-- Option to sort by MIME type
-- Better handling of deleted files in slideshow mode
-- Hide "Download All"-button if no files are available
+- Sort by MIME type
+- Improved slideshow & "Download All" button
 
 ## Fixes
 
 ### App
 
-- Open/close navigation bar via gestures on all screens
-- Fix UI being partially covered by the system navigation bar
-- Change "Stream" to "WebUI" in the QR code dialog
-- Initialize token in settings repository on app start to prevent changing random values
-- Prevent ip address selector from opening when disabled
+- Navigation bar & UI fixes
+- QR code dialog & settings improvements
+- IP selector fix
 
 ### Webinterface
 
-- Fix `/icon/unknown` request
+- Fixed icon request issue
