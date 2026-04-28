@@ -111,8 +111,8 @@ fun QRDialog(
                         ),
                         onClick = onToggleIsStream,
                         selected = isStream,
-                        label = { Text("Stream") },
-                        icon = { Icon(imageVector = Icons.Default.Stream, contentDescription = "Download") }
+                        label = { Text("WebUI") },
+                        icon = { Icon(imageVector = Icons.Default.Stream, contentDescription = "Webinterface") }
                     )
                 }
             }
