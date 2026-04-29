@@ -90,7 +90,7 @@ Avoid using it on public or untrusted networks, especially for sensitive data.
 
 ## License & Credits
 
--   **License**: GNU General Public License v3.0 (GPL-3.0)
+-   [![GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](https://spdx.org/licenses/GPL-3.0-or-later.html)
 
 -   **Icons**: Papirus Icon Theme
     Licensed under GPL-3.0
