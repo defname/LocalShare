@@ -1,0 +1,96 @@
+version = 1
+
+# =========================
+# Source Code
+# =========================
+[[annotations]]
+path = [
+    "app/src/main/**.kt",
+    "app/src/main/assets/**.html",
+    "app/src/main/assets/web/js/main.js",
+    "buildScripts/generate_icon_mapping.py",
+    "web-build/input.css"
+]
+SPDX-License-Identifier = "GPL-3.0-or-later"
+SPDX-FileCopyrightText = "2026 defname (https://github.com/defname)"
+
+# =========================
+# Project / Config Files
+# =========================
+[[annotations]]
+path = [
+    "app/build.gradle.kts",
+    "build.gradle.kts",
+    "settings.gradle.kts",
+    "gradle/libs.versions.toml",
+    "app/proguard-rules.pro",
+    "app/src/main/AndroidManifest.xml",
+    ".github/workflows/**",
+    "gradle.properties",
+    "gradle/wrapper/gradle-wrapper.properties"
+]
+SPDX-License-Identifier = "GPL-3.0-or-later"
+SPDX-FileCopyrightText = "2026 defname (https://github.com/defname)"
+
+# =========================
+# Documentation & Meta (frei verwendbar)
+# =========================
+[[annotations]]
+path = [
+    "README.md",
+    "TODO",
+    ".gitignore",
+    ".gitmodules",
+    "app/.gitignore",
+    "fastlane/**.txt"
+]
+SPDX-License-Identifier = "CC0-1.0"
+SPDX-FileCopyrightText = "2026 defname (https://github.com/defname)"
+
+# =========================
+# Graphics / Assets
+# =========================
+[[annotations]]
+path = [
+    "fastlane/**.png",
+    "fastlane/**.jpg",
+    "app/src/main/res/**.webp",
+    "app/src/main/res/**.xml",
+    "app/src/main/ic_launcher-playstore.png",
+    "raw_assets/**.svg"
+]
+SPDX-License-Identifier = "GPL-3.0-or-later"
+SPDX-FileCopyrightText = "2026 defname (https://github.com/defname)"
+
+# =========================
+# Web Build (generated / metadata)
+# =========================
+[[annotations]]
+path = [
+    "web-build/package.json",
+    "web-build/package-lock.json",
+    "web-build/tailwind.config.js"
+]
+SPDX-License-Identifier = "CC0-1.0"
+SPDX-FileCopyrightText = "2026 defname (https://github.com/defname)"
+SPDX-FileComment = "Some files in this group may be auto-generated (e.g. package-lock.json)"
+
+# =========================
+# Gradle Wrapper (third-party)
+# =========================
+[[annotations]]
+path = [
+    "gradlew",
+    "gradlew.bat",
+    "gradle/wrapper/gradle-wrapper.jar"
+]
+SPDX-License-Identifier = "Apache-2.0"
+SPDX-FileCopyrightText = "Gradle Foundation"
+
+# =========================
+# Third-party JS
+# =========================
+[[annotations]]
+path = "app/src/main/assets/web/js/alpine.min.js"
+SPDX-License-Identifier = "MIT"
+SPDX-FileCopyrightText = "Caleb Porzio"

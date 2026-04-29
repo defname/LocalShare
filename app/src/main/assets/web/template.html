@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Part of LocalShare - https://github.com/PapirusDevelopmentTeam/LocalShare -->
 <html lang="en"
       x-data="{
         darkMode: localStorage.getItem('dark') === 'true' ||
@@ -7,6 +8,7 @@
       :class="{ 'dark': darkMode }">
 <head>
     <meta charset="UTF-8">
+    <meta name="generator" content="LocalShare">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{appname}} - Shared Files</title>
     <link rel="icon" type="image/png" href="/{{token}}/favicon">
