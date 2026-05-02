@@ -60,7 +60,7 @@ fun Route.getThumbnail(
             }
         }
         val stream = ByteArrayOutputStream()
-        thumbnail.compress(Bitmap.CompressFormat.PNG, 100, stream)
-        call.respondBytes(stream.toByteArray(), ContentType.Image.PNG)
+        thumbnail.compress(Bitmap.CompressFormat.JPEG, 75, stream)
+        call.respondBytes(stream.toByteArray(), ContentType.Image.JPEG)
     }
 }

@@ -6,7 +6,7 @@
 - Only show one URL per IP (not stream & download)
 - Optimized list performance for large file and log collections
 - Connection logs now automatically scroll to the top for new entries
-- Improved loading speed and reliability for file thumbnails
+- Significantly reduced data usage for file thumbnails
 - Synchronize IP list with available network interfaces (needs INTERNET permission)
 
 ### Webinterface
@@ -17,6 +17,4 @@
 
 ### App
 
-- Fix a stability issue with network detection
-
-
+- Fixed a crash related to network status monitoring (TooManyRequestsException)
