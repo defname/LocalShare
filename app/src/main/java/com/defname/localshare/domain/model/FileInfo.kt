@@ -4,7 +4,6 @@
 
 package com.defname.localshare.domain.model
 
-import android.graphics.Bitmap
 import android.net.Uri
 
 data class FileInfo(
@@ -13,8 +12,7 @@ data class FileInfo(
     val name: String,
     val size: Long,
     val mimeType: String,
-    val iconFile: String,
-    val filePreview: Bitmap? = null
+    val iconFile: String
 )
 
 fun FileInfo.sizeAsString(): String {

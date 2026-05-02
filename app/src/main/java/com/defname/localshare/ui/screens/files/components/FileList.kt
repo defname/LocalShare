@@ -6,8 +6,9 @@ package com.defname.localshare.ui.screens.files.components
 
 import android.net.Uri
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -27,10 +28,10 @@ fun FileList(
     selectedFiles: Set<Uri>,
     onFileSelected: (FileInfo) -> Unit,
 ) {
-    Column(
+    LazyColumn(
         modifier = Modifier.fillMaxWidth()
     ) {
-        for (file in files) {
+        items(files, key = { it.id }) { file ->
             val isSelected = selectedFiles.contains(file.uri)
             FileListRow(
                 file = file,

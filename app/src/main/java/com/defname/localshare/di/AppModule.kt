@@ -43,7 +43,7 @@ val appModule = module {
     single { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
 
     single { FileInfoProvider(androidContext().contentResolver) }
-    single { NetworkInfoProvider(androidContext()) }
+    single { NetworkInfoProvider(androidContext(), get()) }
     single { QrCodeProvider() }
 
     single { androidContext().dataStore }

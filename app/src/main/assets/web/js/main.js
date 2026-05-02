@@ -1,20 +1,6 @@
-/*
- * LocalShare - Share files locally
- * Copyright (C) 2026 defname
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+// SPDX-FileCopyrightText: 2026 2026 defname
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 function humanFileSize(size) {
     if (size === 0) return '0 B';
@@ -78,6 +64,43 @@ document.addEventListener('alpine:init', () => {
 
         prevSlide() {
             this.currentIndex = (this.currentIndex - 1 + this.sortedFiles.length) % this.sortedFiles.length;
+        },
+
+        loadPreview(el, file) {
+            if (!file) return;
+            // console.log("Checking preview for:", file.filename, "hasThumbnail:", file.hasThumbnail);
+
+            // Reset to icon state if it's the slideshow (since the element is reused)
+            if (el.dataset.isSlideshow) {
+                el.src = `/${token}/icon/${file.icon}`;
+                el.classList.remove('max-w-full', 'max-h-[60vh]', 'shadow-2xl', 'rounded-lg');
+                el.classList.add('object-contain', 'w-48', 'h-48', 'md:w-64', 'md:h-64');
+            }
+
+            // Fallback for older JSON or missing property
+            const canHaveThumbnail = file.hasThumbnail ||
+                                   (file.mimeType && (file.mimeType.startsWith('image/') || file.mimeType.startsWith('video/')));
+
+            if (!canHaveThumbnail) return;
+
+            const thumbUrl = `/${token}/thumbnail/${file.fileId}`;
+            const img = new Image();
+            img.onload = () => {
+                // IMPORTANT: Check if the file for this element is still the same
+                // (prevents async race conditions when scrolling/navigating)
+                if (file.fileId !== (el.dataset.isSlideshow ? this.currentFile?.fileId : file.fileId)) return;
+
+                el.src = thumbUrl;
+                // Remove icon-specific classes and add thumbnail-specific classes
+                el.classList.remove('p-2', 'w-20', 'h-20', 'w-8', 'h-8', 'w-48', 'h-48', 'md:w-64', 'md:h-64');
+
+                if (el.dataset.isSlideshow) {
+                     el.classList.add('max-w-full', 'max-h-[60vh]', 'object-contain', 'shadow-2xl', 'rounded-lg');
+                } else {
+                     el.classList.add('object-cover', 'w-full', 'h-full');
+                }
+            };
+            img.src = thumbUrl;
         },
 
         get sortedFiles() {

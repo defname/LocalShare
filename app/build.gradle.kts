@@ -93,6 +93,7 @@ dependencies {
     implementation(libs.zxing.core)
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)
+    implementation(libs.coil.video)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.datastore.preferences)
 

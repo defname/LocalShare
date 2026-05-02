@@ -9,14 +9,17 @@ import android.net.ConnectivityManager
 import android.net.LinkProperties
 import android.net.Network
 import com.defname.localshare.domain.model.NetworkInfo
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.shareIn
 import java.net.NetworkInterface
 
-class NetworkInfoProvider(context: Context) {
+class NetworkInfoProvider(context: Context, scope: CoroutineScope) {
     private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
     val localIpAddresses: Flow<List<NetworkInfo>> = callbackFlow {
@@ -35,14 +38,18 @@ class NetworkInfoProvider(context: Context) {
         }
 
         connectivityManager.registerDefaultNetworkCallback(callback)
-        
-        // Initialer Wert
-        trySend(getLocalIpAddresses())
 
         awaitClose {
             connectivityManager.unregisterNetworkCallback(callback)
         }
-    }.onStart { emit(getLocalIpAddresses()) }.distinctUntilChanged()
+    }
+        .onStart { emit(getLocalIpAddresses()) }
+        .distinctUntilChanged()
+        .shareIn(
+            scope = scope,
+            started = SharingStarted.WhileSubscribed(5000),
+            replay = 1
+        )
 
     fun getLocalIpAddresses(): List<NetworkInfo> {
         val addresses = mutableListOf<NetworkInfo>()

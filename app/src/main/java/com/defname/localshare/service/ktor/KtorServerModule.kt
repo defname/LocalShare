@@ -7,6 +7,7 @@ package com.defname.localshare.service.ktor
 import android.content.Context
 import com.defname.localshare.data.CallAttributes
 import com.defname.localshare.data.ConnectionLogsRepository
+import com.defname.localshare.data.FileInfoProvider
 import com.defname.localshare.data.ServiceRepository
 import com.defname.localshare.domain.model.DisconnectReason
 import com.defname.localshare.domain.repository.SettingsRepository
@@ -39,6 +40,7 @@ fun Application.configureServerModule(
     connectionLogsRepository: ConnectionLogsRepository,
     settingsRepository: SettingsRepository,
     securityHandler: ServerSecurityHandler,
+    fileInfoProvider: FileInfoProvider,
     context: Context
 ) {
     install(PartialContent)
@@ -77,7 +79,7 @@ fun Application.configureServerModule(
 
         getFavIcon(securityHandler, context)
 
-        getThumbnail(securityHandler, serviceRepository, context)
+        getThumbnail(securityHandler, serviceRepository, fileInfoProvider, context)
 
         getFileIcon(securityHandler, context)
 

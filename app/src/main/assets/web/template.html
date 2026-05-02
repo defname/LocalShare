@@ -88,15 +88,11 @@
 
                 <div :class="isGrid ? 'contents' : 'flex items-center gap-4 w-full'">
                     <div @click="currentIndex = index; toggleSlideshow()"
-                         :class="isGrid ? 'h-40 bg-gray-100 dark:bg-slate-800 flex items-center justify-center cursor-pointer group' : 'w-12 h-12 bg-gray-100 dark:bg-slate-800 rounded-lg flex-shrink-0 flex items-center justify-center cursor-pointer group'">
-                        <template x-if="file.hasThumbnail">
-                            <img :src="'/' + window.token + '/thumbnail/' + file.fileId" class="object-cover w-full h-full group-hover:opacity-90 transition" />
-                        </template>
-                        <template x-if="!file.hasThumbnail">
-                            <img :src="'/' + window.token + '/icon/' + file.icon"
-                                 :class="isGrid ? 'w-20 h-20 p-2' : 'w-8 h-8'"
-                                 class="object-contain group-hover:scale-110 transition" />
-                        </template>
+                         :class="isGrid ? 'h-40 bg-gray-100 dark:bg-slate-800 flex items-center justify-center cursor-pointer group overflow-hidden' : 'w-12 h-12 bg-gray-100 dark:bg-slate-800 rounded-lg flex-shrink-0 flex items-center justify-center cursor-pointer group overflow-hidden'">
+                        <img :src="'/' + window.token + '/icon/' + file.icon"
+                             x-init="loadPreview($el, file)"
+                             :class="isGrid ? 'w-20 h-20 p-2 object-contain' : 'w-8 h-8 object-contain'"
+                             class="transition-all duration-300 group-hover:scale-105" />
                     </div>
 
                     <div :class="isGrid ? 'p-4 flex flex-col flex-grow items-center text-center' : 'flex-grow grid grid-cols-2 md:grid-cols-4 items-center px-2'">
@@ -150,14 +146,10 @@
                 </button>
 
                 <div class="max-w-full max-h-full flex items-center justify-center">
-                    <template x-if="currentFile?.hasThumbnail">
-                        <img :src="'/' + window.token + '/thumbnail/' + currentFile.fileId"
-                             class="max-w-full max-h-[60vh] object-contain shadow-2xl rounded-lg" />
-                    </template>
-                    <template x-if="!currentFile?.hasThumbnail">
-                        <img :src="'/' + window.token + '/icon/' + currentFile?.icon"
-                             class="w-48 h-48 md:w-64 md:h-64 object-contain" />
-                    </template>
+                    <img :src="'/' + window.token + '/icon/' + currentFile?.icon"
+                         x-init="loadPreview($el, currentFile); $watch('currentFile', (val) => loadPreview($el, val))"
+                         data-is-slideshow="true"
+                         class="w-48 h-48 md:w-64 md:h-64 object-contain transition-all duration-500" />
                 </div>
 
                 <button @click="nextSlide()" class="absolute right-4 p-4 text-gray-300 hover:text-blue-600 transition cursor-pointer z-10">

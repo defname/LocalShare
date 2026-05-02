@@ -62,7 +62,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.defname.localshare.R
-import com.defname.localshare.ui.components.LogList
 import com.defname.localshare.ui.components.QrCodeDialog
 import com.defname.localshare.ui.screens.home.components.FileCarousel
 import com.defname.localshare.ui.screens.home.components.IpAddressSelector
@@ -340,6 +339,7 @@ fun HomeScreen(
             }
             Spacer(modifier = Modifier.height(8.dp))
 
+            /*
             LogList(
                 entries = state.logEntries,
                 menuOpenForId = state.logMenuOpenForId,
@@ -349,6 +349,7 @@ fun HomeScreen(
                 onRemoveFromBlackList = { viewModel.removeFromBlacklist(it) },
                 onRemoveFromWhiteList = { viewModel.removeFromWhitelist(it) }
             )
+            */
 
 
             if (state.isRunning) {

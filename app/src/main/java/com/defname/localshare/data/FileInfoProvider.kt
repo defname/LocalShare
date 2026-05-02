@@ -67,8 +67,7 @@ class FileInfoProvider(private val contentResolver: ContentResolver) {
             name = name,
             size = size,
             mimeType = mimeType,
-            iconFile = iconFile,
-            filePreview = getThumbnail(uri)
+            iconFile = iconFile
         )
     }
 

@@ -10,9 +10,9 @@ fun FileInfo.toJsonString() = """
     {
         "fileId": "${this.id}",
         "filename": "${this.name.escapeJson()}",
-        "hasThumbnail": ${if (this.filePreview != null) "true" else "false"},
         "icon": "${this.iconFile}",
         "size": ${this.size},
-        "mimeType": "${this.mimeType}"
+        "mimeType": "${this.mimeType}",
+        "hasThumbnail": ${mimeType.startsWith("image/") || mimeType.startsWith("video/")}
     }    
     """.toOneLine()

@@ -6,6 +6,7 @@ package com.defname.localshare.service.ktor.routes
 
 import android.content.Context
 import android.graphics.Bitmap
+import com.defname.localshare.data.FileInfoProvider
 import com.defname.localshare.data.ServiceRepository
 import com.defname.localshare.service.ServerSecurityHandler
 import io.ktor.http.ContentType
@@ -20,6 +21,7 @@ import java.io.ByteArrayOutputStream
 fun Route.getThumbnail(
     securityHandler: ServerSecurityHandler,
     serviceRepository: ServiceRepository,
+    fileInfoProvider: FileInfoProvider,
     context: Context
 ) {
     get("/{token}/thumbnail/{file}") {
@@ -36,12 +38,26 @@ fun Route.getThumbnail(
             return@get call.respondText("File not found.\n", status = HttpStatusCode.NotFound)
         }
 
-        val thumbnail = fileInfo.filePreview
+        val thumbnail: Bitmap? = fileInfoProvider.getThumbnail(fileInfo.uri)
+
         if (thumbnail == null) {
-            return@get call.respondText(
-                "No thumbnail found.\n",
-                status = HttpStatusCode.NotFound
-            )
+            val iconFilename = fileInfo.iconFile
+            return@get try {
+                context.assets.open("fileicons/$iconFilename").use { inputStream ->
+                    val bytes = inputStream.readBytes()
+                    val contentType = if (iconFilename.endsWith(".svg")) {
+                        ContentType.parse("image/svg+xml")
+                    } else {
+                        ContentType.Image.PNG
+                    }
+                    call.respondBytes(bytes, contentType)
+                }
+            } catch (e: Exception) {
+                call.respondText(
+                    "No thumbnail or icon found.\n",
+                    status = HttpStatusCode.NotFound
+                )
+            }
         }
         val stream = ByteArrayOutputStream()
         thumbnail.compress(Bitmap.CompressFormat.PNG, 100, stream)
