@@ -34,6 +34,7 @@ import com.defname.localshare.ui.screens.main.NavigationItem
 @Composable
 fun MainMenu(
     drawerItems: List<NavigationItem>,
+    currentRoute: String,
     onItemClick: (String) -> Unit,
     onHelpClick: () -> Unit
 ) {
@@ -62,7 +63,7 @@ fun MainMenu(
                         icon = { Icon(item.icon, contentDescription = null) },
                         label = { Text(item.label) },
                         onClick = { onItemClick(item.route) },
-                        selected = false,
+                        selected = currentRoute == item.route,
                         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                     )
                 }

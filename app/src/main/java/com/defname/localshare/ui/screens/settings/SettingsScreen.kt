@@ -47,10 +47,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = koinViewModel(),
-    onOpenDrawer: () -> Unit,
-    serverState: RuntimeState,
-    onStartServer: () -> Unit,
-    onStopServer: () -> Unit
+    onOpenDrawer: () -> Unit
 ) {
     val settings by viewModel.settings.collectAsState()
     val runtimeState by viewModel.runtimeState.collectAsState()
@@ -174,9 +171,6 @@ fun SettingsScreenPreview() {
     LocalShareTheme {
         SettingsScreen(
             onOpenDrawer = {},
-            serverState = RuntimeState.STOPPED,
-            onStartServer = {},
-            onStopServer = {}
         )
     }
 }

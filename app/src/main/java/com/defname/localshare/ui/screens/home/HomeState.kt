@@ -2,8 +2,9 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-package com.defname.localshare.ui.screens.servercontrol
+package com.defname.localshare.ui.screens.home
 
+import android.graphics.Bitmap
 import android.net.Uri
 import com.defname.localshare.data.RuntimeState
 import com.defname.localshare.domain.model.FileInfo
@@ -11,7 +12,7 @@ import com.defname.localshare.domain.model.NetworkInfo
 import com.defname.localshare.domain.model.WhiteListEntry
 import com.defname.localshare.ui.components.LogListEntry
 
-data class ServerControlState(
+data class HomeState(
     val token: String = "",
 
     val selectedIpAddress: String = "0.0.0.0",
@@ -36,6 +37,12 @@ data class ServerControlState(
 
     val showExpandLogsButton: Boolean = false,
 
-    val hasNotificationPermission: Boolean = false
+    val hasNotificationPermission: Boolean = false,
+
+    val qrCodeDialogVisible: Boolean = false,
+    val qrCodeUrl: String = "",
+    val qrCodeBitmap: Bitmap? = null,
+
+    val serverUrls: List<String> = emptyList()
 
     )

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-package com.defname.localshare.ui.screens.servercontrol
+package com.defname.localshare.ui.screens.home
 
 import android.Manifest
 import android.content.Context
@@ -28,13 +28,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Stream
 import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -64,11 +62,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.defname.localshare.R
-import com.defname.localshare.data.RuntimeState
 import com.defname.localshare.ui.components.LogList
-import com.defname.localshare.ui.screens.servercontrol.components.FileCarousel
-import com.defname.localshare.ui.screens.servercontrol.components.IpAddressSelector
-import com.defname.localshare.ui.screens.servercontrol.components.StartServerButton
+import com.defname.localshare.ui.components.QrCodeDialog
+import com.defname.localshare.ui.screens.home.components.FileCarousel
+import com.defname.localshare.ui.screens.home.components.IpAddressSelector
+import com.defname.localshare.ui.screens.home.components.StartServerButton
 import com.defname.localshare.ui.theme.LocalShareTheme
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -85,14 +83,10 @@ fun shareText(context: Context, text: String) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ServerControlScreen(
-    viewModel: ServerControlViewModel = koinViewModel(),
+fun HomeScreen(
+    viewModel: HomeViewModel = koinViewModel(),
     onOpenDrawer: () -> Unit,
-    onNavigateToLogs: () -> Unit,
-    onShowQr: () -> Unit,
-    serverState: RuntimeState,
-    onStartServer: () -> Unit,
-    onStopServer: () -> Unit
+    onNavigateToLogs: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
@@ -108,6 +102,14 @@ fun ServerControlScreen(
         viewModel.updatePermissionStatus()
     }
 
+    if (state.qrCodeDialogVisible) {
+        QrCodeDialog(
+            url = state.qrCodeUrl,
+            qrCodeBitmap = state.qrCodeBitmap,
+            onDismiss = { viewModel.onCloseQrCodeDialog() }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -119,7 +121,7 @@ fun ServerControlScreen(
                 },
                 actions = {
                     if (state.isRunning) {
-                        IconButton(onClick = onShowQr) {
+                        IconButton(onClick = {  }) {
                             Icon(Icons.Default.QrCode2, contentDescription = stringResource(R.string.main_action_button_descr_qr_code))
                         }
                     }
@@ -131,15 +133,15 @@ fun ServerControlScreen(
         },
         bottomBar = {
             StartServerButton(
-                serverState = serverState,
+                serverState = state.serviceState,
                 hasNotificationPermission = state.hasNotificationPermission,
                 requestNotificationPermission = {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     }
                 },
-                startServer = onStartServer,
-                stopServer = onStopServer,
+                startServer = { viewModel.onStartServer() },
+                stopServer = { viewModel.onStopServer() },
                 modifier = Modifier.navigationBarsPadding()
             )
         }
@@ -285,39 +287,32 @@ fun ServerControlScreen(
                 }
             }
 
-            for (ipAddress in usedAddresses) {
-                val baseUrl = "http://$ipAddress:${state.port}/${state.token}"
-                for (download in listOf(false, true)) {
-                    val url = "$baseUrl" + if (download) "?download" else ""
-                    Card(
-                        modifier = Modifier
-                            .padding(bottom = 8.dp)
-                    ) {
-                        Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            for (serverUrl in state.serverUrls) {
+                Card(
+                    modifier = Modifier
+                        .padding(bottom = 8.dp)
+                ) {
+                    Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                                Text(
+                            serverUrl,
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        IconButton(onClick = { shareText(context, serverUrl) }) {
                             Icon(
-                                imageVector = if (!download) Icons.Default.Stream else Icons.Default.Download,
-                                contentDescription = if (!download) stringResource(R.string.servercontrollscreen_server_urls_icon_descr_stream) else stringResource(
-                                    R.string.servercontrollscreen_server_urls_icon_descr_download
-                                ),
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                url,
-                                modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            IconButton(onClick = { shareText(context, url) }) {
-                                Icon(
-                                    imageVector = Icons.Default.Share, contentDescription = stringResource(
-                                        R.string.servercontrollscreen_serverurls_icon_descr_share
-                                    )
+                                imageVector = Icons.Default.Share, contentDescription = stringResource(
+                                    R.string.servercontrollscreen_serverurls_icon_descr_share
                                 )
-                            }
+                            )
+                        }
+                        //Spacer(modifier = Modifier.width(8.dp))
+                        IconButton(onClick = { viewModel.onOpenQrCodeDialog(serverUrl) }) {
+                            Icon(Icons.Default.QrCode2, contentDescription = stringResource(R.string.main_action_button_descr_qr_code))
                         }
                     }
                 }
+
             }
 
 
@@ -410,15 +405,11 @@ fun ServerControlScreen(
 
 @Preview(showBackground = true)
 @Composable
-fun ServerControlScreenPreview() {
+fun HomeScreenPreview() {
     LocalShareTheme {
-        ServerControlScreen(
+        HomeScreen(
             onOpenDrawer = {},
-            onNavigateToLogs = {},
-            onShowQr = {},
-            serverState = RuntimeState.STOPPED,
-            onStartServer = {},
-            onStopServer = {}
+            onNavigateToLogs = {}
         )
     }
 }

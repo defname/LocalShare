@@ -27,14 +27,9 @@ data class MainState(
         NavigationItem(it.route, it.label, it.icon)
     },
 
-    val serverState: RuntimeState = RuntimeState.STOPPED,
-    val hasLogs: Boolean = false,
-    val showQrDialog: Boolean = false,
-    val qrForStream: Boolean = false,
-    val qrFullLink: String = "",
     val helpLink: String = "",
-    val isNotificationPermissionGranted: Boolean = false,
-    val welcomeMessageVisible: Boolean = false
+    val welcomeMessageVisible: Boolean = false,
+    val serverState: RuntimeState = RuntimeState.STOPPED
 )
 
 class NavigationItem(
@@ -44,7 +39,7 @@ class NavigationItem(
 )
 
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
-    object Main : Screen("main", "Server", Icons.Default.Send)
+    object Main : Screen("main", "Overview", Icons.Default.Send)
     object Files : Screen("files", "Files", Icons.Default.ListAlt)
     object SharedContent : Screen("sharedcontent", "Shared Content", Icons.Default.ContentPaste)
     object Logs : Screen("logs", "Logs", Icons.Default.List)

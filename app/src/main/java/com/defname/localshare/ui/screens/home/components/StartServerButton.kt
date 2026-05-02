@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-package com.defname.localshare.ui.screens.servercontrol.components
+package com.defname.localshare.ui.screens.home.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer

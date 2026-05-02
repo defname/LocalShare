@@ -20,15 +20,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.defname.localshare.data.RuntimeState
-import com.defname.localshare.ui.components.QRDialog
 import com.defname.localshare.ui.screens.files.FilesScreen
-import com.defname.localshare.ui.screens.sharedcontent.SharedContentScreen
+import com.defname.localshare.ui.screens.home.HomeScreen
 import com.defname.localshare.ui.screens.info.InfoScreen
 import com.defname.localshare.ui.screens.logs.LogsScreen
 import com.defname.localshare.ui.screens.main.components.MainMenu
-import com.defname.localshare.ui.screens.main.components.WelcomeOnboarding
-import com.defname.localshare.ui.screens.servercontrol.ServerControlScreen
 import com.defname.localshare.ui.screens.settings.SettingsScreen
+import com.defname.localshare.ui.screens.sharedcontent.SharedContentScreen
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -47,16 +45,6 @@ fun MainScreen(
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
-    if (state.showQrDialog) {
-        QRDialog(state.qrFullLink, state.qrForStream, { viewModel.toggleQrForStream() }, { viewModel.hideQrDialog() })
-    }
-
-    if (state.welcomeMessageVisible) {
-        WelcomeOnboarding(
-            onDismiss = { scope.launch { viewModel.onDismissWelcomeMessage(true) } },
-            onDontShowAgain = { scope.launch { viewModel.onDismissWelcomeMessage() } }
-        )
-    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -73,6 +61,7 @@ fun MainScreen(
                         }
                     }
                 },
+                currentRoute = currentRoute ?: state.navigationItems.getOrNull(0)?.route ?: "",
                 onHelpClick = {
                     if (state.serverState != RuntimeState.RUNNING) {
                         android.widget.Toast.makeText(
@@ -98,13 +87,9 @@ fun MainScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             composable(Screen.Main.route) {
-                ServerControlScreen(
+                HomeScreen(
                     onOpenDrawer = onOpenDrawer,
-                    onNavigateToLogs = { navController.navigate(Screen.Logs.route) },
-                    onShowQr = { viewModel.showQrDialog() },
-                    serverState = state.serverState,
-                    onStartServer = { viewModel.startServer() },
-                    onStopServer = { viewModel.stopServer() }
+                    onNavigateToLogs = { navController.navigate(Screen.Logs.route) }
                 )
             }
             composable(Screen.Files.route) {
@@ -115,10 +100,7 @@ fun MainScreen(
             }
             composable(Screen.Settings.route) {
                 SettingsScreen(
-                    onOpenDrawer = onOpenDrawer,
-                    serverState = state.serverState,
-                    onStartServer = { viewModel.startServer() },
-                    onStopServer = { viewModel.stopServer() }
+                    onOpenDrawer = onOpenDrawer
                 )
             }
             composable(Screen.Logs.route) {

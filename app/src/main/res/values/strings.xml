@@ -20,7 +20,7 @@
     <string name="servercontrolscreen_shared_files_delete_file_cancel">Cancel</string>
     <string name="servercontrolscreen_add_files_icon_description_add">Add</string>
     <string name="servercontrolsscreen_add_files_button_caption">Add Files</string>
-    <string name="servercontrolscreen_server_settings_caption">Server Settings</string>
+    <string name="servercontrolscreen_server_settings_caption">Overview</string>
     <string name="servercontrolscreen_token_input_caption">Token</string>
     <string name="servercontrolscreen_generate_random_token_icon_description">Generate Random Token</string>
     <string name="main_title_info">Info</string>

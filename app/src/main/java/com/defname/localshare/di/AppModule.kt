@@ -11,7 +11,9 @@ import com.defname.localshare.data.DataStoreSettingsRepository
 import com.defname.localshare.data.FileInfoProvider
 import com.defname.localshare.data.NetworkInfoProvider
 import com.defname.localshare.data.PermissionRepository
+import com.defname.localshare.data.QrCodeProvider
 import com.defname.localshare.data.SecurityRepository
+import com.defname.localshare.data.ServerUrlProvider
 import com.defname.localshare.data.ServiceRepository
 import com.defname.localshare.domain.repository.SettingsRepository
 import com.defname.localshare.domain.usecase.AddFilesUseCase
@@ -21,9 +23,9 @@ import com.defname.localshare.service.ServerIdleManager
 import com.defname.localshare.service.ServerSecurityHandler
 import com.defname.localshare.service.notification.NotificationHelper
 import com.defname.localshare.ui.screens.files.FilesViewModel
+import com.defname.localshare.ui.screens.home.HomeViewModel
 import com.defname.localshare.ui.screens.logs.LogsViewModel
 import com.defname.localshare.ui.screens.main.MainViewModel
-import com.defname.localshare.ui.screens.servercontrol.ServerControlViewModel
 import com.defname.localshare.ui.screens.settings.SettingsViewModel
 import com.defname.localshare.ui.screens.sharedcontent.SharedContentViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -41,7 +43,8 @@ val appModule = module {
     single { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
 
     single { FileInfoProvider(androidContext().contentResolver) }
-    single { NetworkInfoProvider() }
+    single { NetworkInfoProvider(androidContext()) }
+    single { QrCodeProvider() }
 
     single { androidContext().dataStore }
 
@@ -58,10 +61,11 @@ val appModule = module {
     factory { AddSharedContentUseCase(get()) }
     factory { ManageServiceUseCase(get(), get()) }
     factory { ServerSecurityHandler(get(), get()) }
+    factory { ServerUrlProvider(get(), get())}
 
-    viewModel { MainViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { MainViewModel(get(), get(), get()) }
     viewModel { FilesViewModel(get(), get()) }
-    viewModel { ServerControlViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { HomeViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { LogsViewModel(get(), get(), get()) }
     viewModel { SettingsViewModel(get(), get()) }
     viewModel { SharedContentViewModel(get(), get()) }
