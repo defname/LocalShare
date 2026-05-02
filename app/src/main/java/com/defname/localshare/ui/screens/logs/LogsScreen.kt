@@ -50,7 +50,7 @@ fun LogsScreen(
                 },
                 actions = {
                     IconButton(onClick = { viewModel.clearLogs() }) {
-                        Icon(Icons.Default.DeleteSweep, contentDescription = "Logs löschen")
+                        Icon(Icons.Default.DeleteSweep, contentDescription = "Clear logs")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
