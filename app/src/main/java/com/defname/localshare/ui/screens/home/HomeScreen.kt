@@ -119,13 +119,7 @@ fun HomeScreen(
                         Icon(Icons.Default.Menu, contentDescription = null)
                     }
                 },
-                actions = {
-                    if (state.isRunning) {
-                        IconButton(onClick = {  }) {
-                            Icon(Icons.Default.QrCode2, contentDescription = stringResource(R.string.main_action_button_descr_qr_code))
-                        }
-                    }
-                },
+                actions = { },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant
                 )

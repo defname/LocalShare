@@ -90,15 +90,12 @@ class MainActivity : ComponentActivity() {
         if (action != Intent.ACTION_SEND && action != Intent.ACTION_SEND_MULTIPLE) return
 
         scope.launch {
-            // 1. Settings synchron abfragen (aus dem Flow)
             val settings = settingsRepository.settingsFlow.first()
 
-            // 2. Dateiliste leeren falls konfiguriert
             if (settings.clearFileListOnShareIntent) {
                 serviceRepository.clearFiles()
             }
 
-            // 3. Dateien hinzufügen
             val urisToGrant = mutableListOf<Uri>()
             when (action) {
                 Intent.ACTION_SEND -> {
@@ -112,6 +109,11 @@ class MainActivity : ComponentActivity() {
                         val extraText = intent.getStringExtra(Intent.EXTRA_TEXT)
                         val extraSubject = intent.getStringExtra(Intent.EXTRA_SUBJECT)
                         addSharedContentUseCase(mime, extraText, extraSubject)
+                        android.widget.Toast.makeText(
+                            this@MainActivity,
+                            "Text added to shared texts.",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
                     }
                 }
                 Intent.ACTION_SEND_MULTIPLE -> {

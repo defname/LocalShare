@@ -1,0 +1,13 @@
+## Improvements
+
+### App
+
+- Refactor home screen
+- Only show one URL per IP (not stream & download)
+
+## Fixes
+
+### App
+
+### Webinterface
+
