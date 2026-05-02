@@ -4,10 +4,19 @@
 
 - Refactor home screen
 - Only show one URL per IP (not stream & download)
+- Optimized list performance for large file and log collections
+- Connection logs now automatically scroll to the top for new entries
+- Improved loading speed and reliability for file thumbnails
+- Synchronize IP list with available network interfaces (needs INTERNET permission)
+
+### Webinterface
+
+- Improved loading speed and reliability for file thumbnails
 
 ## Fixes
 
 ### App
 
-### Webinterface
+- Fix a stability issue with network detection
+
 
