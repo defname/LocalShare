@@ -20,4 +20,5 @@ interface SettingsRepository {
     suspend fun setClearFileListOnShareIntent(clearFileListOnShareIntent: Boolean)
     suspend fun setHeartbeatPeriodSeconds(heartbeatPeriod: Int)
     suspend fun setShowWelcomeMessage(showWelcomeMessage: Boolean)
+    suspend fun setRegenerateTokenAtAppStart(regenerateTokenAtAppStart: Boolean)
 }

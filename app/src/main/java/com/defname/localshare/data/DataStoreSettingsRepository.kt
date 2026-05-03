@@ -29,6 +29,7 @@ class DataStoreSettingsRepository(
         val CLEAR_FILE_LIST_ON_SHARE_INTENT = booleanPreferencesKey("clearFileListOnShareIntent")
         val SSE_HEARTBEAT_PERIOD_SECONDS = intPreferencesKey("sseHeartbeatPeriod")
         val SHOW_WELCOME_MESSAGE = booleanPreferencesKey("showWelcomeMessage")
+        val REGENERATE_TOKEN_AT_APP_START = booleanPreferencesKey("regenerateTokenAtAppStart")
     }
 
     override val settingsFlow: Flow<Settings> = store.data
@@ -43,7 +44,8 @@ class DataStoreSettingsRepository(
                 whitelistEntryTTLSeconds = it[Keys.WHITELIST_ENTRY_TTL_SECONDS] ?: (60 * 60),
                 clearFileListOnShareIntent = it[Keys.CLEAR_FILE_LIST_ON_SHARE_INTENT] ?: false,
                 sseHeartbeatPeriodSeconds = it[Keys.SSE_HEARTBEAT_PERIOD_SECONDS] ?: 1,
-                showWelcomeMessage = it[Keys.SHOW_WELCOME_MESSAGE] ?: true
+                showWelcomeMessage = it[Keys.SHOW_WELCOME_MESSAGE] ?: true,
+                regenerateTokenAtAppStart = it[Keys.REGENERATE_TOKEN_AT_APP_START] ?: true
             )
         }
 
@@ -57,4 +59,5 @@ class DataStoreSettingsRepository(
     override suspend fun setClearFileListOnShareIntent(clearFileListOnShareIntent: Boolean) { store.edit { it[Keys.CLEAR_FILE_LIST_ON_SHARE_INTENT] = clearFileListOnShareIntent } }
     override suspend fun setHeartbeatPeriodSeconds(heartbeatPeriod: Int) { store.edit { it[Keys.SSE_HEARTBEAT_PERIOD_SECONDS] = heartbeatPeriod } }
     override suspend fun setShowWelcomeMessage(showWelcomeMessage: Boolean) { store.edit { it[Keys.SHOW_WELCOME_MESSAGE] = showWelcomeMessage } }
+    override suspend fun setRegenerateTokenAtAppStart(regenerateTokenAtAppStart: Boolean) { store.edit { it[Keys.REGENERATE_TOKEN_AT_APP_START] = regenerateTokenAtAppStart } }
 }

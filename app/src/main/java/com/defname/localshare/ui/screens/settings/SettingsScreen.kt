@@ -114,6 +114,12 @@ fun SettingsScreen(
             // Gruppe 2: Sicherheit
             SettingsGroup(title = stringResource(R.string.settings_security_title)) {
                 SettingsSwitchRow(
+                    title = stringResource(R.string.settings_regenerate_token_at_app_start_label),
+                    subtitle = stringResource(R.string.settings_generate_a_new_security_token_every_time_the_app_starts_hint),
+                    checked = settings.regenerateTokenAtAppStart,
+                    onCheckedChange = { scope.launch { viewModel.setRegenerateTokenAtAppStart(it) } }
+                )
+                SettingsSwitchRow(
                     title = stringResource(R.string.settings_security_require_approval_label),
                     subtitle = stringResource(R.string.settings_security_require_approval_hint),
                     checked = settings.requireApproval,

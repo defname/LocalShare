@@ -14,5 +14,6 @@ data class Settings(
     val whitelistEntryTTLSeconds: Int = 60 * 60,
     val clearFileListOnShareIntent: Boolean = false,
     val sseHeartbeatPeriodSeconds: Int = 1,
-    val showWelcomeMessage: Boolean = true
+    val showWelcomeMessage: Boolean = true,
+    val regenerateTokenAtAppStart: Boolean = true,
 )

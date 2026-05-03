@@ -6,6 +6,7 @@
 - Reduced data usage for thumbnails
 - Better network IP synchronization
 - Refined UI with improved status styling
+- Add option to regenerate token at app start
 
 ### Webinterface
 - Faster and more reliable thumbnail loading

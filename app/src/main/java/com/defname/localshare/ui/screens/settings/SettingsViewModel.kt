@@ -47,4 +47,8 @@ class SettingsViewModel(
     suspend fun setHeartbeatPeriodSeconds(seconds: Int) {
         settingsRepository.setHeartbeatPeriodSeconds(seconds)
     }
+
+    suspend fun setRegenerateTokenAtAppStart(regenerateTokenAtAppStart: Boolean) {
+        settingsRepository.setRegenerateTokenAtAppStart(regenerateTokenAtAppStart)
+    }
 }

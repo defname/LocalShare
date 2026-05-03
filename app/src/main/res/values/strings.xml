@@ -82,4 +82,6 @@
     <string name="info_report_an_issue">Report an issue</string>
     <string name="sharedcontentscreen_title">Shared Text</string>
     <string name="screen_files_empty_hint">Your file list is empty. Start by adding files with the + button or share them directly from other apps. Added files will be available to connected clients instantly.</string>
+    <string name="settings_regenerate_token_at_app_start_label">Regenerate Token at App Start</string>
+    <string name="settings_generate_a_new_security_token_every_time_the_app_starts_hint">Generate a new security token every time the app starts</string>
 </resources>
