@@ -12,6 +12,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
@@ -54,7 +55,12 @@ fun LocalShareTheme(
     }
 
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = colorScheme.copy(
+            tertiary = if (darkTheme) Color(0xFF81C784) else Color(0xFF2E7D32),
+            onTertiary = if (darkTheme) Color(0xFF003300) else Color.White,
+            tertiaryContainer = if (darkTheme) Color(0xFF1B5E20) else Color(0xFFC8E6C9),
+            onTertiaryContainer = if (darkTheme) Color(0xFFC8E6C9) else Color(0xFF002100)
+        ),
         typography = Typography,
         content = content
     )

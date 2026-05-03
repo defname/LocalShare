@@ -8,8 +8,12 @@
     <string name="connection_request_notification_text">Device %1$s wants to load %2$s.</string>
     <string name="connection_request_notification_accept">Accept</string>
     <string name="connection_request_notification_deny">Deny</string>
-    <string name="servercontrolscreen_bind_server_input_label">Bind Server to IP</string>
-    <string name="servercontrolscreen_bind_server_input_default">All Interfaces (0.0.0.0)</string>
+    <string name="ipaddressselector_all_networks">All Networks</string>
+    <string name="ipaddressselector_all_networks_description">Share using all available connections</string>
+    <string name="ipaddressselector_label">Network Connection</string>
+    <string name="ipaddressselector_connection_lost">Connection lost. Please select an active network.</string>
+    <string name="ipaddressselector_stop_sharing_to_change">Stop sharing to change connection settings</string>
+    <string name="ipaddressselector_interface_label">Interface: %1$s</string>
     <string name="servercontrolscreen_remove_from_whitelist">Remove %1$s from whitelist</string>
     <string name="servercontrolscreen_remove_from_blacklist">Remove %1$s from blacklist</string>
     <string name="servercontrolscreen_add_to_blacklist">Add %1$s to blacklist</string>

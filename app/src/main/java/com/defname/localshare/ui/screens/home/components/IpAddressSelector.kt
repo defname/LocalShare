@@ -16,8 +16,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import com.defname.localshare.R
 import com.defname.localshare.domain.model.NetworkInfo
 
@@ -41,10 +41,10 @@ fun IpAddressSelector(
             .padding(vertical = 8.dp)
     ) {
         OutlinedTextField(
-            value = selectedAddress ?: "0.0.0.0",
+            value = selectedAddress ?: stringResource(R.string.ipaddressselector_all_networks),
             onValueChange = {},
             readOnly = true,
-            label = { Text(stringResource(R.string.servercontrolscreen_bind_server_input_label)) },
+            label = { Text(stringResource(R.string.ipaddressselector_label)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
             isError = !isSelectedAddressValid,
@@ -54,9 +54,9 @@ fun IpAddressSelector(
             enabled = enabled,
             supportingText = {
                 if (!isSelectedAddressValid)
-                    Text(stringResource(R.string.ipaddressseelector_selected_ip_is_not_available))
+                    Text(stringResource(R.string.ipaddressselector_connection_lost))
                 else if (!enabled)
-                    Text(stringResource(R.string.ipaddressselector_only_available_when_server_is_stopped))
+                    Text(stringResource(R.string.ipaddressselector_stop_sharing_to_change))
             }
         )
 
@@ -64,9 +64,14 @@ fun IpAddressSelector(
             expanded = expanded,
             onDismissRequest = { onDismiss() }
         ) {
-            // Option 1: Alle Interfaces
+            // Option 1: All Networks
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.servercontrolscreen_bind_server_input_default)) },
+                text = {
+                    Column {
+                        Text(stringResource(R.string.ipaddressselector_all_networks), style = MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(R.string.ipaddressselector_all_networks_description), style = MaterialTheme.typography.labelSmall)
+                    }
+                },
                 onClick = {
                     onAddressSelected(null)
                     onDismiss()
@@ -79,8 +84,8 @@ fun IpAddressSelector(
                 DropdownMenuItem(
                     text = {
                         Column {
-                            Text(netInfo.ip)
-                            Text(netInfo.interfaceName, style = MaterialTheme.typography.labelSmall)
+                            Text(netInfo.ip, style = MaterialTheme.typography.bodyLarge)
+                            Text(stringResource(R.string.ipaddressselector_interface_label, netInfo.interfaceName), style = MaterialTheme.typography.labelSmall)
                         }
                     },
                     onClick = {

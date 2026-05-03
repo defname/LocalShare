@@ -79,8 +79,7 @@ class HomeViewModel(
         _uiState,
         permissionRepository.hasNotificationPermission,
         serverUrlProvider.serverUrls,
-        networkInfoProvider.localIpAddresses
-
+        networkInfoProvider.localIpAddresses,
     ) { states ->
 
         val runtimeState = states[0] as RuntimeData
@@ -117,7 +116,8 @@ class HomeViewModel(
             qrCodeDialogVisible = uiState.qrCodeDialogVisible,
             qrCodeUrl = uiState.qrCodeUrl,
             qrCodeBitmap = uiState.qrCodeBitmap,
-            serverUrls = serverUrls.serverUrls
+            serverUrls = serverUrls.serverUrls,
+            primaryServerUrl = networkInfoProvider.getSmartDefaultIp(localIpAddresses)
         )
     }.stateIn(
         scope = viewModelScope,

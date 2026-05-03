@@ -43,6 +43,6 @@ data class HomeState(
     val qrCodeUrl: String = "",
     val qrCodeBitmap: Bitmap? = null,
 
-    val serverUrls: List<String> = emptyList()
-
+    val serverUrls: List<String> = emptyList(),
+    val primaryServerUrl: String = ""
     )

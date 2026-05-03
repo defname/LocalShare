@@ -7,10 +7,13 @@ package com.defname.localshare.ui.screens.home.components
 import android.net.Uri
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
@@ -36,25 +39,30 @@ fun FileCarousel(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .padding(top = 16.dp, bottom = 16.dp),
-        preferredItemWidth = 48.dp,
+            .padding(vertical = 8.dp),
+        preferredItemWidth = 80.dp,
         itemSpacing = 8.dp,
-        maxSmallItemWidth = 48.dp,
-        minSmallItemWidth = 48.dp,
-        contentPadding = PaddingValues(horizontal = 8.dp)
+        maxSmallItemWidth = 40.dp,
+        minSmallItemWidth = 40.dp,
+        contentPadding = PaddingValues(horizontal = 0.dp)
     ) { i ->
         val item = fileList[i]
         val isSelected = selectedFiles.contains(item.uri)
 
         Card(
-            Modifier
+            modifier = Modifier
+                .height(80.dp)
                 .maskClip(MaterialTheme.shapes.medium)
                 .combinedClickable(
                     onClick = { if (selectedFiles.isNotEmpty()) onToggleSelection(item.uri) },
                     onLongClick = { onToggleSelection(item.uri) }
-                )
+                ),
+            colors = CardDefaults.cardColors(
+                containerColor = if (isSelected) MaterialTheme.colorScheme.errorContainer 
+                                 else MaterialTheme.colorScheme.surfaceVariant
+            )
         ) {
-            FileIcon(item, isSelected = isSelected)
+            FileIcon(item, isSelected = isSelected, modifier = Modifier.fillMaxSize())
         }
     }
 }

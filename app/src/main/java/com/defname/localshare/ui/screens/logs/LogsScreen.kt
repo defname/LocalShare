@@ -27,7 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.defname.localshare.R
-import com.defname.localshare.ui.components.LogList
+import com.defname.localshare.ui.components.LazyLogList
 import com.defname.localshare.ui.theme.LocalShareTheme
 import org.koin.androidx.compose.koinViewModel
 
@@ -66,7 +66,7 @@ fun LogsScreen(
         )
         {
             Spacer(modifier = Modifier.height(16.dp))
-            LogList(
+            LazyLogList(
                 entries = state.value.entries,
                 menuOpenForId = state.value.menuOpenForId,
                 onContextMenuOpen = { viewModel.openMenu(it.id) },

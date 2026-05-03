@@ -47,19 +47,16 @@ fun FileIcon(
             .build()
     }
 
-    val iconFilename = file.iconFile
-    val assetPath = "file:///android_asset/fileicons/$iconFilename"
-
     // Wir versuchen zuerst das Thumbnail/Bild über die URI zu laden
     SubcomposeAsyncImage(
         model = ImageRequest.Builder(context)
             .data(file.uri)
             .videoFrameMillis(1000) // Nimm den Frame bei 1 Sekunde
+            .size(256) // Request 256px as optimized in previous steps
             .build(),
         imageLoader = imageLoader,
         contentDescription = file.name,
         modifier = modifier
-            .size(48.dp)
             .clip(MaterialTheme.shapes.small)
             .alpha(if (isSelected) 0.3f else 1f),
         contentScale = ContentScale.Crop,

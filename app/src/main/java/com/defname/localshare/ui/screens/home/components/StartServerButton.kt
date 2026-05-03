@@ -57,7 +57,7 @@ fun StartServerButton(
                         contentColor = MaterialTheme.colorScheme.onTertiary
                     ),
                 ) {
-                    Text(stringResource(R.string.main_server_button_request_notification_permission))
+                    Text("Enable Notifications to Start")
                 }
             } else {
                 when (serverState) {
@@ -67,16 +67,16 @@ fun StartServerButton(
                             modifier = Modifier.fillMaxWidth(),
                             onClick = { startServer() },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primaryFixed,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryFixed
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                             )
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Send,
-                                contentDescription = stringResource(R.string.main_server_button_start)
+                                contentDescription = "Start Sharing"
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(stringResource(R.string.main_server_button_start))
+                            Text("Start Sharing")
                         }
                     }
 
@@ -92,12 +92,10 @@ fun StartServerButton(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Stop,
-                                contentDescription = stringResource(
-                                    R.string.main_server_button_stop
-                                )
+                                contentDescription = "Stop Sharing"
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(stringResource(R.string.main_server_button_stop))
+                            Text("Stop Sharing")
                         }
                     }
 
@@ -110,10 +108,10 @@ fun StartServerButton(
                             CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),
                                 strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant // Farbe anpassen, damit sie zum deaktivierten Button passt
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(stringResource(R.string.main_server_button_starting))
+                            Text("Starting...")
                         }
                     }
 
@@ -126,10 +124,10 @@ fun StartServerButton(
                             CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),
                                 strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant // Farbe anpassen, damit sie zum deaktivierten Button passt
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(stringResource(R.string.main_server_button_stopping))
+                            Text("Stopping...")
                         }
                     }
                 }

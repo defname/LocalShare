@@ -7,6 +7,7 @@ package com.defname.localshare.ui.screens.files.components
 import android.net.Uri
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Checkbox
@@ -17,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.defname.localshare.domain.model.FileInfo
 import com.defname.localshare.domain.model.sizeAsString
 import com.defname.localshare.ui.components.FileIcon
@@ -64,7 +66,7 @@ fun FileListRow(
             headlineContent = { Text(file.name, overflow = TextOverflow.Ellipsis) },
             supportingContent = { Text(file.sizeAsString()) },
             leadingContent = {
-                FileIcon(file)
+                FileIcon(file, modifier = Modifier.size(40.dp))
             },
             trailingContent = {
                 if (isSelectionMode) {

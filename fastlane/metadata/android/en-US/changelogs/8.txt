@@ -8,6 +8,7 @@
 - Connection logs now automatically scroll to the top for new entries
 - Significantly reduced data usage for file thumbnails
 - Synchronize IP list with available network interfaces (needs INTERNET permission)
+- Better success and error colors
 
 ### Webinterface
 

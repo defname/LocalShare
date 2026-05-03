@@ -35,7 +35,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -79,11 +78,13 @@ fun List<ConnectionLogEntry>.toLogListEntries(securityRepository: SecurityReposi
 fun DisconnectReasonText(
     disconnectReason: DisconnectReason
 ) {
+    val colorRed = MaterialTheme.colorScheme.error
+    val colorGreen = MaterialTheme.colorScheme.tertiary
     when (disconnectReason) {
         is DisconnectReason.Expected -> {
             Text(
                 "${disconnectReason.statusCode}",
-                color = if (disconnectReason.statusCode >= 400) Color.Red else Color.Green
+                color = if (disconnectReason.statusCode >= 400) colorRed else colorGreen
             )
         }
 
@@ -91,7 +92,7 @@ fun DisconnectReasonText(
             Icon(
                 imageVector = Icons.Default.Stop,
                 contentDescription = "Server shutdown",
-                tint = Color.Red
+                tint = colorRed
             )
         }
 
@@ -100,24 +101,24 @@ fun DisconnectReasonText(
                 DisconnectReason.Unexpected.ClientGone -> Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Auth invalid",
-                    tint = Color.Green
+                    tint = colorGreen
                 )
                 DisconnectReason.Unexpected.AuthInvalid -> Icon(
                     imageVector = Icons.Default.Shield,
                     contentDescription = "Auth invalid",
-                    tint = Color.Red
+                    tint = colorRed
                 )
 
                 DisconnectReason.Unexpected.Unknown -> Icon(
                     imageVector = Icons.Default.QuestionMark,
                     contentDescription = "Unknown",
-                    tint = Color.Red
+                    tint = colorRed
                 )
 
                 is DisconnectReason.Unexpected.Error -> Icon(
                     imageVector = Icons.Default.QuestionMark,
                     contentDescription = disconnectReason.message ?: "Unknown",
-                    tint = Color.Red
+                    tint = colorRed
                 )
             }
         }
@@ -125,7 +126,7 @@ fun DisconnectReasonText(
 }
 
 @Composable
-fun LogList(
+fun LazyLogList(
     entries: List<LogListEntry>,
     menuOpenForId: String? = null,
 
@@ -155,58 +156,82 @@ fun LogList(
         modifier = Modifier.fillMaxWidth()
     ) {
         items(entries, key = { it.logEntry.id }) { entry ->
-            Box {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp, 4.dp)
-                        .combinedClickable(
-                            onClick = { },
-                            onLongClick = { onContextMenuOpen(entry.logEntry) }
-                        ),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (entry.logEntry.closedTimestamp == null) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            strokeWidth = 2.dp
-                        )
-                    } else if (entry.logEntry.result != null) {
-                        DisconnectReasonText(entry.logEntry.result)
-                    } else {
-                        Text("UNKNOWN")
-                    }
-                    Spacer(Modifier.width(8.dp))
-                    Text(entry.logEntry.method)
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        entry.logEntry.path,
-                        modifier = Modifier.weight(1f),
-                        //style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.StartEllipsis
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        entry.logEntry.clientIp,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (entry.isBlackListed) Color.Red else if (entry.isWhiteListed) Color.Green else MaterialTheme.colorScheme.outline
-                    )
-                }
-
-                LogEntryContextMenu(
-                    ipAddress = entry.logEntry.clientIp,
-                    visible = menuOpenForId == entry.logEntry.id,
-                    isWhiteListed = entry.isWhiteListed,
-                    isBlackListed = entry.isBlackListed,
-                    onDismiss = { onContextMenuClose() },
-                    onRemoveFromWhiteList = { onRemoveFromWhiteList(entry.logEntry.clientIp) },
-                    onAddToBlackList = { onAddToBlackList(entry.logEntry.clientIp) },
-                    onRemoveFromBlackList = { onRemoveFromBlackList(entry.logEntry.clientIp) }
-                )
-
-            }
+            LogListEntry(
+                entry = entry,
+                menuIsOpen = entry.logEntry.id == menuOpenForId,
+                onContextMenuOpen = { onContextMenuOpen(entry.logEntry) },
+                onContextMenuClose = { onContextMenuClose() },
+                onRemoveFromWhiteList = { onRemoveFromWhiteList(entry.logEntry.clientIp) },
+                onAddToBlackList = { onAddToBlackList(entry.logEntry.clientIp) },
+                onRemoveFromBlackList = { onRemoveFromBlackList(entry.logEntry.clientIp) }
+            )
         }
+    }
+}
+
+@Composable
+fun LogListEntry(
+    entry: LogListEntry,
+    menuIsOpen: Boolean = false,
+    onContextMenuOpen: () -> Unit = {},
+    onContextMenuClose: () -> Unit = {},
+    onRemoveFromWhiteList: () -> Unit = {},
+    onAddToBlackList: () -> Unit = {},
+    onRemoveFromBlackList: () -> Unit = {},
+) {
+    val colorRed = MaterialTheme.colorScheme.error
+    val colorGreen = MaterialTheme.colorScheme.tertiary
+
+    Box {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(8.dp, 4.dp)
+                .combinedClickable(
+                    onClick = { },
+                    onLongClick = { onContextMenuOpen() }
+                ),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (entry.logEntry.closedTimestamp == null) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp
+                )
+            } else if (entry.logEntry.result != null) {
+                DisconnectReasonText(entry.logEntry.result)
+            } else {
+                Text("UNKNOWN")
+            }
+            Spacer(Modifier.width(8.dp))
+            Text(entry.logEntry.method)
+            Spacer(Modifier.width(8.dp))
+            Text(
+                entry.logEntry.path,
+                modifier = Modifier.weight(1f),
+                //style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                overflow = TextOverflow.StartEllipsis
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                entry.logEntry.clientIp,
+                style = MaterialTheme.typography.labelSmall,
+                color = if (entry.isBlackListed) colorRed else if (entry.isWhiteListed) colorGreen else MaterialTheme.colorScheme.outline
+            )
+        }
+
+        LogEntryContextMenu(
+            ipAddress = entry.logEntry.clientIp,
+            visible = menuIsOpen,
+            isWhiteListed = entry.isWhiteListed,
+            isBlackListed = entry.isBlackListed,
+            onDismiss = onContextMenuClose,
+            onRemoveFromWhiteList = onRemoveFromWhiteList,
+            onAddToBlackList = onAddToBlackList,
+            onRemoveFromBlackList = onRemoveFromBlackList
+        )
+
     }
 }
 
@@ -247,7 +272,7 @@ fun LogListPreview() {
             )
         )
 
-        LogList(
+        LazyLogList(
             entries = entries
         )
     }
@@ -282,7 +307,7 @@ fun LogEntryContextMenu(
                     Icon(
                         Icons.Default.Block,
                         contentDescription = null,
-                        //tint = Color.Red
+                        //tint = colorRed
                     )
                 },
                 onClick = {
@@ -299,7 +324,7 @@ fun LogEntryContextMenu(
                         ipAddress
                     )) },
                 leadingIcon = {
-                    Icon(Icons.Default.Undo, contentDescription = null, tint = Color.Green)
+                    Icon(Icons.Default.Undo, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
                 },
                 onClick = {
                     onRemoveFromBlackList()
@@ -318,7 +343,7 @@ fun LogEntryContextMenu(
                     Icon(
                         Icons.Default.Block,
                         contentDescription = null,
-                        tint = Color.Red
+                        tint = MaterialTheme.colorScheme.error
                     )
                 },
                 onClick = {
