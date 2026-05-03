@@ -28,7 +28,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.defname.localshare.R
+import com.defname.localshare.ui.components.HintCard
 import com.defname.localshare.ui.screens.files.components.AddFilesFab
 import com.defname.localshare.ui.screens.files.components.FileList
 import com.defname.localshare.ui.screens.files.components.SortingButton
@@ -102,12 +104,19 @@ fun FilesScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            FileList(
-                files = state.fileList,
-                selectedFiles = state.selectedFiles,
-                isSelectionMode = state.selectedFiles.isNotEmpty(),
-                onFileSelected = { viewModel.onToggleSelection(it) }
-            )
+            if (state.fileList.isNotEmpty()) {
+                FileList(
+                    files = state.fileList,
+                    selectedFiles = state.selectedFiles,
+                    isSelectionMode = state.selectedFiles.isNotEmpty(),
+                    onFileSelected = { viewModel.onToggleSelection(it) }
+                )
+            } else {
+                HintCard(
+                    stringResource(R.string.files_screen_empty_hint),
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
         }
     }
 }

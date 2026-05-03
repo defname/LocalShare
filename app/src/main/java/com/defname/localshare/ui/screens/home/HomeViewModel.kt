@@ -117,7 +117,7 @@ class HomeViewModel(
             qrCodeUrl = uiState.qrCodeUrl,
             qrCodeBitmap = uiState.qrCodeBitmap,
             serverUrls = serverUrls.serverUrls,
-            primaryServerUrl = networkInfoProvider.getSmartDefaultIp(localIpAddresses)
+            primaryServerUrl = serverUrls.defaultServerUrl
         )
     }.stateIn(
         scope = viewModelScope,

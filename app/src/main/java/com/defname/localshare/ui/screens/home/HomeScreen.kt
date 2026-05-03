@@ -71,6 +71,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.defname.localshare.ui.components.HintCard
 import com.defname.localshare.ui.components.LogListEntry
 import com.defname.localshare.ui.components.QrCodeDialog
 import com.defname.localshare.ui.screens.home.components.FileCarousel
@@ -328,30 +329,6 @@ fun HomeScreen(
             }
             Spacer(modifier = Modifier.height(80.dp))
         }
-    }
-}
-
-@Composable
-fun HintCard(
-    modifier: Modifier? = null,
-    text: String? = null,
-    content: @Composable () -> Unit = {}
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).then(modifier ?: Modifier),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-    ) {
-        if (text != null) {
-            Text(
-                text,
-                modifier = Modifier.padding(16.dp),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-        }
-        content()
     }
 }
 

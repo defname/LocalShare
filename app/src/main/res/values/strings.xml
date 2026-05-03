@@ -81,4 +81,5 @@
     <string name="sort_type">Type</string>
     <string name="info_report_an_issue">Report an issue</string>
     <string name="sharedcontentscreen_title">Shared Content</string>
+    <string name="files_screen_empty_hint">Your file list is empty. Start by adding files with the + button or share them directly from other apps.</string>
 </resources>
