@@ -83,7 +83,7 @@ fun InfoScreen(onOpenDrawer: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.screen_info)) },
+                title = { Text(stringResource(R.string.screen_info_title)) },
                 navigationIcon = {
                     IconButton(onClick = onOpenDrawer) {
                         Icon(Icons.Default.Menu, contentDescription = null)

@@ -72,14 +72,14 @@
     <string name="settings_webinterface_title">Webinterface</string>
     <string name="settings_webinterface_heartbeat_label">SSE Heartbeat Period</string>
     <string name="settings_webinterface_heartbeat_hint">How many seconds between server-send events</string>
-    <string name="screen_files">Files</string>
-    <string name="screen_logs">Logs</string>
-    <string name="screen_settings">Settings</string>
-    <string name="screen_info">Info</string>
-    <string name="sort_name">Name</string>
-    <string name="sort_size">Size</string>
-    <string name="sort_type">Type</string>
+    <string name="screen_files_title">Shared Files</string>
+    <string name="screen_logs_title">Logs</string>
+    <string name="screen_settings_title">Settings</string>
+    <string name="screen_info_title">Info</string>
+    <string name="screen_files_sort_name">Name</string>
+    <string name="screen_files_sort_size">Size</string>
+    <string name="screen_files_sort_type">Type</string>
     <string name="info_report_an_issue">Report an issue</string>
-    <string name="sharedcontentscreen_title">Shared Content</string>
-    <string name="files_screen_empty_hint">Your file list is empty. Start by adding files with the + button or share them directly from other apps.</string>
+    <string name="sharedcontentscreen_title">Shared Text</string>
+    <string name="screen_files_empty_hint">Your file list is empty. Start by adding files with the + button or share them directly from other apps. Added files will be available to connected clients instantly.</string>
 </resources>

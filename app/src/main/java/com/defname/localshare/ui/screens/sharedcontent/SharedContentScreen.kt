@@ -30,10 +30,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.defname.localshare.R
+import com.defname.localshare.ui.components.HintCard
 import com.defname.localshare.ui.screens.sharedcontent.components.PasteFab
 import com.defname.localshare.ui.screens.sharedcontent.components.SharedContentList
 import com.defname.localshare.ui.theme.LocalShareTheme
@@ -130,13 +132,20 @@ fun SharedContentScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            SharedContentList(
-                items = state.sharedContentList,
-                selectedItems = state.selectedItems,
-                onToggleSelection = { viewModel.onToggleSelection(it) },
-                expandedItem = state.expandedItem,
-                onExpand = { viewModel.onExpand(it) }
-            )
+            if (state.sharedContentList.isNotEmpty()) {
+                SharedContentList(
+                    items = state.sharedContentList,
+                    selectedItems = state.selectedItems,
+                    onToggleSelection = { viewModel.onToggleSelection(it) },
+                    expandedItem = state.expandedItem,
+                    onExpand = { viewModel.onExpand(it) }
+                )
+            } else {
+                HintCard(
+                    "You can share text snippets by sharing text from any other app or by pasting text from the clipboard by pressing the button below (if available). Be aware that added text snippets will be available to connected clients instantly.",
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
         }
     }
 }

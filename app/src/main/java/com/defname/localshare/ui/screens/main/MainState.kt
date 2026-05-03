@@ -40,8 +40,8 @@ class NavigationItem(
 
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
     object Main : Screen("main", "Overview", Icons.Default.Send)
-    object Files : Screen("files", "Files", Icons.Default.ListAlt)
-    object SharedContent : Screen("sharedcontent", "Shared Content", Icons.Default.ContentPaste)
+    object Files : Screen("files", "Shared Files", Icons.Default.ListAlt)
+    object SharedContent : Screen("sharedcontent", "Shared Text", Icons.Default.ContentPaste)
     object Logs : Screen("logs", "Logs", Icons.Default.List)
     object Settings : Screen("settings", "Settings", Icons.Default.Settings)
     object Info : Screen("info", "Info", Icons.Default.Info)

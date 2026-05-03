@@ -19,7 +19,7 @@ data class FilesState(
 )
 
 enum class FilesSortType(@StringRes val labelRes: Int) {
-    NAME(R.string.sort_name),
-    SIZE(R.string.sort_size),
-    TYPE(R.string.sort_type)
+    NAME(R.string.screen_files_sort_name),
+    SIZE(R.string.screen_files_sort_size),
+    TYPE(R.string.screen_files_sort_type)
 }

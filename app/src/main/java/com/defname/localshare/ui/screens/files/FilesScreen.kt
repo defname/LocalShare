@@ -56,7 +56,7 @@ fun FilesScreen(
                     if (state.selectedFiles.isNotEmpty()) {
                         Text("${state.selectedFiles.size} selected")
                     } else {
-                        Text(stringResource(R.string.screen_files))
+                        Text(stringResource(R.string.screen_files_title))
                     }
                 },
                 navigationIcon = {
@@ -113,7 +113,7 @@ fun FilesScreen(
                 )
             } else {
                 HintCard(
-                    stringResource(R.string.files_screen_empty_hint),
+                    stringResource(R.string.screen_files_empty_hint),
                     modifier = Modifier.padding(16.dp)
                 )
             }
