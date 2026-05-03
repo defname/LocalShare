@@ -1,21 +1,16 @@
 ## Improvements
 
 ### App
-
-- Refactor home screen
-- Only show one URL per IP (not stream & download)
-- Optimized list performance for large file and log collections
-- Connection logs now automatically scroll to the top for new entries
-- Significantly reduced data usage for file thumbnails
-- Synchronize IP list with available network interfaces (needs INTERNET permission)
-- Better success and error colors
+- Redesigned Home screen for a more intuitive experience
+- Boosted performance for large file and log collections
+- Reduced data usage for thumbnails
+- Better network IP synchronization
+- Refined UI with improved status styling
 
 ### Webinterface
-
-- Improved loading speed and reliability for file thumbnails
+- Faster and more reliable thumbnail loading
 
 ## Fixes
 
 ### App
-
-- Fixed a crash related to network status monitoring (TooManyRequestsException)
+- Resolved a crash in network status monitoring
