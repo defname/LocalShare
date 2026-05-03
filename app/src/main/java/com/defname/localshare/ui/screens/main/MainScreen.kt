@@ -54,10 +54,14 @@ fun MainScreen(
                 onItemClick = { route ->
                     scope.launch {
                         drawerState.close()
-                        navController.navigate(route) {
-                            popUpTo(Screen.Main.route) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
+                        if (currentRoute != route) {
+                            navController.navigate(route) {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         }
                     }
                 },
@@ -89,7 +93,13 @@ fun MainScreen(
             composable(Screen.Main.route) {
                 HomeScreen(
                     onOpenDrawer = onOpenDrawer,
-                    onNavigateToLogs = { navController.navigate(Screen.Logs.route) }
+                    onNavigateToLogs = { navController.navigate(Screen.Logs.route) {
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    } }
                 )
             }
             composable(Screen.Files.route) {
