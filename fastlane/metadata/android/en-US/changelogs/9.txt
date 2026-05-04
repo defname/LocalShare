@@ -1,0 +1,4 @@
+## Fixes
+
+### App
+- Fix onboarding message

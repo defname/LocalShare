@@ -74,8 +74,8 @@ fun WelcomeOnboarding(
             color = MaterialTheme.colorScheme.primary
         ),
         OnboardingPage(
-            title = "2. Run Server",
-            description = "Tap 'Run Server' to make your content available. If someone tries to connect you will be asked for confirmation.",
+            title = "2. Start Sharing",
+            description = "Tap 'Start Sharing' to make your content available. If someone tries to connect you will be asked for confirmation.",
             icon = Icons.Default.Send,
             color = MaterialTheme.colorScheme.primary
         ),

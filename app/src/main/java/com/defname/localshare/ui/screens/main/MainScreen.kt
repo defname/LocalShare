@@ -25,6 +25,7 @@ import com.defname.localshare.ui.screens.home.HomeScreen
 import com.defname.localshare.ui.screens.info.InfoScreen
 import com.defname.localshare.ui.screens.logs.LogsScreen
 import com.defname.localshare.ui.screens.main.components.MainMenu
+import com.defname.localshare.ui.screens.main.components.WelcomeOnboarding
 import com.defname.localshare.ui.screens.settings.SettingsScreen
 import com.defname.localshare.ui.screens.sharedcontent.SharedContentScreen
 import kotlinx.coroutines.launch
@@ -45,6 +46,12 @@ fun MainScreen(
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
+    if (state.welcomeMessageVisible) {
+        WelcomeOnboarding(
+            onDismiss = { scope.launch { viewModel.onDismissWelcomeMessage(true) } },
+            onDontShowAgain = { scope.launch { viewModel.onDismissWelcomeMessage(false) } }
+        )
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,

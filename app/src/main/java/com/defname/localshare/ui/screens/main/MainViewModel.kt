@@ -48,17 +48,7 @@ class MainViewModel(
         _welcomeMessageVisible.update { false }
         settingsRepository.setShowWelcomeMessage(showNextTime)
     }
-
-    private val _qrState = MutableStateFlow(QrState(false, false))
-    private val _welcomeMessageVisible = MutableStateFlow(true)
-
-    private fun getQrLink(qrForStream: Boolean, token: String, ip: String, port: Int): String {
-        return if (qrForStream) {
-            "http://$ip:$port/$token"
-        } else {
-            "http://$ip:$port/$token?download"
-        }
-    }
+    private val _welcomeMessageVisible = MutableStateFlow(false)
 
     val state = combine(
         serverUrlProvider.serverUrls,

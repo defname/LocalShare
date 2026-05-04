@@ -19,8 +19,8 @@ android {
         applicationId = "com.defname.localshare"
         minSdk = 26
         targetSdk = 36
-        versionCode = 8
-        versionName = "0.2.5"
+        versionCode = 9
+        versionName = "0.2.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
