@@ -92,7 +92,7 @@ fun DisconnectReasonText(
             Icon(
                 imageVector = Icons.Default.Stop,
                 contentDescription = "Server shutdown",
-                tint = colorRed
+                tint = colorGreen
             )
         }
 
@@ -100,7 +100,7 @@ fun DisconnectReasonText(
             when (disconnectReason) {
                 DisconnectReason.Unexpected.ClientGone -> Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Auth invalid",
+                    contentDescription = "Client Gone",
                     tint = colorGreen
                 )
                 DisconnectReason.Unexpected.AuthInvalid -> Icon(
