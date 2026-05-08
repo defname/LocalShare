@@ -16,8 +16,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.defname.localshare.R
 import com.defname.localshare.domain.model.NetworkInfo
 
@@ -30,7 +30,7 @@ fun IpAddressSelector(
     expanded: Boolean = false,
     enabled: Boolean = false,
     onExpandedChange: () -> Unit = {},
-    onAddressSelected: (String?) -> Unit = {},
+    onAddressSelected: (NetworkInfo?) -> Unit = {},
     onDismiss: () -> Unit = {},
 ) {
     ExposedDropdownMenuBox(
@@ -57,6 +57,9 @@ fun IpAddressSelector(
                     Text(stringResource(R.string.ipaddressselector_connection_lost))
                 else if (!enabled)
                     Text(stringResource(R.string.ipaddressselector_stop_sharing_to_change))
+                else if (selectedAddress != null && '%' in selectedAddress) {
+                    Text("The selected address will not work in most browsers!")
+                }
             }
         )
 
@@ -84,12 +87,12 @@ fun IpAddressSelector(
                 DropdownMenuItem(
                     text = {
                         Column {
-                            Text(netInfo.ip, style = MaterialTheme.typography.bodyLarge)
+                            Text(netInfo.address, style = MaterialTheme.typography.bodyLarge)
                             Text(stringResource(R.string.ipaddressselector_interface_label, netInfo.interfaceName), style = MaterialTheme.typography.labelSmall)
                         }
                     },
                     onClick = {
-                        onAddressSelected(netInfo.ip)
+                        onAddressSelected(netInfo)
                         onDismiss()
                     },
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding

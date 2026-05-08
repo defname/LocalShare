@@ -1,6 +1,7 @@
 ## Improvements
 
 - app UI improvements
+- support IPv6
 
 ## Fixes
 

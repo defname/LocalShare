@@ -8,6 +8,7 @@ data class Settings(
     val token: String = "",
     val serverPort: Int = 8080,
     val serverIp: String = "0.0.0.0",
+    val isServerIpv6: Boolean = false,
     val serverIdleTimeoutSeconds: Int = 30,
     val requireApproval: Boolean = true,
     val approvalTimeoutSeconds: Int = 30,

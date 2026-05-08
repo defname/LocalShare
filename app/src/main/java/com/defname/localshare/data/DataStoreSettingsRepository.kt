@@ -22,6 +22,7 @@ class DataStoreSettingsRepository(
         val TOKEN = stringPreferencesKey("token")
         val PORT = intPreferencesKey("port")
         val SERVER_IP = stringPreferencesKey("serverIp")
+        val IS_SERVER_IP_V6 = booleanPreferencesKey("isServerIpv6")
         val SERVER_IDLE_TIMEOUT_SECONDS = intPreferencesKey("serverIdleTimeout")
         val REQUIRE_APPROVAL = booleanPreferencesKey("requireApproval")
         val APPROVAL_TIMEOUT_SECONDS = intPreferencesKey("approvalTimeout")
@@ -38,6 +39,7 @@ class DataStoreSettingsRepository(
                 token = it[Keys.TOKEN] ?: "",
                 serverPort = it[Keys.PORT] ?: 8080,
                 serverIp = it[Keys.SERVER_IP] ?: "0.0.0.0",
+                isServerIpv6 = it[Keys.IS_SERVER_IP_V6] ?: false,
                 serverIdleTimeoutSeconds = it[Keys.SERVER_IDLE_TIMEOUT_SECONDS] ?: 30,
                 requireApproval = it[Keys.REQUIRE_APPROVAL] ?: true,
                 approvalTimeoutSeconds = it[Keys.APPROVAL_TIMEOUT_SECONDS] ?: 30,
@@ -57,6 +59,7 @@ class DataStoreSettingsRepository(
     }
     override suspend fun setPort(port: Int) { store.edit { it[Keys.PORT] = port } }
     override suspend fun setServerIp(serverIp: String) { store.edit { it[Keys.SERVER_IP] = serverIp } }
+    override suspend fun setIsServerIpv6(isIpv6: Boolean) { store.edit { it[Keys.IS_SERVER_IP_V6] = isIpv6 } }
     override suspend fun setServerIdleTimeoutSeconds(serverIdleTimeout: Int) { store.edit { it[Keys.SERVER_IDLE_TIMEOUT_SECONDS] = serverIdleTimeout } }
     override suspend fun setRequireApproval(requireApproval: Boolean) { store.edit { it[Keys.REQUIRE_APPROVAL] = requireApproval } }
     override suspend fun setApprovalTimeoutSeconds(approvalTimeout: Int) { store.edit { it[Keys.APPROVAL_TIMEOUT_SECONDS] = approvalTimeout } }

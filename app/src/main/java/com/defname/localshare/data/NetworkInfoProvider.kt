@@ -62,8 +62,38 @@ class NetworkInfoProvider(context: Context, scope: CoroutineScope) {
 
                 val iFaceAddresses = iface.inetAddresses
                 for (addr in iFaceAddresses) {
-                    if (!addr.isLoopbackAddress && addr is java.net.Inet4Address) {
-                        addresses.add(NetworkInfo(addr.hostAddress!!, iface.name))
+                    if (addr.isLoopbackAddress) {
+                        continue
+                    }
+
+                    val host = addr.hostAddress ?: continue
+
+                    when (addr) {
+                        is java.net.Inet4Address -> {
+                            addresses.add(
+                                NetworkInfo(
+                                    address = host,
+                                    interfaceName = iface.name,
+                                    isIpv6Addr = false,
+                                    priority = 0
+                                )
+                            )
+                        }
+                        is java.net.Inet6Address -> {
+                            val priority = when {
+                                // Global Unicast (meistens 2000::/3) - Das ist die "schöne" IP
+                                !addr.isLinkLocalAddress && !addr.isSiteLocalAddress -> 2
+                                // Link-Local (fe80::) - Nur als Backup
+                                addr.isLinkLocalAddress -> 3
+                                else -> 4
+                            }
+                            addresses.add(NetworkInfo(
+                                address = host,
+                                interfaceName = iface.name,
+                                isIpv6Addr = true,
+                                priority = priority
+                            ))
+                        }
                     }
                 }
             }
@@ -73,8 +103,8 @@ class NetworkInfoProvider(context: Context, scope: CoroutineScope) {
         return addresses
     }
 
-    fun getSmartDefaultIp(addresses: List<NetworkInfo>): String {
-        if (addresses.isEmpty()) return "127.0.0.1"
+    fun getSmartDefaultIp(addresses: List<NetworkInfo>): NetworkInfo {
+        if (addresses.isEmpty()) return NetworkInfo("127.0.0.1", "none", 0, false)
 
         val priorityPrefixes = listOf(
             "wlan", "wlp", "swlan",      // Wi-Fi
@@ -85,11 +115,12 @@ class NetworkInfoProvider(context: Context, scope: CoroutineScope) {
             "rmnet", "ccmni", "ppp",     // mobil network
             "wwan"                       // Wireless Wide Area Network
         )
+        val sortedAddresses = addresses.sortedBy { it.priority }
         for (prefix in priorityPrefixes) {
-            val found = addresses.find { it.interfaceName.lowercase().startsWith(prefix) }
-            if (found != null) return found.ip
+            val found = sortedAddresses.find { it.interfaceName.lowercase().startsWith(prefix) }
+            if (found != null) return found
         }
 
-        return addresses.first().ip
+        return addresses.first()
     }
 }

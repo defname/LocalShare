@@ -13,6 +13,7 @@ interface SettingsRepository {
     suspend fun setToken(token: String)
     suspend fun setPort(port: Int)
     suspend fun setServerIp(serverIp: String)
+    suspend fun setIsServerIpv6(isIpv6: Boolean)
     suspend fun setServerIdleTimeoutSeconds(serverIdleTimeout: Int)
     suspend fun setRequireApproval(requireApproval: Boolean)
     suspend fun setApprovalTimeoutSeconds(approvalTimeout: Int)

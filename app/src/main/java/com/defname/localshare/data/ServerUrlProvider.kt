@@ -21,34 +21,37 @@ class ServerUrlProvider(
         val serverPort = settings.serverPort
 
         if (settings.serverIp != "0.0.0.0") {
-            val serverIp = networkInfoProvider.getSmartDefaultIp(localIpAddresses)
-            val serverUrl = getServerUrl(serverIp, serverPort, token)
+            val serverAddress = formatAddressForUrl(settings.serverIp, settings.isServerIpv6)
+            val serverUrl = getServerUrl(serverAddress, serverPort, token)
             ServerUrls(
                 listOf(serverUrl),
                 serverUrl
             )
         }
         else {
-            val defaultServerIp = networkInfoProvider.getSmartDefaultIp(localIpAddresses)
-            val defaultServerUrl = getServerUrl(defaultServerIp, serverPort, token)
+            val defaultServerAddress = networkInfoProvider.getSmartDefaultIp(localIpAddresses)
+            val defaultServerAddressString = formatAddressForUrl(defaultServerAddress.address, defaultServerAddress.isIpv6Addr)
+            val defaultServerUrl = getServerUrl(defaultServerAddressString, serverPort, token)
             ServerUrls(
                 localIpAddresses.map {
-                    getServerUrl(it.ip, serverPort, token)
+                    getServerUrl(it.address, serverPort, token)
                 },
                 defaultServerUrl
             )
         }
     }
 
-    fun getServerUrl(serverIp: String, serverPort: Int, token: String): String {
-        return "http://$serverIp:$serverPort/$token"
+    fun formatAddressForUrl(address: String, isIpv6: Boolean) = if (isIpv6) "[$address]" else address
+
+    fun getServerUrl(serverAddress: String, serverPort: Int, token: String): String {
+        return "http://$serverAddress:$serverPort/$token"
     }
 
-    fun getFileUrl(serverIp: String, serverPort: Int, token: String,fileId: String, download: Boolean = false): String {
-        return "${getServerUrl(serverIp, serverPort, token)}/file/$fileId${if (download) "?download" else ""}"
+    fun getFileUrl(serverAddress: String, serverPort: Int, token: String, fileId: String, download: Boolean = false): String {
+        return "${getServerUrl(serverAddress, serverPort, token)}/file/$fileId${if (download) "?download" else ""}"
     }
 
-    fun getZipUrl(serverIp: String, serverPort: Int, token: String): String {
-        return "${getServerUrl(serverIp, serverPort, token)}?download"
+    fun getZipUrl(serverAddress: String, serverPort: Int, token: String): String {
+        return "${getServerUrl(serverAddress, serverPort, token)}?download"
     }
 }

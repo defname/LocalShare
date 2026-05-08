@@ -377,21 +377,24 @@ fun SharingHeroSection(state: HomeState, viewModel: HomeViewModel, context: Cont
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(12.dp))
+
                 Card(
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                     ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
+
                     Text(
                         text = primaryUrl,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(12.dp).fillMaxWidth(),
-                        color = MaterialTheme.colorScheme.primary
+                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
+
                 Spacer(modifier = Modifier.height(24.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -418,7 +421,6 @@ fun SharingHeroSection(state: HomeState, viewModel: HomeViewModel, context: Cont
                     }
                 }
             } else if (!isRunning) {
-                Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     "Start sharing to make your files available to other devices on this network.",
                     style = MaterialTheme.typography.bodyMedium,
@@ -486,7 +488,7 @@ fun AdvancedSettingsSection(
                     expanded = state.ipAddressSelectorExpanded,
                     enabled = state.ipAddressSelectorEnabled,
                     onExpandedChange = { viewModel.ipAddressSelectorExpandedChange() },
-                    onAddressSelected = { scope.launch { viewModel.setSeletectedIp(it) } },
+                    onAddressSelected = { scope.launch { viewModel.onIpAddressSelected(it) } },
                     onDismiss = { viewModel.collapseIpAddressSelector() }
                 )
             }

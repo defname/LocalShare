@@ -22,6 +22,7 @@ import com.defname.localshare.domain.model.ConnectionLogEntry
 import com.defname.localshare.domain.model.NetworkInfo
 import com.defname.localshare.domain.model.Settings
 import com.defname.localshare.domain.model.WhiteListEntry
+import com.defname.localshare.domain.model.allNetworksNetworkInfo
 import com.defname.localshare.domain.repository.SettingsRepository
 import com.defname.localshare.domain.usecase.AddFilesUseCase
 import com.defname.localshare.domain.usecase.ManageServiceUseCase
@@ -93,7 +94,7 @@ class HomeViewModel(
         val localIpAddresses = states[8] as List<NetworkInfo>
 
 
-        val selectedIpAddressIsValid = (localIpAddresses + NetworkInfo("0.0.0.0", "any")).any { it.ip == settings.serverIp }
+        val selectedIpAddressIsValid = (localIpAddresses + allNetworksNetworkInfo).any { it.address == settings.serverIp }
 
         HomeState(
             token = settings.token,
@@ -155,8 +156,14 @@ class HomeViewModel(
         clearFilesToDelete()
     }
 
-    suspend fun setSeletectedIp(ip: String?) {
-        settingsRepository.setServerIp(ip ?: "0.0.0.0")
+    suspend fun onIpAddressSelected(networkInfo: NetworkInfo?) {
+        if (networkInfo == null) {
+            settingsRepository.setServerIp("0.0.0.0")
+            settingsRepository.setIsServerIpv6(false)
+            return
+        }
+        settingsRepository.setServerIp(networkInfo.address)
+        settingsRepository.setIsServerIpv6(networkInfo.isIpv6Addr)
     }
 
     fun collapseIpAddressSelector() {
@@ -168,8 +175,8 @@ class HomeViewModel(
         val currentSettingsIp = settingsState.value.serverIp
 
         // Falls die aktuelle IP nicht mehr existiert, korrigieren wir sie
-        if (addresses.none { it.ip == currentSettingsIp } && currentSettingsIp != "0.0.0.0") {
-            val fallbackIp = networkInfoProvider.getSmartDefaultIp(addresses)
+        if (addresses.none { it.address == currentSettingsIp } && currentSettingsIp != "0.0.0.0") {
+            val fallbackIp = networkInfoProvider.getSmartDefaultIp(addresses).address
             viewModelScope.launch {
                 settingsRepository.setServerIp(fallbackIp)
             }
