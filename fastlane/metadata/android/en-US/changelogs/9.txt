@@ -2,6 +2,7 @@
 
 - app UI improvements
 - support IPv6
+- IP address for QR code can be chosen from available addresses.
 
 ## Fixes
 

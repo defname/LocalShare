@@ -34,7 +34,7 @@ class ServerUrlProvider(
             val defaultServerUrl = getServerUrl(defaultServerAddressString, serverPort, token)
             ServerUrls(
                 localIpAddresses.map {
-                    getServerUrl(it.address, serverPort, token)
+                    getServerUrl(formatAddressForUrl(it.address, it.isIpv6Addr), serverPort, token)
                 },
                 defaultServerUrl
             )

@@ -43,7 +43,9 @@ private data class InternalUiState(
     val ipAddressSelectorExpanded: Boolean = false,
     val qrCodeDialogVisible: Boolean = false,
     val qrCodeUrl: String = "",
-    val qrCodeBitmap: Bitmap? = null
+    val qrCodeBitmap: Bitmap? = null,
+    val serverUrlSelectorExpanded: Boolean = false,
+    val selectedServerUrl: String? = null
 )
 
 class HomeViewModel(
@@ -96,6 +98,9 @@ class HomeViewModel(
 
         val selectedIpAddressIsValid = (localIpAddresses + allNetworksNetworkInfo).any { it.address == settings.serverIp }
 
+        val serverUrl = if (uiState.selectedServerUrl in serverUrls.serverUrls) uiState.selectedServerUrl!! else serverUrls.defaultServerUrl
+
+
         HomeState(
             token = settings.token,
             selectedIpAddress = settings.serverIp,
@@ -114,11 +119,13 @@ class HomeViewModel(
             ipAddressSelectorEnabled = runtimeState.serviceState == RuntimeState.STOPPED,
             showExpandLogsButton = logs.size > logCount,
             hasNotificationPermission = hasNotificationPermission,
+            serverUrls = serverUrls.serverUrls,
+            primaryServerUrl = serverUrls.defaultServerUrl,
+            selectedServerUrl = serverUrl,
+            serverUrlSelectorExpanded = uiState.serverUrlSelectorExpanded,
             qrCodeDialogVisible = uiState.qrCodeDialogVisible,
             qrCodeUrl = uiState.qrCodeUrl,
             qrCodeBitmap = uiState.qrCodeBitmap,
-            serverUrls = serverUrls.serverUrls,
-            primaryServerUrl = serverUrls.defaultServerUrl
         )
     }.stateIn(
         scope = viewModelScope,
@@ -255,6 +262,14 @@ class HomeViewModel(
                 _uiState.update { it.copy(qrCodeBitmap = bitmap) }
             }
         }
+    }
+
+    fun onServerUrlSelectorExpandedChange() {
+        _uiState.update { it.copy(serverUrlSelectorExpanded = !_uiState.value.serverUrlSelectorExpanded) }
+    }
+
+    fun onServerUrlSelected(url: String) {
+        _uiState.update { it.copy(selectedServerUrl = url) }
     }
 
 }

@@ -44,5 +44,8 @@ data class HomeState(
     val qrCodeBitmap: Bitmap? = null,
 
     val serverUrls: List<String> = emptyList(),
-    val primaryServerUrl: String = ""
+    val primaryServerUrl: String = "",
+    val selectedServerUrl: String = "",
+
+    val serverUrlSelectorExpanded: Boolean = false
     )
