@@ -20,7 +20,7 @@ class ServerIdleManager(
 ) {
     private var timeoutJob: Job? = null
 
-    fun startMonitoring(onTimeout: () -> Unit) {
+    fun startMonitoring(onTimeout: suspend () -> Unit) {
         scope.launch {
             combine(
                 connectionLogsRepository.hasActiveConnections, // Flow<Boolean>

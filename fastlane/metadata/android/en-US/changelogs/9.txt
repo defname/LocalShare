@@ -1,4 +1,7 @@
+## Improvements
+
+- app UI improvements
+
 ## Fixes
 
-### App
 - Fix onboarding message

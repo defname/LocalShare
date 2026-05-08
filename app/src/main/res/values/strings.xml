@@ -3,7 +3,7 @@
     <string name="notification_channel_name">LocalShare</string>
     <string name="service_notification_title">Sharing Files…</string>
     <string name="server_notification_text">Listening on %1$s:%2$d</string>
-    <string name="service_notification_stop_server">Stop Server</string>
+    <string name="service_notification_stop_server">Stop Sharing</string>
     <string name="connection_request_notification_title">Connection Request</string>
     <string name="connection_request_notification_text">Device %1$s wants to load %2$s.</string>
     <string name="connection_request_notification_accept">Accept</string>
@@ -84,4 +84,6 @@
     <string name="screen_files_empty_hint">Your file list is empty. Start by adding files with the + button or share them directly from other apps. Added files will be available to connected clients instantly.</string>
     <string name="settings_regenerate_token_at_app_start_label">Regenerate Token at App Start</string>
     <string name="settings_generate_a_new_security_token_every_time_the_app_starts_hint">Generate a new security token every time the app starts</string>
+    <string name="service_stopped_timeout">Sharing stopped due to a idle timeout (check settings).</string>
+    <string name="service_stopped_starting_error">Error starting server: %1$s</string>
 </resources>

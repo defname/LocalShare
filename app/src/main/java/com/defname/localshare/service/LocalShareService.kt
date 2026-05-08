@@ -10,6 +10,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.IBinder
 import android.widget.Toast
+import com.defname.localshare.R
 import com.defname.localshare.data.ConnectionLogsRepository
 import com.defname.localshare.data.FileInfoProvider
 import com.defname.localshare.data.ServiceRepository
@@ -53,7 +54,7 @@ class LocalShareService : Service() {
     override fun onCreate() {
         super.onCreate()
         idleManager.startMonitoring {
-            stopSelf()
+            stopSelf(getString(R.string.service_stopped_timeout))
         }
     }
 
@@ -146,15 +147,8 @@ class LocalShareService : Service() {
                     manager.notify(NotificationHelper.NOTIFICATION_ID, runningNotification)
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            this@LocalShareService,
-                            "Error starting server: ${e.localizedMessage}",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
                     server = null
-                    stopSelf()
+                    stopSelf(getString(R.string.service_stopped_starting_error, e.localizedMessage))
                 }
             }
         }
@@ -166,6 +160,17 @@ class LocalShareService : Service() {
         server?.stop(1000, 2000)
         server = null
         serviceRepository.serverStopped()
+    }
+
+    suspend fun stopSelf(reason: String) {
+        withContext(Dispatchers.Main) {
+            Toast.makeText(
+                this@LocalShareService,
+                reason,
+                Toast.LENGTH_LONG
+            ).show()
+        }
+        stopSelf()
     }
 
     override fun onDestroy() {
