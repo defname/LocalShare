@@ -49,7 +49,12 @@ class DataStoreSettingsRepository(
             )
         }
 
-    override suspend fun setToken(token: String) { store.edit { it[Keys.TOKEN] = token } }
+    override suspend fun setToken(token: String) {
+        if (token.isEmpty()) {
+            return
+        }
+        store.edit { it[Keys.TOKEN] = token }
+    }
     override suspend fun setPort(port: Int) { store.edit { it[Keys.PORT] = port } }
     override suspend fun setServerIp(serverIp: String) { store.edit { it[Keys.SERVER_IP] = serverIp } }
     override suspend fun setServerIdleTimeoutSeconds(serverIdleTimeout: Int) { store.edit { it[Keys.SERVER_IDLE_TIMEOUT_SECONDS] = serverIdleTimeout } }

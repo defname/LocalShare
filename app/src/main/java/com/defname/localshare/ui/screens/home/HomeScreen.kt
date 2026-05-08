@@ -467,7 +467,6 @@ fun AdvancedSettingsSection(
                 OutlinedTextField(
                     value = state.token,
                     label = { Text("Security Token") },
-                    placeholder = { Text("Optional password") },
                     singleLine = true,
                     onValueChange = { scope.launch { viewModel.onTokenChange(it) } },
                     modifier = Modifier.fillMaxWidth(),
