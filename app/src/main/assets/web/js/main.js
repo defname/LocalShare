@@ -8,10 +8,69 @@ function humanFileSize(size) {
     return (size / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + ['B', 'kB', 'MB', 'GB', 'TB'][i];
 }
 
+// ─── LightGallery Integration ─────────────────────────────────────────────────
+let lgInstance = null;
+
+function buildGalleryItems(files, token) {
+    return files.map(file => {
+        const isVideo = file.mimeType && file.mimeType.startsWith('video/');
+        const isImage = file.mimeType && file.mimeType.startsWith('image/');
+        const src = '/' + token + '/file/' + file.fileId;
+        const thumb = (isImage || isVideo) ? '/' + token + '/thumbnail/' + file.fileId : '/' + token + '/icon/' + file.icon;
+
+        if (isVideo) {
+            return {
+                src: src,
+                thumb: thumb,
+                subHtml: '<h4>' + file.filename + '</h4><p>' + humanFileSize(file.size) + '</p>',
+                video: { source: [{ src: src, type: file.mimeType }], attributes: { preload: false, controls: true } }
+            };
+        }
+        return {
+            src: isImage ? src : '/' + token + '/icon/' + file.icon,
+            thumb: thumb,
+            downloadUrl: src + '?download',
+            subHtml: '<h4>' + file.filename + '</h4><p>' + humanFileSize(file.size) + '</p>'
+        };
+    });
+}
+
+function openLightGallery(files, token, startIndex) {
+    const el = document.getElementById('lg-inline-container');
+    if (!el) return;
+
+    if (lgInstance) {
+        lgInstance.destroy();
+        lgInstance = null;
+    }
+
+    lgInstance = lightGallery(el, {
+        dynamic: true,
+        dynamicEl: buildGalleryItems(files, token),
+        index: startIndex || 0,
+        plugins: [lgZoom, lgThumbnail, lgVideo],
+        speed: 400,
+        thumbnail: true,
+        animateThumb: true,
+        zoomFromOrigin: false,
+        allowMediaOverlap: true,
+        toggleThumb: true,
+        download: true,
+        mobileSettings: {
+            controls: true,
+            showCloseIcon: true,
+            download: true
+        }
+    });
+
+    lgInstance.openGallery(startIndex || 0);
+}
+
+// ─── Alpine Component ─────────────────────────────────────────────────────────
+
 document.addEventListener('alpine:init', () => {
     Alpine.data('fileManager', (initialFiles, token) => ({
         view: 'grid',
-        slideshow: false,
         files: initialFiles,
         sharedContent: [],
         sidebarOpen: false,
@@ -19,130 +78,73 @@ document.addEventListener('alpine:init', () => {
         sortKey: 'filename',
         sortAsc: true,
         copiedId: null,
-        currentIndex: 0,
-
-        get currentFile() {
-            return this.sortedFiles[this.currentIndex];
-        },
-
-        get isGrid() {
-            return !this.slideshow && this.view === 'grid';
-        },
-
-        get isList() {
-            return !this.slideshow && this.view === 'list';
-        },
-
-        get isSlideshow() {
-            return this.slideshow;
-        },
-
-        toggleSlideshow() {
-            this.slideshow = !this.slideshow;
-        },
-
-        showList() {
-            this.slideshow = false;
-            this.view = 'list';
-        },
-
-        showGrid() {
-            this.slideshow = false;
-            this.view = 'grid';
-        },
-
-        toggleSidebar() {
-            this.sidebarOpen = !this.sidebarOpen;
-            if (this.sidebarOpen) {
-                this.hasNewSharedContent = false;
-            }
-        },
-
-        nextSlide() {
-            this.currentIndex = (this.currentIndex + 1) % this.sortedFiles.length;
-        },
-
-        prevSlide() {
-            this.currentIndex = (this.currentIndex - 1 + this.sortedFiles.length) % this.sortedFiles.length;
-        },
-
-        loadPreview(el, file) {
-            if (!file) return;
-            // console.log("Checking preview for:", file.filename, "hasThumbnail:", file.hasThumbnail);
-
-            // Reset to icon state if it's the slideshow (since the element is reused)
-            if (el.dataset.isSlideshow) {
-                el.src = `/${token}/icon/${file.icon}`;
-                el.classList.remove('max-w-full', 'max-h-[60vh]', 'shadow-2xl', 'rounded-lg');
-                el.classList.add('object-contain', 'w-48', 'h-48', 'md:w-64', 'md:h-64');
-            }
-
-            // Fallback for older JSON or missing property
-            const canHaveThumbnail = file.hasThumbnail ||
-                                   (file.mimeType && (file.mimeType.startsWith('image/') || file.mimeType.startsWith('video/')));
-
-            if (!canHaveThumbnail) return;
-
-            const thumbUrl = `/${token}/thumbnail/${file.fileId}`;
-            const img = new Image();
-            img.onload = () => {
-                // IMPORTANT: Check if the file for this element is still the same
-                // (prevents async race conditions when scrolling/navigating)
-                if (file.fileId !== (el.dataset.isSlideshow ? this.currentFile?.fileId : file.fileId)) return;
-
-                el.src = thumbUrl;
-                // Remove icon-specific classes and add thumbnail-specific classes
-                el.classList.remove('p-2', 'w-20', 'h-20', 'w-8', 'h-8', 'w-48', 'h-48', 'md:w-64', 'md:h-64');
-
-                if (el.dataset.isSlideshow) {
-                     el.classList.add('max-w-full', 'max-h-[60vh]', 'object-contain', 'shadow-2xl', 'rounded-lg');
-                } else {
-                     el.classList.add('object-cover', 'w-full', 'h-full');
-                }
-            };
-            img.src = thumbUrl;
-        },
 
         get sortedFiles() {
             return [...this.files].sort((a, b) => {
                 let valA = a[this.sortKey];
                 let valB = b[this.sortKey];
-                if (typeof valA === 'string') {
-                    valA = valA.toLowerCase();
-                    valB = valB.toLowerCase();
-                }
+                if (typeof valA === 'string') { valA = valA.toLowerCase(); valB = valB.toLowerCase(); }
                 if (valA < valB) return this.sortAsc ? -1 : 1;
                 if (valA > valB) return this.sortAsc ? 1 : -1;
                 return 0;
             });
         },
 
+        get isGrid() { return this.view === 'grid'; },
+        get isList() { return this.view === 'list'; },
+
+        showList() { this.view = 'list'; },
+        showGrid() { this.view = 'grid'; },
+
+        toggleSidebar() {
+            this.sidebarOpen = !this.sidebarOpen;
+            if (this.sidebarOpen) this.hasNewSharedContent = false;
+        },
+
+        openPreview(index) {
+            openLightGallery(this.sortedFiles, token, index);
+        },
+
+        canPreview(file) {
+            return file.mimeType && (
+                file.mimeType.startsWith('image/') ||
+                file.mimeType.startsWith('video/')
+            );
+        },
+
+        loadThumbnail(el, file) {
+            if (!file) return;
+            const canThumb = file.hasThumbnail ||
+                (file.mimeType && (file.mimeType.startsWith('image/') || file.mimeType.startsWith('video/')));
+            if (!canThumb) return;
+
+            const thumbUrl = '/' + token + '/thumbnail/' + file.fileId;
+            const img = new Image();
+            img.onload = () => {
+                el.src = thumbUrl;
+                el.classList.remove('p-2', 'w-20', 'h-20', 'w-8', 'h-8');
+                el.classList.add('object-cover', 'w-full', 'h-full');
+            };
+            img.src = thumbUrl;
+        },
+
         copyLink(fileId) {
             const link = window.location.origin + '/' + token + '/file/' + fileId;
-
             const handleSuccess = () => {
                 this.copiedId = fileId;
-                setTimeout(() => { if(this.copiedId === fileId) this.copiedId = null; }, 2000);
+                setTimeout(() => { if (this.copiedId === fileId) this.copiedId = null; }, 2000);
             };
-
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(link).then(handleSuccess);
             } else {
-                const textArea = document.createElement('textarea');
-                textArea.value = link;
-                textArea.style.position = 'fixed';
-                textArea.style.left = '-999999px';
-                textArea.style.top = '-999999px';
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                    handleSuccess();
-                } catch (err) {
-                    console.error('Fallback copy failed', err);
-                }
-                document.body.removeChild(textArea);
+                const ta = document.createElement('textarea');
+                ta.value = link;
+                ta.style.position = 'fixed';
+                ta.style.left = '-999999px';
+                document.body.appendChild(ta);
+                ta.focus(); ta.select();
+                try { document.execCommand('copy'); handleSuccess(); } catch (e) {}
+                document.body.removeChild(ta);
             }
         },
 
@@ -150,67 +152,66 @@ document.addEventListener('alpine:init', () => {
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(text);
             } else {
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                textArea.style.position = 'fixed';
-                textArea.style.left = '-999999px';
-                textArea.style.top = '-999999px';
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                } catch (err) {
-                    console.error('Fallback copy failed', err);
-                }
-                document.body.removeChild(textArea);
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.left = '-999999px';
+                document.body.appendChild(ta);
+                ta.focus(); ta.select();
+                try { document.execCommand('copy'); } catch (e) {}
+                document.body.removeChild(ta);
             }
         },
 
+        doneSharing() {
+            if (!confirm('End this sharing session? Your access will be removed.')) return;
+            fetch('/' + token + '/session', { method: 'DELETE' })
+                .then(() => { window.location.href = '/' + token + '/'; })
+                .catch(() => { window.location.href = '/' + token + '/'; });
+        },
+
         initSSE() {
-            const eventSource = new EventSource('/' + token + '/events');
+            const connect = () => {
+                const es = new EventSource('/' + token + '/events');
 
-            eventSource.addEventListener('add', (event) => {
-                const newFile = JSON.parse(event.data);
-                if (!this.files.find(f => f.fileId === newFile.fileId)) {
-                    this.files.push(newFile);
-                }
-            });
+                es.addEventListener('init', (event) => {
+                    // Server sends current full list on (re)connect — restore it
+                    try {
+                        this.files = JSON.parse(event.data);
+                    } catch (e) {
+                        this.files = [];
+                    }
+                });
 
-            eventSource.addEventListener('remove', (event) => {
-                const fileIdToRemove = event.data;
-                this.files = this.files.filter(f => f.fileId !== fileIdToRemove);
-                if (this.currentIndex >= this.files.length) {
-                    this.currentIndex = this.files.length > 0 ? this.files.length - 1 : 0;
-                }
-                if (this.files.length === 0) {
-                    this.currentIndex = 0;
-                    this.slideshow = false;
-                }
-            });
+                es.addEventListener('add', (event) => {
+                    const newFile = JSON.parse(event.data);
+                    if (!this.files.find(f => f.fileId === newFile.fileId)) {
+                        this.files.push(newFile);
+                    }
+                });
 
-            eventSource.addEventListener('addSharedContent', (event) => {
-                const newContent = JSON.parse(event.data);
-                this.sharedContent.push(newContent);
-                console.log(this.sharedContent)
-                if (!this.sidebarOpen) {
-                    this.hasNewSharedContent = true;
-                }
-            });
+                es.addEventListener('remove', (event) => {
+                    const id = event.data;
+                    this.files = this.files.filter(f => f.fileId !== id);
+                });
 
-            eventSource.addEventListener('removeSharedContent', (event) => {
-                const contentIdToRemove = event.data;
-                this.sharedContent = this.sharedContent.filter(f => f.id !== contentIdToRemove);
-            });
+                es.addEventListener('addSharedContent', (event) => {
+                    const newContent = JSON.parse(event.data);
+                    this.sharedContent.push(newContent);
+                    if (!this.sidebarOpen) this.hasNewSharedContent = true;
+                });
 
-            eventSource.addEventListener('init', (event) => {
-                this.files = [];
-                console.log("Filelist cleared");
-            })
+                es.addEventListener('removeSharedContent', (event) => {
+                    const id = event.data;
+                    this.sharedContent = this.sharedContent.filter(f => f.id !== id);
+                });
 
-            eventSource.onerror = (err) => {
-                console.error('SSE failed, reconnecting...', err);
+                es.onerror = () => {
+                    es.close();
+                    setTimeout(connect, 3000);
+                };
             };
+            connect();
         }
     }));
 });

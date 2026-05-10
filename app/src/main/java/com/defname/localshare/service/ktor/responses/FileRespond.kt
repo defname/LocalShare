@@ -21,6 +21,7 @@ import io.ktor.utils.io.writeFully
 import io.ktor.utils.io.writer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.net.URLEncoder
 
 suspend fun ApplicationCall.sendFile(
     fileInfo: FileInfo,
@@ -34,11 +35,8 @@ suspend fun ApplicationCall.sendFile(
 
     val mimeTypeString = fileInfo.mimeType
     val contentType = ContentType.parse(mimeTypeString)
-
-    // 2. filesize
     val fileSize = fileInfo.size
 
-    // 4. send file
     val inputStream = try {
         context.contentResolver.openInputStream(fileUri)
     } catch (e: Exception) {
@@ -51,29 +49,31 @@ suspend fun ApplicationCall.sendFile(
         return respond(HttpStatusCode.Gone, "File no longer available")
     }
 
+    // RFC 6266 compliant Content-Disposition with UTF-8 encoded filename
+    val disposition = if (isStream) "inline" else "attachment"
+    val encodedName = URLEncoder.encode(fileName, "UTF-8").replace("+", "%20")
+    response.header(
+        HttpHeaders.ContentDisposition,
+        "$disposition; filename=\"$fileName\"; filename*=UTF-8''$encodedName"
+    )
+
     try {
-        response.header( HttpHeaders.ContentDisposition, "${if (isStream) "inline" else "attachment"}; filename=${fileName}" )
         respond(object : OutgoingContent.ReadChannelContent() {
             override val contentType = contentType
             override val contentLength = fileSize
 
             override fun readFrom(): ByteReadChannel {
                 return writer(Dispatchers.IO) {
-                    // Wir öffnen den InputStream innerhalb des Writers
                     inputStream.use { input ->
                         try {
-                            val buffer = ByteArray(8192) // 8KB Buffer
+                            val buffer = ByteArray(8192)
                             var bytesRead: Int
-
                             while (input.read(buffer).also { bytesRead = it } != -1) {
-                                // WICHTIG: Hier prüfen wir bei jedem Buffer-Durchgang den Ban-Status
                                 if (!securityHandler.mayContinueDownload(this@sendFile.request)) {
                                     val clientIp = this@sendFile.request.local.remoteHost
                                     Log.d("FileServerService", "Abort download: Client $clientIp was banned.")
                                     throw CancellationException("Client banned")
                                 }
-
-                                // Daten in den Ktor-Channel schreiben
                                 channel.writeFully(buffer, 0, bytesRead)
                             }
                         } catch (e: Exception) {

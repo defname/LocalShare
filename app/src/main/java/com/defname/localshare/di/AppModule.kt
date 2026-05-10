@@ -60,7 +60,7 @@ val appModule = module {
     factory { AddFilesUseCase(get(), get()) }
     factory { AddSharedContentUseCase(get()) }
     factory { ManageServiceUseCase(get(), get()) }
-    factory { ServerSecurityHandler(get(), get()) }
+    single { ServerSecurityHandler(get(), get()) }
     factory { ServerUrlProvider(get(), get())}
 
     viewModel { MainViewModel(get(), get(), get()) }

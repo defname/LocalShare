@@ -44,11 +44,9 @@ sealed class FlowDelta<T>(val obj: T) {
 fun <T, K>Flow<List<T>>.asDeltaEvents(key: (T) -> K): Flow<FlowDelta<T>> = flow {
     var oldList = emptyList<T>()
     this@asDeltaEvents.collect { newList ->
-        // 1. Was ist neu? (In newList, aber nicht in oldList)
         val added = newList.filter { newItem -> oldList.none { key(it) == key(newItem) } }
         added.forEach { emit(FlowDelta.Added(it)) }
 
-        // 2. Was wurde gelöscht? (In oldList, aber nicht in newList)
         val removed = oldList.filter { oldItem -> newList.none { key(it) == key(oldItem) } }
         removed.forEach { emit(FlowDelta.Removed(it)) }
 
@@ -60,7 +58,6 @@ fun <T, K>Flow<List<T>>.asDeltaEvents(key: (T) -> K): Flow<FlowDelta<T>> = flow 
 fun Flow<List<FileInfo>>.asDeltaEvents() = asDeltaEvents { it.id }
 @JvmName("asSharedContentDeltaEvents")
 fun Flow<List<SharedContent>>.asDeltaEvents() = asDeltaEvents { it.id }
-
 
 fun BufferedWriter.writeEvent(eventName: String, data: String) {
     write("event: $eventName\n")
@@ -80,7 +77,7 @@ fun Route.getEvents(
     connectionLogsRepository: ConnectionLogsRepository,
     context: Context
 ) {
-    get ("/{token}/events") {
+    get("/{token}/events") {
 
         if (!securityHandler.verifyAccess(call)) {
             return@get call.respondText("No Access.", status = HttpStatusCode.Forbidden)
@@ -92,80 +89,65 @@ fun Route.getEvents(
         call.response.header("X-Accel-Buffering", "no")
 
         call.respondOutputStream {
-            // Wir nutzen den OutputStream, um die Kontrolle über das Flushing zu haben
             val writer = bufferedWriter()
-
-            // Standardmäßig gehen wir von einem Server-Shutdown aus
             var disconnectReason: DisconnectReason = DisconnectReason.ServerShutdown
 
             try {
                 coroutineScope {
-                    writer.writeEvent("init", "connected")
+                    // Send current file list with init so reconnects restore the list
+                    val currentFiles = serviceRepository.fileList.first()
+                    val initJson = "[" + currentFiles.map { it.toJsonString() }.joinToString(",") + "]"
+                    writer.writeEvent("init", initJson)
 
                     val sharedContentList = serviceRepository.runtimeState.map { it.sharedContentList }
-                        .stateIn(
-                            this@coroutineScope,
-                            started = kotlinx.coroutines.flow.SharingStarted.Eagerly,
-                            initialValue = emptyList()
-                        )
+                        .stateIn(this, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyList())
 
-                    // 🔄 Event-Collector (reagiert auf Datei-Änderungen)
+                    // File delta collector — uses isStillAllowed (non-suspending) to avoid
+                    // re-triggering the full approval flow on every file change
                     launch {
-                        serviceRepository.fileList
-                            .asDeltaEvents()
-                            .collect { delta ->
-                                // Sofort-Check bei Datei-Event (falls IP gerade gebannt wurde)
-                                if (!securityHandler.verifyAccess(call)) {
-                                    disconnectReason = DisconnectReason.Unexpected.AuthInvalid
-                                    this@coroutineScope.cancel("Access denied")
-                                    return@collect
-                                }
-
-                                val eventName = when (delta) {
-                                    is FlowDelta.Added -> "add"
-                                    is FlowDelta.Removed -> "remove"
-                                }
-
-                                val data = when (delta) {
-                                    is FlowDelta.Added -> delta.obj.toJsonString()
-
-                                    is FlowDelta.Removed -> delta.obj.id
-                                }
-
-                                writer.writeEvent(eventName, data)
+                        serviceRepository.fileList.asDeltaEvents().collect { delta ->
+                            if (!securityHandler.isStillAllowed(call)) {
+                                disconnectReason = DisconnectReason.Unexpected.AuthInvalid
+                                this@coroutineScope.cancel("Access denied")
+                                return@collect
                             }
+                            val eventName = when (delta) {
+                                is FlowDelta.Added -> "add"
+                                is FlowDelta.Removed -> "remove"
+                            }
+                            val data = when (delta) {
+                                is FlowDelta.Added -> delta.obj.toJsonString()
+                                is FlowDelta.Removed -> delta.obj.id
+                            }
+                            writer.writeEvent(eventName, data)
+                        }
                     }
 
+                    // Shared content delta collector
                     launch {
-                        sharedContentList
-                            .asDeltaEvents()
-                            .collect { delta ->
-                                // Sofort-Check bei Datei-Event (falls IP gerade gebannt wurde)
-                                if (!securityHandler.verifyAccess(call)) {
-                                    disconnectReason = DisconnectReason.Unexpected.AuthInvalid
-                                    this@coroutineScope.cancel("Access denied")
-                                    return@collect
-                                }
-
-                                val eventName = when (delta) {
-                                    is FlowDelta.Added -> "addSharedContent"
-                                    is FlowDelta.Removed -> "removeSharedContent"
-                                }
-
-                                val data = when (delta) {
-                                    is FlowDelta.Added -> delta.obj.toJsonString()
-                                    is FlowDelta.Removed -> delta.obj.id.toString()
-                                }
-
-                                writer.writeEvent(eventName, data)
+                        sharedContentList.asDeltaEvents().collect { delta ->
+                            if (!securityHandler.isStillAllowed(call)) {
+                                disconnectReason = DisconnectReason.Unexpected.AuthInvalid
+                                this@coroutineScope.cancel("Access denied")
+                                return@collect
                             }
+                            val eventName = when (delta) {
+                                is FlowDelta.Added -> "addSharedContent"
+                                is FlowDelta.Removed -> "removeSharedContent"
+                            }
+                            val data = when (delta) {
+                                is FlowDelta.Added -> delta.obj.toJsonString()
+                                is FlowDelta.Removed -> delta.obj.id.toString()
+                            }
+                            writer.writeEvent(eventName, data)
+                        }
                     }
 
-                    // ❤️ Heartbeat Loop (prüft regelmäßig und hält Verbindung offen)
+                    // Heartbeat loop — non-suspending ban check only
                     launch {
                         while (true) {
                             delay(settingsRepository.settingsFlow.first().sseHeartbeatPeriodSeconds * 1000L)
-                            if (!securityHandler.verifyAccess(call)) {
+                            if (!securityHandler.isStillAllowed(call)) {
                                 disconnectReason = DisconnectReason.Unexpected.AuthInvalid
                                 this@coroutineScope.cancel("Access denied")
                             }
@@ -174,8 +156,6 @@ fun Route.getEvents(
                     }
                 }
             } catch (e: Exception) {
-                // Wenn es KEINE CancellationException ist (z.B. IOException weil Socket zu),
-                // dann ist der Client weg.
                 if (e !is kotlinx.coroutines.CancellationException) {
                     disconnectReason = DisconnectReason.Unexpected.ClientGone
                 }

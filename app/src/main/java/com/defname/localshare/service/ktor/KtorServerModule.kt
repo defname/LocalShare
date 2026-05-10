@@ -12,6 +12,7 @@ import com.defname.localshare.data.ServiceRepository
 import com.defname.localshare.domain.model.DisconnectReason
 import com.defname.localshare.domain.repository.SettingsRepository
 import com.defname.localshare.service.ServerSecurityHandler
+import com.defname.localshare.service.ktor.routes.getApprovalEvents
 import com.defname.localshare.service.ktor.routes.getAssets
 import com.defname.localshare.service.ktor.routes.getEvents
 import com.defname.localshare.service.ktor.routes.getFavIcon
@@ -19,6 +20,7 @@ import com.defname.localshare.service.ktor.routes.getFile
 import com.defname.localshare.service.ktor.routes.getFileIcon
 import com.defname.localshare.service.ktor.routes.getLanding
 import com.defname.localshare.service.ktor.routes.getThumbnail
+import com.defname.localshare.service.ktor.routes.getWaiting
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
@@ -58,19 +60,14 @@ fun Application.configureServerModule(
         try {
             proceed()
         } finally {
-            val discconnectReason: DisconnectReason = call.response.status()?.let {
+            val disconnectReason: DisconnectReason = call.response.status()?.let {
                 DisconnectReason.Expected(it.value)
             } ?: DisconnectReason.Unexpected.Unknown
 
-            connectionLogsRepository.clientDisconnected(
-                connectionId,
-                discconnectReason
-            )
+            connectionLogsRepository.clientDisconnected(connectionId, disconnectReason)
         }
-
     }
 
-    // 2. Routing definieren
     routing {
         get("/favicon.ico") {
             call.response.header(HttpHeaders.CacheControl, "public, max-age=31536000, immutable")
@@ -78,17 +75,13 @@ fun Application.configureServerModule(
         }
 
         getFavIcon(securityHandler, context)
-
         getThumbnail(securityHandler, serviceRepository, fileInfoProvider, context)
-
         getFileIcon(securityHandler, context)
-
         getAssets(securityHandler, context)
-
         getEvents(securityHandler, serviceRepository, settingsRepository, connectionLogsRepository, context)
-
         getFile(securityHandler, serviceRepository, context)
-
+        getWaiting(securityHandler, context)
+        getApprovalEvents(securityHandler)
         getLanding(securityHandler, serviceRepository, context)
 
         get("{...}") {

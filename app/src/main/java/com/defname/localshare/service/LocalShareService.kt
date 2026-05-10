@@ -44,8 +44,12 @@ class LocalShareService : Service() {
     companion object {
         const val ACTION_START = "com.defname.localshare.START_SERVICE"
         const val ACTION_STOP = "com.defname.localshare.STOP_SERVICE"
+        // Legacy IP-based actions kept for any external callers
         const val APPROVE_IP = "com.defname.localshare.APPROVE_IP"
         const val DENY_IP = "com.defname.localshare.DENY_IP"
+        // New session-based actions
+        const val APPROVE_SESSION = "com.defname.localshare.APPROVE_SESSION"
+        const val DENY_SESSION = "com.defname.localshare.DENY_SESSION"
         const val ACTION_GRANT_PERMISSION = "com.defname.localshare.GRANT_PERMISSION"
     }
 
@@ -60,8 +64,8 @@ class LocalShareService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val ip = intent?.getStringExtra("ip") ?: ""
-        
-        // Delegierte Berechtigungen für den gesamten Prozess verankern
+        val sessionId = intent?.getStringExtra("sessionId") ?: ""
+
         intent?.clipData?.let { clipData ->
             for (i in 0 until clipData.itemCount) {
                 clipData.getItemAt(i).uri?.let { activeUriPermissions.add(it) }
@@ -69,50 +73,55 @@ class LocalShareService : Service() {
         }
 
         when (intent?.action) {
-            ACTION_GRANT_PERMISSION -> {
-                // Die URIs wurden bereits am Anfang der Funktion in activeUriPermissions
-                // gespeichert. Da ACTION_GRANT_PERMISSION nur aufgerufen wird, wenn der 
-                // Server bereits läuft, ist keine weitere Aktion nötig.
-            }
+            ACTION_GRANT_PERMISSION -> { /* URIs stored above */ }
             ACTION_START -> startHttpServer()
             ACTION_STOP -> stopSelf()
+
+            APPROVE_SESSION -> {
+                if (sessionId.isNotEmpty()) {
+                    securityHandler.approveSession(sessionId)
+                    cancelNotification(sessionId.hashCode())
+                }
+            }
+            DENY_SESSION -> {
+                if (sessionId.isNotEmpty()) {
+                    securityHandler.denySession(sessionId)
+                    cancelNotification(sessionId.hashCode())
+                }
+            }
+
+            // Legacy fallbacks
             APPROVE_IP -> {
                 securityHandler.approveIp(ip)
-                cancelNotification(ip)
+                cancelNotification(ip.hashCode())
             }
             DENY_IP -> {
                 securityHandler.blockIp(ip)
-                cancelNotification(ip)
+                cancelNotification(ip.hashCode())
             }
         }
         return START_NOT_STICKY
     }
 
-    private fun cancelNotification(ip: String) {
+    private fun cancelNotification(id: Int) {
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        manager.cancel(ip.hashCode())
+        manager.cancel(id)
     }
 
-    override fun onBind(p0: Intent?): IBinder? {
-        return null
-    }
+    override fun onBind(p0: Intent?): IBinder? = null
 
     private fun startHttpServer() {
         serviceScope.launch {
             val settings = settingsRepository.settingsFlow.first()
-
-            // 1. Status auf STARTING setzen (UI zeigt jetzt den Spinner)
             serviceRepository.serverStarting()
 
-            // 2. Basis-Notification bauen und zeigen
             val notification = notificationHelper.buildBaseNotification(
                 serverIp = settings.serverIp,
                 port = settings.serverPort,
-                isRunning = false // Spinner in der Notification, kein Stop-Button
+                isRunning = false
             )
             startForeground(NotificationHelper.NOTIFICATION_ID, notification)
 
-            // 3. Ktor Start
             if (server == null) {
                 try {
                     val newServer = withContext(Dispatchers.IO) {
@@ -137,7 +146,6 @@ class LocalShareService : Service() {
 
                     server = newServer
 
-                    // 4. Notification auf "Running" updaten (Stop-Button zeigen)
                     val runningNotification = notificationHelper.buildBaseNotification(
                         serverIp = settings.serverIp,
                         port = settings.serverPort,
@@ -164,11 +172,7 @@ class LocalShareService : Service() {
 
     suspend fun stopSelf(reason: String) {
         withContext(Dispatchers.Main) {
-            Toast.makeText(
-                this@LocalShareService,
-                reason,
-                Toast.LENGTH_LONG
-            ).show()
+            Toast.makeText(this@LocalShareService, reason, Toast.LENGTH_LONG).show()
         }
         stopSelf()
     }

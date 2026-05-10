@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waiting for Approval — LocalShare</title>
+    <link rel="icon" type="image/png" href="/{{token}}/favicon">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --sub: #64748b;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --deny: #ef4444;
+            --deny-hover: #dc2626;
+            --radius: 1.25rem;
+            --shadow: 0 4px 24px rgba(0,0,0,0.08);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0f172a;
+                --card: #1e293b;
+                --border: #334155;
+                --text: #f1f5f9;
+                --sub: #94a3b8;
+                --shadow: 0 4px 24px rgba(0,0,0,0.4);
+            }
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 2.5rem 2rem;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 56px;
+            height: 56px;
+            border: 4px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            margin: 0 auto 1.5rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .icon-denied {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 1.5rem;
+            background: var(--deny);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-denied svg { width: 28px; height: 28px; color: #fff; }
+
+        h1 { font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem; }
+
+        p { color: var(--sub); font-size: 0.9rem; line-height: 1.6; }
+
+        .timer {
+            display: inline-block;
+            margin-top: 1.25rem;
+            font-size: 2rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            color: var(--accent);
+            letter-spacing: -1px;
+        }
+
+        .timer.warning { color: #f59e0b; }
+        .timer.urgent { color: var(--deny); }
+
+        .progress-bar-wrap {
+            margin-top: 1rem;
+            background: var(--border);
+            border-radius: 99px;
+            height: 6px;
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 99px;
+            transition: width 1s linear, background 0.5s;
+            width: 100%;
+        }
+
+        .btn {
+            display: inline-block;
+            margin-top: 1.5rem;
+            padding: 0.65rem 1.5rem;
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+            color: #fff;
+            background: var(--accent);
+            transition: background 0.15s;
+        }
+
+        .btn:hover { background: var(--accent-hover); }
+        .btn.secondary { background: transparent; color: var(--sub); border: 1px solid var(--border); }
+        .btn.secondary:hover { background: var(--border); color: var(--text); }
+
+        #state-waiting, #state-denied { display: none; }
+        #state-waiting.active, #state-denied.active { display: block; }
+
+        .footer { font-size: 0.75rem; color: var(--sub); }
+    </style>
+</head>
+<body>
+    <div class="card" id="state-waiting">
+        <div class="spinner" id="spinner"></div>
+        <h1>Waiting for Approval</h1>
+        <p>The device owner needs to approve your access request before you can view the shared files.</p>
+        <div class="timer" id="timer">—</div>
+        <div class="progress-bar-wrap">
+            <div id="progress-bar"></div>
+        </div>
+    </div>
+
+    <div class="card" id="state-denied">
+        <div class="icon-denied">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </div>
+        <h1 id="denied-title">Access Denied</h1>
+        <p id="denied-msg">The device owner did not approve your request. You may close this tab.</p>
+        <a href="/{{token}}/" class="btn secondary" style="margin-right:0.5rem">Try Again</a>
+    </div>
+
+    <p class="footer">LocalShare — secure local file sharing</p>
+
+    <script>
+        const TOKEN = '{{token}}';
+        const SESSION_ID = '{{sessionId}}';
+        const TIMEOUT_SECS = 30; // matches approvalTimeoutSeconds default; server auto-denies after this
+
+        let secondsLeft = TIMEOUT_SECS;
+        let timerInterval = null;
+
+        function showState(name) {
+            document.getElementById('state-waiting').classList.remove('active');
+            document.getElementById('state-denied').classList.remove('active');
+            document.getElementById('state-' + name).classList.add('active');
+        }
+
+        function updateTimer() {
+            const el = document.getElementById('timer');
+            const bar = document.getElementById('progress-bar');
+            const pct = (secondsLeft / TIMEOUT_SECS) * 100;
+
+            const mm = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
+            const ss = String(secondsLeft % 60).padStart(2, '0');
+            el.textContent = mm + ':' + ss;
+            bar.style.width = pct + '%';
+
+            if (pct <= 20) {
+                el.className = 'timer urgent';
+                bar.style.background = '#ef4444';
+            } else if (pct <= 50) {
+                el.className = 'timer warning';
+                bar.style.background = '#f59e0b';
+            } else {
+                el.className = 'timer';
+                bar.style.background = '';
+            }
+
+            if (secondsLeft <= 0) {
+                clearInterval(timerInterval);
+                showDenied('Request timed out.', 'No response was received in time. You can try again.');
+            }
+            secondsLeft--;
+        }
+
+        function showDenied(title, msg) {
+            clearInterval(timerInterval);
+            document.getElementById('denied-title').textContent = title || 'Access Denied';
+            document.getElementById('denied-msg').textContent = msg || 'The device owner declined your request.';
+            showState('denied');
+        }
+
+        function connectSSE() {
+            const url = '/' + TOKEN + '/approval-events/' + SESSION_ID;
+            const es = new EventSource(url);
+
+            es.addEventListener('status', function(e) {
+                es.close();
+                const state = e.data.trim();
+                if (state === 'approved') {
+                    // Redirect to main page — the session cookie is already set
+                    window.location.href = '/' + TOKEN + '/';
+                } else if (state === 'denied') {
+                    showDenied('Access Denied', 'The device owner declined your request. You may try again.');
+                } else if (state === 'revoked') {
+                    showDenied('Session Ended', 'The sharing session was ended by the device owner.');
+                } else {
+                    showDenied('Request Timed Out', 'No response was received. You can try again.');
+                }
+            });
+
+            es.onerror = function() {
+                es.close();
+                // Retry after 3s if connection drops
+                setTimeout(connectSSE, 3000);
+            };
+        }
+
+        // Boot
+        showState('waiting');
+        updateTimer();
+        timerInterval = setInterval(updateTimer, 1000);
+        connectSSE();
+    </script>
+</body>
+</html>

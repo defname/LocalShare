@@ -15,11 +15,9 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytesWriter
-import io.ktor.utils.io.CancellationException
 import io.ktor.utils.io.jvm.javaio.toOutputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
-
 
 suspend fun ApplicationCall.sendZip(
     files: List<FileInfo>,
@@ -37,9 +35,7 @@ suspend fun ApplicationCall.sendZip(
         "attachment; filename=\"$filename\""
     )
 
-    respondBytesWriter(
-        contentType = ContentType.Application.Zip
-    ) {
+    respondBytesWriter(contentType = ContentType.Application.Zip) {
         try {
             val zip = ZipOutputStream(this.toOutputStream())
 
@@ -47,31 +43,29 @@ suspend fun ApplicationCall.sendZip(
                 if (!securityHandler.mayContinueDownload(this@sendZip.request)) {
                     val clientIp = this@sendZip.request.local.remoteHost
                     Log.d("FileServerService", "Stopping ZIP: Client $clientIp was banned.")
-                    break // Schleife abbrechen
+                    break
                 }
                 try {
-                    val uri = fileInfo.uri
-                    val inputStream = context.contentResolver.openInputStream(uri) ?: continue
-
-                    val entryName = fileInfo.name
-
-                    zip.putNextEntry(ZipEntry(entryName))
+                    val inputStream = context.contentResolver.openInputStream(fileInfo.uri) ?: continue
+                    zip.putNextEntry(ZipEntry(fileInfo.name))
 
                     inputStream.use { input ->
-                        // 2. Manueller Buffer-Loop statt copyTo
                         val buffer = ByteArray(8192)
                         var read: Int
                         while (input.read(buffer).also { read = it } != -1) {
-                            // 3. Check während des Kopierens der aktuellen Datei
                             if (!securityHandler.mayContinueDownload(this@sendZip.request)) {
-                                throw CancellationException("Client banned during file streaming")
+                                // Re-throw as a real exception so the outer loop breaks
+                                throw IllegalStateException("Client banned during zip streaming")
                             }
                             zip.write(buffer, 0, read)
                         }
                     }
 
                     zip.closeEntry()
-
+                } catch (e: IllegalStateException) {
+                    // Ban detected mid-file — stop the whole ZIP
+                    Log.d("FileServerService", "ZIP aborted: ${e.message}")
+                    break
                 } catch (e: Exception) {
                     Log.d("FileServerService", "Error adding file to zip: ${e.message}")
                 }
@@ -80,7 +74,6 @@ suspend fun ApplicationCall.sendZip(
             zip.finish()
             zip.flush()
             zip.close()
-
         } catch (e: Exception) {
             Log.e("FileServerService", "ZIP streaming error", e)
         }

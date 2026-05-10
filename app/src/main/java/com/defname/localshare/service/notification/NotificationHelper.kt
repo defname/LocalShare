@@ -29,7 +29,6 @@ class NotificationHelper(private val context: Context) {
     private fun createNotificationChannel() {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Channel für den dauerhaften Server-Dienst (niedrige Wichtigkeit, damit es nicht nervt)
         val serverChannel = NotificationChannel(
             CHANNEL_ID,
             context.getString(R.string.notification_channel_name),
@@ -39,7 +38,6 @@ class NotificationHelper(private val context: Context) {
         }
         manager.createNotificationChannel(serverChannel)
 
-        // Channel für Approvals (hohe Wichtigkeit für Heads-up / Banner oben)
         val approvalChannel = NotificationChannel(
             APPROVAL_CHANNEL_ID,
             context.getString(R.string.connection_request_notification_title),
@@ -75,33 +73,47 @@ class NotificationHelper(private val context: Context) {
             .build()
     }
 
+    fun showApprovalNotification(clientIp: String, sessionId: String) {
+        // Use sessionId hash as the unique notification ID so each session gets its own notification
+        val notifId = sessionId.hashCode()
 
-    fun showApprovalNotification(clientIp: String, filename: String = "files") {
         val approveIntent = Intent(context, LocalShareService::class.java).apply {
-            action = LocalShareService.APPROVE_IP
+            action = LocalShareService.APPROVE_SESSION
+            putExtra("sessionId", sessionId)
             putExtra("ip", clientIp)
         }
-        val approvePending = PendingIntent.getService(context, clientIp.hashCode(), approveIntent, PendingIntent.FLAG_IMMUTABLE)
+        val approvePending = PendingIntent.getService(
+            context,
+            notifId,
+            approveIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
         val denyIntent = Intent(context, LocalShareService::class.java).apply {
-            action = LocalShareService.DENY_IP
+            action = LocalShareService.DENY_SESSION
+            putExtra("sessionId", sessionId)
             putExtra("ip", clientIp)
         }
-        val denyPending = PendingIntent.getService(context, clientIp.hashCode(), denyIntent, PendingIntent.FLAG_IMMUTABLE)
+        val denyPending = PendingIntent.getService(
+            context,
+            notifId + 1,
+            denyIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
         val notification = NotificationCompat.Builder(context, APPROVAL_CHANNEL_ID)
             .setContentTitle(context.getString(R.string.connection_request_notification_title))
-            .setContentText(context.getString(R.string.connection_request_notification_text, clientIp, filename))
+            .setContentText(context.getString(R.string.connection_request_notification_text, clientIp, ""))
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setDefaults(Notification.DEFAULT_ALL) // Wichtig für Heads-up (Ton/Vibration)
+            .setDefaults(Notification.DEFAULT_ALL)
             .addAction(0, context.getString(R.string.connection_request_notification_accept), approvePending)
             .addAction(0, context.getString(R.string.connection_request_notification_deny), denyPending)
             .setAutoCancel(true)
             .build()
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.notify(clientIp.hashCode(), notification)
+        manager.notify(notifId, notification)
     }
 }
