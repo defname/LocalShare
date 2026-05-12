@@ -1,5 +1,8 @@
 # LocalShare
 
+[![Play Store](https://img.shields.io/badge/Google_Play-Download-green?logo=google-play&logoColor=white)](https://play.google.com/store/apps/details?id=com.defname.localshare)
+[![F-Droid](https://img.shields.io/badge/F--Droid-Download-blue?logo=f-droid&logoColor=white)](https://f-droid.org/packages/com.defname.localshare)
+
 ![Logo](raw_assets/logo.svg)
 
 **LocalShare** is a lightweight Android app to share files over your local network via a browser - no cloud, no cables, no extra apps required.
