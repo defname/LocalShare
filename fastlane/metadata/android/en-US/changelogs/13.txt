@@ -1,0 +1,3 @@
+## Fixes
+
+- Fix a bug in the response header in the file route

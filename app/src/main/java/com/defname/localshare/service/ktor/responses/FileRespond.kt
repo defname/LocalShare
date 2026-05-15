@@ -8,6 +8,7 @@ import android.content.Context
 import android.util.Log
 import com.defname.localshare.domain.model.FileInfo
 import com.defname.localshare.service.ServerSecurityHandler
+import io.ktor.http.ContentDisposition
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -52,7 +53,8 @@ suspend fun ApplicationCall.sendFile(
     }
 
     try {
-        response.header( HttpHeaders.ContentDisposition, "${if (isStream) "inline" else "attachment"}; filename=${fileName}" )
+        val disposition = if (isStream) ContentDisposition.Inline else ContentDisposition.Attachment
+        response.header(HttpHeaders.ContentDisposition, disposition.withParameter(ContentDisposition.Parameters.FileName, fileName).toString())
         respond(object : OutgoingContent.ReadChannelContent() {
             override val contentType = contentType
             override val contentLength = fileSize
