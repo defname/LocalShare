@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
@@ -25,7 +26,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -35,10 +35,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.defname.localshare.R
 import com.defname.localshare.data.RuntimeState
+import com.defname.localshare.ui.components.ConfirmedTextField
 import com.defname.localshare.ui.theme.LocalShareTheme
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -78,8 +80,10 @@ fun SettingsScreen(
             SettingsGroup(title = stringResource(R.string.settings_server_title)) {
                 // Port Einstellung
                 SettingsRow {
-                    TextField(
+                    ConfirmedTextField(
                         value = settings.serverPort.toString(),
+                        validator = { input -> input.toIntOrNull().let { it != null && it in 1024.. 65535 } },
+                        errorHint = { Text("Port must be between 1024 and 65535") },
                         enabled = runtimeState.serviceState == RuntimeState.STOPPED,
                         label = { Text(stringResource(R.string.settings_server_port_label)) },
                         modifier = Modifier.weight(1f),
@@ -92,21 +96,29 @@ fun SettingsScreen(
                         },
                         onValueChange = {
                             scope.launch { viewModel.setPort(it.toIntOrNull() ?: 8080) }
-                        }
+                        },
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = KeyboardType.Number
+                        )
                     )
                 }
 
                 SettingsRow {
-                    TextField(
+                    ConfirmedTextField(
                         value = settings.serverIdleTimeoutSeconds.toString(),
                         label = { Text(stringResource(R.string.settings_server_timeout_label)) },
+                        validator = { input -> input.toIntOrNull() != null },
+                        errorHint = { Text("Number of seonds must be a number.") },
                         modifier = Modifier.weight(1f),
                         supportingText = {
                             Text(stringResource(R.string.settings_server_timeout_hint))
                         },
                         onValueChange = {
                             scope.launch { viewModel.setIdleTimeoutSeconds(it.toIntOrNull() ?: 30) }
-                        }
+                        },
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = KeyboardType.Number
+                        )
                     )
                 }
             }
@@ -128,9 +140,14 @@ fun SettingsScreen(
 
                 if (settings.requireApproval) {
                     SettingsRow {
-                        TextField(
+                        ConfirmedTextField(
                             value = settings.whitelistEntryTTLSeconds.toString(),
                             label = { Text(stringResource(R.string.settings_security_whitelist_ttl_label)) },
+                            validator = { it.toIntOrNull() != null },
+                            errorHint = { Text("Number of seconds must be a number.") },
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Number
+                            ),
                             modifier = Modifier.weight(1f),
                             supportingText = {
                                 Text(stringResource(R.string.settings_security_whitelist_ttl_hint))
@@ -145,9 +162,14 @@ fun SettingsScreen(
 
             SettingsGroup(title = stringResource(R.string.settings_webinterface_title)) {
                 SettingsRow {
-                    TextField(
+                    ConfirmedTextField(
                         value = settings.sseHeartbeatPeriodSeconds.toString(),
                         label = { Text(stringResource(R.string.settings_webinterface_heartbeat_label)) },
+                        validator = { it.toIntOrNull() != null },
+                        errorHint = { Text("Number of seconds must be a number.") },
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = KeyboardType.Number
+                        ),
                         modifier = Modifier.weight(1f),
                         supportingText = {
                             Text(stringResource(R.string.settings_webinterface_heartbeat_hint))

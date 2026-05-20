@@ -15,7 +15,6 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.defname.localshare.ui.components.ConfirmedTextField
 import com.defname.localshare.ui.screens.home.HomeState
 import com.defname.localshare.ui.screens.home.HomeViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -65,7 +65,7 @@ fun AdvancedSettingsSection(
 
         if (expanded) {
             Column(modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)) {
-                OutlinedTextField(
+                ConfirmedTextField(
                     value = state.token,
                     label = { Text("Security Token") },
                     singleLine = true,
@@ -75,7 +75,9 @@ fun AdvancedSettingsSection(
                         IconButton(onClick = { scope.launch { viewModel.onRandomTokenClick() } }) {
                             Icon(Icons.Default.Refresh, contentDescription = "Generate New")
                         }
-                    }
+                    },
+                    validator = { it.isNotEmpty() },
+                    errorHint = { Text("Token cannot be empty") }
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
